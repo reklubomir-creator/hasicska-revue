@@ -156,16 +156,29 @@ function loadDemoData(){
  ["Průzkum zahrnul směr šíření, posádka správně upozornila na vodiče VN a požádala o potvrzení vypnutí.","Požár lokalizován, ale hlášení o možném šíření bylo předáno se zpožděním.","Velitel správně vyhodnotil rizika, vyžádal posily a určil bezpečné sektory.","Jednotka zahájila přiblížení k označeným vodičům bez potvrzení bezpečného stavu. Zásah zastaven, riziko znovu vysvětleno.","Rozvinutí vedení v pořádku, drobná nepřesnost v předání informace o rozsahu požáru.","Dobrá souhra při rozvinutí vedení a průběžném hlášení veliteli.","Bezpečné vyhodnocení místa a přiměřený postup podle dostupného vybavení."],
  ["Tým odpovídal věcně, velitel i strojník prokázali dobrou orientaci v postupech.","Většina odpovědí správně, u jedné otázky bylo třeba upřesnit postup při závadě.","Odpovědi byly rychlé a věcné, členové si rozdělili otázky bez zmatků.","U bezpečnostní otázky byl navržen nebezpečný postup a tým nedokázal určit správné řešení ani po doplňující otázce.","Několik odpovědí bylo neúplných, doporučeno zopakovat postupy pro práci s technikou.","Dobrá znalost základních postupů, pouze drobná nepřesnost v terminologii.","Kvíz vyplněn v limitu, odpovědi přesné a zdůvodněné."]
  ];
- records=[];
+ const demoVersion=Number(localStorage.getItem("hasicskaRevueDemoVersion")||0);
+ const targetDefects=16+(demoVersion%5)*4;
+ const goodVariants=[0,2,5,6],defectVariants=[1,3,4];
+ const demoRecords=[];
+ let generatedIndex=0;
  units.forEach((unit,ui)=>stations.forEach((station,si)=>{
   if(si===3)return;
-  const variant=(ui*3+si*2)%7;
+  const variant=generatedIndex<targetDefects
+   ? defectVariants[generatedIndex%defectVariants.length]
+   : goodVariants[(generatedIndex+ui+si)%goodVariants.length];
   const minutes=(si*23+ui*7)%60;
   const hour=13+Math.floor((si*23+ui*7)/60);
-  records.push({unit,station,reviewer:stationDetails[si].reviewer,status:statusCycle[variant],notes:notesByStation[si<3?si:si-1][variant],date:"25. 10. 2026",time:String(hour).padStart(2,"0")+":"+String(minutes).padStart(2,"0")});
+  demoRecords.push({unit,station,reviewer:stationDetails[si].reviewer,status:statusCycle[variant],notes:notesByStation[si<3?si:si-1][variant],date:"25. 10. 2026",time:String(hour).padStart(2,"0")+":"+String(minutes).padStart(2,"0")});
+  generatedIndex++;
  }));
+ if(demoRecords.length!==56||demoRecords.filter(r=>r.status!=="V pořádku").length!==targetDefects||demoRecords.some(r=>!r.unit||!r.station||!r.notes)){
+  alert("Testovací data se nepodařilo správně připravit. Původní zápisy zůstaly zachované.");
+  return;
+ }
+ records=demoRecords;
+ localStorage.setItem("hasicskaRevueDemoVersion",String(demoVersion+1));
  save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();showPage("home");
- alert("Načteno 56 fiktivních zápisů. Data jsou pouze pro vyzkoušení aplikace.");
+ alert("Načteno 56 fiktivních zápisů, z toho "+targetDefects+" se závadami. Při dalším načtení se počet závad změní. Data jsou pouze pro vyzkoušení aplikace.");
 }
 el("loadDemoData").onclick=loadDemoData;
 el("loadDemoDataDashboard").onclick=loadDemoData;
