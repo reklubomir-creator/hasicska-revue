@@ -44,7 +44,7 @@ table{min-width:620px}th,td{padding:10px 8px}
 .main{padding-left:8px;padding-right:8px}
 .brand{font-size:15px}
 }
-</style>
+.qr-code canvas,.qr-code img{max-width:100%;height:auto}@media print{body.qr-print *{visibility:hidden!important}body.qr-print #quizQrPanel,body.qr-print #quizQrPanel *{visibility:visible!important}body.qr-print #quizQrPanel{position:absolute;left:0;top:0;width:100%;border:0!important}}</style>
 </head>
 <body>
 <div class="layout">
@@ -80,7 +80,33 @@ table{min-width:620px}th,td{padding:10px 8px}
 <div class="voice"><button id="micButton" class="mic">🎙 Nadiktovat hodnocení</button><span class="muted" id="voiceStatus">Diktování závisí na podpoře prohlížeče a mikrofonu.</span></div>
 <div class="actions"><button class="primary" id="saveAssessment">Uložit zápis</button><button class="soft" id="clearAssessment">Vymazat formulář</button></div>
 <div id="saveMessage" class="notice hidden"></div></div><div id="unitPickerPanel" class="panel hidden"><h2>Vyber další jednotku</h2><div class="muted">Zobrazují se pouze jednotky, které na tomto stanovišti ještě nemají zápis. Klepnutím na dlaždici rovnou otevřeš nový zápis.</div><p><strong id="pickerStationName"></strong></p><div id="unitPickerTiles" class="unit-grid"></div><div id="unitPickerEmpty" class="empty hidden">Všechny jednotky už mají na tomto stanovišti zápis.</div></div></section>
-<section id="quiz" class="page hidden"><div class="panel"><h2>Vědomostní kvíz</h2><div class="muted">Ukázková otázka pro velitele a strojníky.</div><div class="field"><label for="quizPerson">Jméno účastníka</label><input id="quizPerson" placeholder="Jméno a příjmení"></div><p><strong>Co má hodnotitel udělat, pokud při kontrole zjistí závadu?</strong></p><label class="quiz-option"><input type="radio" name="answer" value="a"> Závadu nezapisovat, pokud vozidlo stále funguje.</label><label class="quiz-option"><input type="radio" name="answer" value="b"> Závadu přesně zaznamenat do poznámky.</label><label class="quiz-option"><input type="radio" name="answer" value="c"> Počkat až na konec soutěže a sdělit ji ústně.</label><div class="actions"><button class="primary" id="checkQuiz">Vyhodnotit odpověď</button></div><div id="quizResult" class="notice hidden"></div></div></section>
+<section id="quiz" class="page hidden">
+<div id="quizOrganizer" class="panel">
+ <h2>Řízení kvízu a QR kód</h2>
+ <p class="muted">Aktivuj právě jednu jednotku. QR platí pouze pro otevřenou relaci; po uzavření už s ním nový účastník kvíz nezahájí.</p>
+ <div class="field"><label for="quizApiUrl">Adresa Google Apps Script</label><input id="quizApiUrl" value="https://script.google.com/macros/s/AKfycbyMcWJuKMguCD7Vk5cxromK8in9ga7aTD57SWffbNjwcNviZx7ckRTf2NyNuAFquG8ucw/exec"></div>
+ <div class="field"><label for="quizOrganizerPin">Organizační PIN</label><input id="quizOrganizerPin" type="password" autocomplete="current-password" placeholder="PIN nastavený v Apps Scriptu"></div>
+ <div class="field"><label for="quizActiveUnit">Aktivovat jednotku</label><select id="quizActiveUnit"></select></div>
+ <div class="actions"><button class="primary" id="quizActivate">Aktivovat jednotku a vytvořit QR</button><button class="soft" id="quizRefresh">Obnovit stav</button><button class="danger" id="quizClose">Ukončit příjem kvízů</button></div>
+ <div id="quizOrganizerStatus" class="notice">Připojení ještě nebylo ověřeno.</div>
+ <div id="quizQrPanel" class="hidden" style="text-align:center;padding:18px;border:1px solid var(--line);border-radius:14px;margin-top:16px">
+  <h3 id="quizQrTitle">QR kód</h3><div id="quizQr" style="display:flex;justify-content:center;margin:16px auto"></div>
+  <p class="muted" id="quizQrUrl" style="overflow-wrap:anywhere"></p>
+  <p><strong id="quizQrExpiry">QR je platný pouze pro aktivní relaci.</strong></p>
+  <button class="soft" id="quizPrintQr">Vytisknout QR kód</button>
+ </div>
+ <div style="margin-top:18px"><h3>Účastníci v aktuální relaci</h3><div id="quizLiveResults" class="muted">Zatím bez načtených dat.</div></div>
+</div>
+<div id="quizParticipant" class="panel hidden">
+ <h2>Vědomostní kvíz jednotky SDH</h2><div id="quizParticipantState" class="notice">Ověřuji platnost QR kódu…</div>
+ <div id="quizParticipantForm" class="hidden">
+  <div class="field"><label for="quizPerson">Jméno a příjmení</label><input id="quizPerson" autocomplete="name" placeholder="Jméno a příjmení" maxlength="100"></div>
+  <div class="field"><label for="quizRole">Role</label><select id="quizRole"><option value="">Vyber roli</option><option>Hasič</option><option>Strojník</option><option>Velitel</option></select></div>
+  <div id="quizQuestionArea"></div><div class="notice" id="quizTimer">Časový limit: 20 minut od zahájení.</div>
+  <div class="actions"><button class="primary" id="quizBegin">Zahájit kvíz (20 minut)</button><button class="primary hidden" id="quizSubmit">Odevzdat odpovědi</button></div>
+ </div>
+</div>
+</section>
 <section id="issues" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>Zaznamenané nedostatky</h2><div class="muted">Přehled zápisů označených jako drobné nebo závažné nedostatky.</div></div><button class="soft" data-goto="home">Zpět na přehled</button></div><div id="issuesList"></div><div id="issuesEmpty" class="empty hidden">Zatím nejsou zaznamenány žádné nedostatky.</div></div></section>
 <section id="edits" class="page hidden"><div class="panel"><h2>Upravit hotový zápis</h2><p class="muted">Vyber stanoviště a potom konkrétní uložený zápis jednotky. Zápis můžeš otevřít a upravit.</p><div id="editStationTiles" class="station-choice-grid"></div><div id="editRecordsPanel" class="hidden"><h3 id="editStationHeading"></h3><div id="editRecordTiles" class="unit-list"></div><div id="editRecordsEmpty" class="empty hidden">Na tomto stanovišti zatím nejsou žádné uložené zápisy.</div></div></div></section><section id="results" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>Zápisy a výsledky</h2><div class="muted">Záznamy uložené v tomto prohlížeči.</div></div><div class="actions" style="margin-top:0"><button class="soft" id="loadDemoData">Načíst testovací data</button><button class="soft" id="exportCsv">Stáhnout CSV</button></div></div><div class="notice"><strong>Testovací režim:</strong> tlačítko načte fiktivní zápisy pro všech 8 jednotek a přepíše dosavadní zápisy v tomto prohlížeči. Testovací data lze odstranit přes odkaz pro reset aplikace.</div><div class="panel" style="margin-top:18px"><h2>Export zprávy jednotky do PDF</h2><p class="muted">Každá jednotka bude mít vlastní přehled zápisů. Po kliknutí vyber v tiskovém dialogu možnost „Uložit jako PDF“.</p><div id="unitPdfExports" class="unit-grid"></div></div><div class="table-wrap"><table><thead><tr><th>Jednotka</th><th>Stanoviště</th><th>Stav</th><th>Hodnotitel</th><th>Datum</th><th>Poznámka</th></tr></thead><tbody id="resultsBody"></tbody></table></div><div id="noResults" class="empty hidden">Zatím nebyl uložen žádný zápis.</div></div></section>
 <footer>Hasičská revue · prototyp pro ověření pracovního postupu</footer>
@@ -142,7 +168,80 @@ el("saveAssessment").onclick=()=>{try{const r={unit:el("assessmentUnit").value,s
  el("clearAssessment").onclick=()=>{if(editingRecord){editingRecord=false;el("saveAssessment").textContent="Uložit zápis";el("clearAssessment").textContent="Vymazat formulář";showPage("edits");renderEditStationTiles();if(editStationSelection)renderEditRecords(stations.indexOf(editStationSelection));return}el("notes").value="";el("status").value="V pořádku";updateStatusTiles();syncReviewer();el("saveMessage").classList.add("hidden");};
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;let recognition=null;
 el("micButton").onclick=()=>{if(!SpeechRecognition){el("voiceStatus").textContent="Tento prohlížeč nepodporuje webové diktování. Použij diktování klávesnice/telefonu nebo otevři aplikaci v podporovaném prohlížeči.";return}if(recognition){recognition.stop();return}recognition=new SpeechRecognition();recognition.lang="cs-CZ";recognition.continuous=true;recognition.interimResults=true;let finalText=el("notes").value;recognition.onstart=()=>{el("micButton").textContent="■ Zastavit diktování";el("voiceStatus").textContent="Poslouchám… mluv přirozeně česky."};recognition.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)finalText+=" "+e.results[i][0].transcript;else interim+=e.results[i][0].transcript}el("notes").value=(finalText+" "+interim).trim()};recognition.onerror=e=>{el("voiceStatus").textContent="Diktování se nepodařilo ("+e.error+"). Zkontroluj oprávnění mikrofonu.";};recognition.onend=()=>{recognition=null;el("micButton").textContent="🎙 Nadiktovat hodnocení";el("voiceStatus").textContent="Diktování ukončeno. Zkontroluj přepis před uložením."};recognition.start()};
-el("checkQuiz").onclick=()=>{let a=document.querySelector('input[name="answer"]:checked');let correct=a&&a.value==="b";el("quizResult").textContent=correct?"Správně! Závadu je potřeba přesně zaznamenat do poznámky.":"Tato odpověď není správná. Správně je možnost B: závadu přesně zaznamenat do poznámky.";el("quizResult").classList.remove("hidden");};
+
+/* QR kvíz – relace se ověřuje přes Apps Script, nikoli jen podle URL. */
+const QUIZ_API_DEFAULT="https://script.google.com/macros/s/AKfycbyMcWJuKMguCD7Vk5cxromK8in9ga7aTD57SWffbNjwcNviZx7ckRTf2NyNuAFquG8ucw/exec";
+const quizUrlParams=new URLSearchParams(location.search);
+const quizTokenFromUrl=quizUrlParams.get("quizToken");
+const quizRoles=["Hasič","Strojník","Velitel"];
+let quizSession=null, quizStartedAt=0, quizTicker=null, quizAnswers={};
+function quizApiUrl(){return (el("quizApiUrl")?.value||QUIZ_API_DEFAULT).trim()}
+async function quizGet(params={}){
+ const u=new URL(quizApiUrl());Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+ const r=await fetch(u.toString(),{method:"GET",cache:"no-store"});if(!r.ok)throw new Error("Server vrátil "+r.status);return await r.json();
+}
+async function quizPost(payload){
+ const u=quizApiUrl();
+ const r=await fetch(u,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify(payload),redirect:"follow"});
+ if(!r.ok)throw new Error("Server vrátil "+r.status);return await r.json();
+}
+function quizStatus(message,isError=false){const n=el("quizOrganizerStatus");if(n){n.textContent=message;n.style.background=isError?"#fff0f0":"#eef5fb";n.style.color=isError?"#a32121":"#284b6b"}}
+function quizFillUnits(){const s=el("quizActiveUnit");if(s)s.innerHTML=units.map(u=>'<option>'+escaped(u)+'</option>').join("")}
+function quizRenderQr(url,unit){
+ const panel=el("quizQrPanel"),target=el("quizQr");panel.classList.remove("hidden");el("quizQrTitle").textContent="Aktivní QR – "+unit;el("quizQrUrl").textContent=url;target.innerHTML="";
+ if(window.QRCode){new QRCode(target,{text:url,width:260,height:260,correctLevel:QRCode.CorrectLevel.H});}
+ else{target.innerHTML='<p>Generátor QR se nenačetl. Použij odkaz níže.</p>'}
+}
+async function quizRefreshState(){
+ try{
+  const state=await quizGet({action:"state"});
+  if(state.active&&state.session){quizSession=state.session;const url=location.origin+location.pathname+"?quizToken="+encodeURIComponent(state.session.token);quizRenderQr(url,state.session.unit);quizStatus("Aktivní jednotka: "+state.session.unit+". QR je navázán na tuto relaci.");}
+  else{quizSession=null;el("quizQrPanel").classList.add("hidden");quizStatus("Momentálně není aktivní žádná jednotka.");}
+  const results=await quizGet({action:"results"});
+  const arr=results.results||[];
+  el("quizLiveResults").innerHTML=arr.length?'<div class="table-wrap"><table><thead><tr><th>Jméno</th><th>Role</th><th>Správně</th><th>Úspěšnost</th></tr></thead><tbody>'+arr.map(x=>'<tr><td>'+escaped(x.name||"")+'</td><td>'+escaped(x.role||"")+'</td><td>'+Number(x.correct||0)+' / '+Number(x.total||0)+'</td><td>'+Number(x.percentage||0)+' %</td></tr>').join("")+'</tbody></table></div>':'Zatím nikdo kvíz neodevzdal.';
+ }catch(e){quizStatus("Nepodařilo se spojit se serverem: "+e.message+". Zkontroluj nasazení Apps Scriptu a jeho oprávnění.",true)}
+}
+async function quizActivate(){
+ const pin=el("quizOrganizerPin").value.trim();if(!pin){quizStatus("Zadej organizační PIN.",true);return}
+ try{const out=await quizPost({action:"activate",pin,unit:el("quizActiveUnit").value});if(!out.ok)throw new Error(out.error||"Aktivaci server odmítl.");quizStatus("Jednotka aktivována. Vytvářím QR…");await quizRefreshState();}
+ catch(e){quizStatus("Aktivaci se nepodařilo dokončit: "+e.message,true)}
+}
+async function quizClose(){
+ const pin=el("quizOrganizerPin").value.trim();if(!pin){quizStatus("Zadej organizační PIN.",true);return}
+ try{const out=await quizPost({action:"close",pin});if(!out.ok)throw new Error(out.error||"Server odmítl uzavření.");quizStatus("Příjem kvízů byl uzavřen.");await quizRefreshState();}
+ catch(e){quizStatus("Uzavření se nepodařilo: "+e.message,true)}
+}
+async function quizLoadParticipant(){
+ el("quizOrganizer").classList.add("hidden");el("quizParticipant").classList.remove("hidden");
+ if(!quizTokenFromUrl){el("quizParticipantState").textContent="Tento odkaz neobsahuje platný QR token. Na stanovišti naskenuj aktuální QR kód.";return}
+ try{
+  const s=await quizGet({action:"validate",token:quizTokenFromUrl});
+  if(!s.ok||!s.active){el("quizParticipantState").textContent="Tento QR kód už není platný. Vrať se za hodnotitelem a naskenuj aktuální kód.";return}
+  quizSession=s.session;el("quizParticipantState").textContent="Jednotka: "+s.session.unit+". Vyplň jméno a roli; čas začne až po stisknutí Zahájit.";
+  el("quizParticipantForm").classList.remove("hidden");
+  const questions=s.questions||[];
+  el("quizQuestionArea").innerHTML=questions.map((q,i)=>'<div class="panel" style="margin:12px 0;padding:14px"><p><strong>'+(i+1)+'. '+escaped(q.question)+'</strong></p>'+q.options.map((o,j)=>'<label class="quiz-option"><input type="radio" name="quizq'+i+'" value="'+j+'"> '+escaped(o)+'</label>').join("")+'</div>').join("");
+ }catch(e){el("quizParticipantState").textContent="Kvíz se nepodařilo ověřit. Zkus načíst stránku znovu nebo požádej hodnotitele o nový QR kód."}
+}
+function quizBegin(){
+ if(!el("quizPerson").value.trim()||!el("quizRole").value){el("quizParticipantState").textContent="Vyplň jméno a vyber roli.";return}
+ quizStartedAt=Date.now();el("quizBegin").classList.add("hidden");el("quizSubmit").classList.remove("hidden");el("quizPerson").readOnly=true;el("quizRole").disabled=true;
+ if(quizTicker)clearInterval(quizTicker);
+ quizTicker=setInterval(()=>{const left=Math.max(0,1200-Math.floor((Date.now()-quizStartedAt)/1000));el("quizTimer").textContent="Zbývá "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0");if(left<=0){clearInterval(quizTicker);quizSubmit()}},1000);
+}
+async function quizSubmit(){
+ if(!quizStartedAt)return;
+ if(quizTicker)clearInterval(quizTicker);
+ const q=el("quizQuestionArea").querySelectorAll('input[type="radio"]:checked');
+ const answers=[...q].map(x=>({question:Number(x.name.replace("quizq","")),answer:Number(x.value)}));
+ el("quizSubmit").disabled=true;el("quizParticipantState").textContent="Odesílám odpovědi…";
+ try{const out=await quizPost({action:"submit",token:quizTokenFromUrl,name:el("quizPerson").value.trim(),role:el("quizRole").value,answers,durationSeconds:Math.min(1200,Math.round((Date.now()-quizStartedAt)/1000))});if(!out.ok)throw new Error(out.error||"Server odmítl odpovědi.");el("quizParticipantState").textContent="Hotovo. Kvíz byl odevzdán. Děkujeme.";el("quizParticipantForm").classList.add("hidden");}
+ catch(e){el("quizParticipantState").textContent="Odeslání se nezdařilo: "+e.message+". Nezavírej stránku a kontaktuj hodnotitele.";el("quizSubmit").disabled=false}
+}
+if(el("quizActiveUnit")){quizFillUnits();el("quizActivate").onclick=quizActivate;el("quizClose").onclick=quizClose;el("quizRefresh").onclick=quizRefreshState;el("quizPrintQr").onclick=()=>{document.body.classList.add("qr-print");window.print();setTimeout(()=>document.body.classList.remove("qr-print"),500)};el("quizBegin").onclick=quizBegin;el("quizSubmit").onclick=quizSubmit;
+ if(quizTokenFromUrl)quizLoadParticipant();else{const script=document.createElement("script");script.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";script.onload=quizRefreshState;script.onerror=()=>quizStatus("QR knihovnu se nepodařilo načíst. Zkontroluj připojení k internetu.",true);document.head.appendChild(script);}}
+
 function loadDemoData(){
  if(!confirm("Načíst 56 fiktivních testovacích zápisů? Dosavadní zápisy v tomto prohlížeči budou nahrazeny."))return;
  const statusCycle=["V pořádku","Drobné nedostatky","V pořádku","Závažné nedostatky","Drobné nedostatky","V pořádku","V pořádku"];
