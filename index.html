@@ -195,6 +195,18 @@ function quizRenderQr(url,unit){
  if(window.QRCode){new QRCode(target,{text:url,width:260,height:260,correctLevel:QRCode.CorrectLevel.H});}
  else{target.innerHTML='<p>Generátor QR se nenačetl. Použij odkaz níže.</p>'}
 }
+function quizWrongAnswers(x){
+ let raw=x.wrongAnswers??x.wrong_answers??x.errors??[];
+ if(typeof raw==="string"){try{raw=JSON.parse(raw)}catch(e){return raw.trim()?[raw.trim()]:[]}}
+ if(!Array.isArray(raw))return [];
+ return raw.map(v=>{
+  if(typeof v==="string")return v;
+  const question=v.question||v.text||v.title||"Otázka";
+  const answer=v.answer===null||v.answer===undefined?"Bez odpovědi":v.answer;
+  const correct=v.correct===undefined?"neuvedeno":v.correct;
+  return question+" — odpověď: "+answer+"; správně: "+correct;
+ }).filter(Boolean);
+}
 function quizRenderResult(x,i){
  const wrong=quizWrongAnswers(x),id="quiz-detail-"+i;
  const duration=Number(x.durationSeconds??x.duration??x.duration_seconds??0);
