@@ -96,6 +96,7 @@ const stationDetails=[
 {where:"Bahňák, u lávky výpusti",task:"Požár lesa označený páskou na protějším svahu. Požár se rychle šíří, žádat další jednotky. Spadlé vodiče VN: požádat KOPIS o vypnutí; po pěti minutách přijde potvrzení. Důraz na průzkum. Bez CAS: nasát a výstřik; s CAS: výstřik a doplnění dle volby.",needs:"Vytyčovací páska a vybavení dle scénáře.",reviewer:"Tomáš Radiměřský (Olomučany)",guarantor:"Viči",sms:"P-Pole; Olomučany, č.ev. 173, u Bahnaku, P stráně, neví rozsah"},
 {where:"Hasička Klepačov",task:"Tři testy: 15 otázek pro velitele, 15 pro strojníka a 15 pro hasiče. Časový limit 15 minut.",needs:"Konkrétní otázky a klíč odpovědí je potřeba doplnit.",reviewer:"Radar",guarantor:"Radar",sms:"ZOZ-Zaval, Blansko, Dlouhá 194, vyproštění zraněné osoby"}
 ];
+if(new URLSearchParams(location.search).get("reset")==="1"){localStorage.removeItem("hasicskaRevueRecords");localStorage.removeItem("hasicskaRevueStartStations");history.replaceState(null,"",location.pathname)}
 let selectedUnit=units[0], records=JSON.parse(localStorage.getItem("hasicskaRevueRecords")||"[]"), doneByUnit={};
 const combinedUnit="Lažánky + Horní Lhota";
 records=records.map(r=>({...r,unit:(r.unit==="Lažánky"||r.unit==="Horní Lhota")?combinedUnit:r.unit})).filter((r,i,a)=>a.findIndex(x=>x.unit===r.unit&&x.station===r.station)>i?a.lastIndexOf(r)===i:true);
