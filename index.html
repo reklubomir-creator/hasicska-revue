@@ -85,7 +85,7 @@ table{min-width:620px}th,td{padding:10px 8px}
 </main></div>
 <script>
 const stations=["Čerpání studny – Klepačov","Technický slalom – Staré Blansko","Transport osoby – kostel sv. Martina","Pohotovost na zbrojnici","Dopravní nehoda osobního auta","Záchrana tonoucího – Salmův mlýn","Požár lesního porostu – Bahňák","Kvíz – hasička Klepačov"];
-const units=["Klepačov","Olešná","Těchov","Lažánky","Horní Lhota","Obůrka","Dolní Lhota","Spešov","Olomučany"];
+const units=["Klepačov","Olešná","Těchov","Lažánky + Horní Lhota","Obůrka","Dolní Lhota","Spešov","Olomučany"];
 const stationDetails=[
 {where:"Klepačov, Na Milíři 107",task:"Vyčerpat studnu hlubokou 20 metrů vlastními prostředky. Pokud vybavení chybí, vyžádat si ho například přes KOPIS.",needs:"Stojatý ejektor, hasičská káď, plachta, vozík; bečka 1 m³ a ejektor budou pod plachtou.",reviewer:"Petr Trojan",guarantor:"Viči",sms:"TP-Čerpání; Blansko - Klepačov, Na milíři 107; zatopené podzemní prostory, přístup pouze přes kontrolní šachtu"},
 {where:"Točna pod mostem ve Starém Blansku",task:"Slalom s vozidlem (zohlednit DA/CAS), vázání savic, proudnice a koštěte, vytažení vyvázané věci na most a výměna řetězu motorové pily.",needs:"Kužely, lana, dvě savice s košem, koště, motorová pila z hasičky. Klíče: Ing. Radek Gajdošík, 516 775 150.",reviewer:"Libor Čermák",guarantor:"Standa",sms:"DN-úklid, Blansko, křižovatka Brněnská x Nádraží"},
@@ -97,8 +97,15 @@ const stationDetails=[
 {where:"Hasička Klepačov",task:"Tři testy: 15 otázek pro velitele, 15 pro strojníka a 15 pro hasiče. Časový limit 15 minut.",needs:"Konkrétní otázky a klíč odpovědí je potřeba doplnit.",reviewer:"Radar",guarantor:"Radar",sms:"ZOZ-Zaval, Blansko, Dlouhá 194, vyproštění zraněné osoby"}
 ];
 let selectedUnit=units[0], records=JSON.parse(localStorage.getItem("hasicskaRevueRecords")||"[]"), doneByUnit={};
+const combinedUnit="Lažánky + Horní Lhota";
+records=records.map(r=>({...r,unit:(r.unit==="Lažánky"||r.unit==="Horní Lhota")?combinedUnit:r.unit})).filter((r,i,a)=>a.findIndex(x=>x.unit===r.unit&&x.station===r.station)>i?a.lastIndexOf(r)===i:true);
+localStorage.setItem("hasicskaRevueRecords",JSON.stringify(records));
 const defaultStartStations=Object.fromEntries(units.map((u,i)=>[u,(i%8)+1]));
-let startStations={...defaultStartStations,...JSON.parse(localStorage.getItem("hasicskaRevueStartStations")||"{}")};
+const savedStarts=JSON.parse(localStorage.getItem("hasicskaRevueStartStations")||"{}");
+if(!savedStarts[combinedUnit])savedStarts[combinedUnit]=savedStarts["Lažánky"]||savedStarts["Horní Lhota"]||4;
+delete savedStarts["Lažánky"];delete savedStarts["Horní Lhota"];
+let startStations={...defaultStartStations,...savedStarts};
+localStorage.setItem("hasicskaRevueStartStations",JSON.stringify(startStations));
 function saveStartStations(){localStorage.setItem("hasicskaRevueStartStations",JSON.stringify(startStations))}
 function nextUnitForStation(station){const target=stations.indexOf(station)+1;if(target<1)return "";return units.filter(u=>!records.some(r=>r.unit===u&&r.station===station)).sort((a,b)=>{const da=(target-(Number(startStations[a])||1)+8)%8;const db=(target-(Number(startStations[b])||1)+8)%8;return da-db||units.indexOf(a)-units.indexOf(b)})[0]||""}
 function setAutomaticUnit(station){const next=nextUnitForStation(station);el("assessmentUnit").value=next;el("saveAssessment").disabled=!next;el("saveMessage").classList.toggle("hidden",!!next);if(!next){el("saveMessage").textContent="Všechny jednotky už mají na tomto stanovišti zápis."}return next}
