@@ -207,7 +207,13 @@ function quizWrongAnswers(x){
  let raw=x.wrongAnswers??x.wrong_answers??x.errors??[];
  if(typeof raw==="string"){try{raw=JSON.parse(raw)}catch(e){return raw.trim()?[raw.trim()]:[]}}
  if(!Array.isArray(raw))return [];
- return raw.map(v=>typeof v==="string"?v:(v.question||v.text||v.title||JSON.stringify(v))).filter(Boolean);
+ return raw.map(v=>{
+  if(typeof v==="string")return v;
+  const question=v.question||v.text||v.title||"Otázka";
+  const answer=v.answer===null||v.answer===undefined?"Bez odpovědi":v.answer;
+  const correct=v.correct===undefined?"neuvedeno":v.correct;
+  return question+" — odpověď: "+answer+"; správně: "+correct;
+ }).filter(Boolean);
 }
 function quizRenderResult(x,i){
  const evaluation=quizBuildEvaluation(x),wrong=quizWrongAnswers(x),id="quiz-detail-"+i;
