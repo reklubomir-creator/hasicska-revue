@@ -378,8 +378,8 @@ async function exportUnitPdf(unit){
   const wrong=quizWrongAnswers(x),criticalWrong=quizCriticalErrors(x),evaluation=quizBuildEvaluation(x);
   return '<section class="record quiz-record"><h2>'+esc(x.name||"Bez jména")+' – '+esc(x.role||"role neuvedena")+'</h2><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně ('+Number(x.percentage||0)+' %)</p><p><strong>'+esc(evaluation.headline)+':</strong> '+esc(evaluation.body)+'</p><p>'+esc(evaluation.advice)+'</p>'+(Number(x.durationSeconds||0)?'<p><strong>Délka kvízu:</strong> '+Math.floor(Number(x.durationSeconds)/60)+':'+String(Number(x.durationSeconds)%60).padStart(2,"0")+'</p>':'')+(criticalWrong.length?'<p class="warning"><strong>Kritická chyba – minimálně závažné nedostatky</strong></p><ul>'+criticalWrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+(wrong.length?'<h3>Chybné odpovědi</h3><ul>'+wrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+'</section>';
  }).join(""):'<p>Pro tuto jednotku zatím nejsou v systému uložené výsledky kvízu.</p>';
- const quizSummary=quizEntries.length?quizEntries.length+" účastníků, medián úspěšnosti "+quizWeightedMedian+" % (strojník a velitel mají dvojnásobnou váhu)":"Kvíz zatím bez uloženého výsledku";
  const quizCriticalEntries=quizEntries.filter(x=>quizCriticalErrors(x).length);
+ const quizSummary=quizEntries.length?quizEntries.length+" účastníků, medián úspěšnosti "+quizWeightedMedian+" % (strojník a velitel mají dvojnásobnou váhu)"+(quizCriticalEntries.length?"; kritická chyba u "+quizCriticalEntries.length+" účastníků":""):"Kvíz zatím bez uloženého výsledku";
  let quizControlStatus="Bez výsledku";
  if(quizEntries.length){
   if(quizCriticalEntries.length)quizControlStatus="Závažné nedostatky – kritická chyba";
