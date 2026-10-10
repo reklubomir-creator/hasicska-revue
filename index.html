@@ -146,6 +146,7 @@ function loadDemoData(){
  if(!confirm("Načíst 56 fiktivních testovacích zápisů? Dosavadní zápisy v tomto prohlížeči budou nahrazeny."))return;
  const statusCycle=["V pořádku","Drobné nedostatky","V pořádku","Závažné nedostatky","Drobné nedostatky","V pořádku","V pořádku"];
  const notesByStation=[
+ 
  ["Čerpání proběhlo plynule. Ejektor i hadice byly připravené, prostor kolem šachty zajištěn.","Zřízení pracoviště bez problémů. Při manipulaci s hadicí bylo nutné upozornit na volně vedenou spojku.","Jednotka zvolila vhodný postup a dodržela bezpečné odstupy. Vybavení kompletní.","Před zahájením nebyla dostatečně zajištěna hrana kontrolní šachty a jeden člen vstoupil do rizikového prostoru bez jištění. Činnost přerušena a postup znovu vysvětlen.","Drobné zdržení při přípravě ejektoru, následně úkol splněn. Doporučeno lépe rozdělit role.","Čerpání zahájeno bez prodlení, komunikace strojníka s velitelem srozumitelná.","Všechny pomůcky připraveny, průběh bezpečný a přehledný."],
  ["Jízda plynulá, kužely bez kontaktu. Vázání i manipulace s řetězem provedeny správně.","Při couvání bylo potřeba další navádění. Vázání savic po krátké opravě správně.","Posádka si dobře rozdělila úkoly, překážky projety bez dotyku.","Při manipulaci s motorovou pilou nebyla dodržena bezpečná zóna a obsluha neměla správně nasazené ochranné prostředky. Úkol zastaven.","Jeden kužel posunut nárazníkem. Ostatní úkony správně, doporučeno zpomalit při nájezdu.","Technické úkony provedeny jistě, drobná prodleva při výměně řetězu.","Slalom bez chyby, lano i příslušenství po dokončení uklizeny."],
  ["Figuranta zkontrolovali, zranění šetrně zafixovali a transport koordinovali ve třech členech.","Ošetření správné, před transportem ale chyběla závěrečná kontrola fixace ramene.","Velitel rozdělil role a průběžně komunikoval. Transport stabilní a bezpečný.","Figuranta začali přesouvat bez dostatečného zajištění poraněné končetiny a bez kontroly stavu. Hodnotitel zásah zastavil a vyžádal opakování postupu.","Při přesunu se uvolnil jeden fixační popruh. Po upozornění opraveno, další postup správný.","Dobrá spolupráce a šetrná manipulace, předání informací bylo úplné.","Zajištění figuranta i transport proběhly bez připomínek."],
@@ -164,6 +165,43 @@ function loadDemoData(){
  }));
  save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();showPage("home");
  alert("Načteno 56 fiktivních zápisů. Data jsou pouze pro vyzkoušení aplikace.");
+}
+el("loadDemoData").onclick=loadDemoData;
+el("exportCsv").onclick=()=>{let rows=[["Jednotka","Stanoviště","Stav","Hodnotitel","Datum","Poznámka"],...records.map(r=>[r.unit,r.station,r.status,r.reviewer,r.date,r.notes])];let csv="\ufeff"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");let url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));let a=document.createElement("a");a.href=url;a.download="hasicska-revue-vysledky.csv";a.click();URL.revokeObjectURL(url)};
+function renderUnitPdfExports(){const target=el("unitPdfExports");if(!target)return;target.innerHTML=units.map(u=>{const n=records.filter(r=>r.unit===u).length;return '<div class="unit-tile"><strong>'+escaped(u)+'</strong><span>'+n+' uložených zápisů</span><button type="button" class="primary" data-unit-pdf="'+escaped(u)+'">Vytvořit PDF zprávu</button></div>'}).join("");target.querySelectorAll("[data-unit-pdf]").forEach(b=>b.onclick=()=>exportUnitPdf(b.dataset.unitPdf))}
+function exportUnitPdf(unit){const entries=records.filter(r=>r.unit===unit).sort((a,b)=>stations.indexOf(a.station)-stations.indexOf(b.station));const popup=window.open("","_blank");if(!popup){alert("Pro vytvoření PDF povol v prohlížeči vyskakovací okna pro tuto stránku.");return}const esc=escaped;const body=entries.length?entries.map(r=>'<section class="record"><h2>'+esc(r.station)+'</h2><p><strong>Stav kontroly:</strong> '+esc(r.status||"—")+'</p><p><strong>Hodnotitel:</strong> '+esc(r.reviewer||"—")+'</p><p><strong>Datum a čas zápisu:</strong> '+esc(r.date||"Bez data")+' / '+esc(r.time||"čas neuveden")+'</p><p><strong>Poznámka:</strong><br>'+esc(r.notes||"Bez poznámky").replace(/\n/g,"<br>")+'</p></section>').join(""):'<p>Zatím nejsou uloženy žádné zápisy pro tuto jednotku.</p>';popup.document.write('<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Zpráva jednotky – '+esc(unit)+'</title><style>body{font:14px/1.5 Arial,sans-serif;color:#172b40;margin:28px}h1{font-size:24px;margin-bottom:4px}h2{font-size:17px;margin:0 0 10px}p{margin:5px 0}.meta{color:#555;margin-bottom:24px}.record{border:1px solid #ccd5df;border-radius:8px;padding:14px;margin:14px 0;break-inside:avoid}.print{margin:0 0 18px;padding:10px 14px;border:0;background:#102d4e;color:#fff;border-radius:6px;cursor:pointer}@media print{body{margin:12mm}.print{display:none}.record{break-inside:avoid}}</style></head><body><button class="print" onclick="window.print()">Tisknout / Uložit jako PDF</button><h1>Hasičská revue – zpráva jednotky</h1><div class="meta"><strong>'+esc(unit)+'</strong><br>Revue pro jednotky okrsku Blansko · 25. října 2026<br>Počet uložených zápisů: '+entries.length+'</div>'+body+'<script>window.onload=()=>{};<\/script></body></html>');popup.document.close();popup.focus()}
+
+renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderStations("homeStations",selectedUnit);renderStations("unitStations",selectedUnit);renderResults();renderProgress();renderStandby();
+renderUnitPdfExports();
+const savedPage=localStorage.getItem("hasicskaRevueCurrentPage");if(savedPage&&document.getElementById(savedPage)?.classList.contains("page"))showPage(savedPage);
+</script></body></html
+ ];
+ const assessedStationIndexes=stations.map((_,i)=>i).filter(i=>i!==3);
+ const demoRecords=[];
+ units.forEach((unit,ui)=>{
+  assessedStationIndexes.forEach((si,activeIndex)=>{
+   const variant=(ui*3+si*2)%7;
+   const minutes=(activeIndex*23+ui*7)%60;
+   const hour=13+Math.floor((activeIndex*23+ui*7)/60);
+   demoRecords.push({
+    unit:unit,
+    station:stations[si],
+    reviewer:stationDetails[si].reviewer,
+    status:statusCycle[variant],
+    notes:notesByStation[activeIndex][variant],
+    date:"25. 10. 2026",
+    time:String(hour).padStart(2,"0")+":"+String(minutes).padStart(2,"0")
+   });
+  });
+ });
+ if(demoRecords.length!==56 || demoRecords.some(r=>!r.unit||!r.station||!r.notes)){
+  alert("Testovací data se nepodařilo správně připravit. Původní zápisy zůstaly zachované.");
+  return;
+ }
+ records=demoRecords;
+ save();
+ renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();showPage("home");
+ alert("Načteno "+records.length+" fiktivních zápisů pro "+units.length+" jednotek. Data jsou pouze pro vyzkoušení aplikace.");
 }
 el("loadDemoData").onclick=loadDemoData;
 el("exportCsv").onclick=()=>{let rows=[["Jednotka","Stanoviště","Stav","Hodnotitel","Datum","Poznámka"],...records.map(r=>[r.unit,r.station,r.status,r.reviewer,r.date,r.notes])];let csv="\ufeff"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");let url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));let a=document.createElement("a");a.href=url;a.download="hasicska-revue-vysledky.csv";a.click();URL.revokeObjectURL(url)};
