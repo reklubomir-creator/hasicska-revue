@@ -207,6 +207,18 @@ function quizWrongAnswers(x){
   return question+" — odpověď: "+answer+"; správně: "+correct;
  }).filter(Boolean);
 }
+function quizCriticalErrors(x){
+ const raw=x.wrongAnswers??x.wrong_answers??x.errors??[];
+ let items=raw;
+ if(typeof items==="string"){try{items=JSON.parse(items)}catch(e){items=[items]}}
+ if(!Array.isArray(items))return [];
+ // Pracovní klasifikace do doby, než budou otázky v kvízu výslovně označeny.
+ const critical=/(dýchac[ií]|izolační dýchac|ochranný dýchac|zásahov(ý|é) oděv|osobní ochrann|elektrick(é|ého|ému) vedení|vysok(é|ého) napětí|elektrick(ý|ého) proud|stabilizac|zajištění vozidla|pád(ů|u)? z výš|práce ve výš|nebezpečn(á|é|ého) látk|chemick(á|é|ého) látk|uzavřen(ý|é|ém) prostor|bleskov(é|ého) povodn|flashover|backdraft|evakuac|záchran(a|ě) osoby|ohrožení života|bezprostřední ohrožení|velitel zásahu|předání velení|nouzov(ý|é) signál|tísňov(é|ého) volání|čerpadl(o|a)|vývěva|vývod|výstroj pod tlakem|tlaková láhev|tlaková hadice|přetlakov(á|é) ventilac)/i;
+ return items.filter(v=>{
+  const q=typeof v==="string"?v:[v.question,v.text,v.title,v.answer,v.correct].filter(Boolean).join(" ");
+  return critical.test(String(q));
+ }).map(v=>typeof v==="string"?v:[v.question||v.text||v.title||"Otázka", "odpověď: "+(v.answer??"Bez odpovědi")+"; správně: "+(v.correct??"neuvedeno")].join(" — "));
+}
 function quizBuildEvaluation(x){
  const pct=Math.max(0,Math.min(100,Number(x.percentage||0)));
  const correct=Number(x.correct||0),total=Number(x.total||0);
@@ -363,13 +375,15 @@ async function exportUnitPdf(unit){
  const stationEntries=entries.filter(r=>r.station!=="Kvíz – hasička Klepačov");
  const stationBody=stationEntries.length?'<div class="station-grid">'+stationEntries.map(r=>'<section class="record"><h2>'+esc(r.station)+'</h2>'+(r.station==="Kvíz – hasička Klepačov"?'':'<p><strong>Stav kontroly:</strong> '+esc(r.status||"—")+'</p>')+'<p><strong>Hodnotitel:</strong> '+esc(r.reviewer||"—")+'</p>'+(r.station==="Kvíz – hasička Klepačov"?(r.notes&&r.notes.trim()?'<p><strong>Slovní hodnocení:</strong><br>'+esc(r.notes).replace(/\n/g,"<br>")+'</p>':''):'<p><strong>Poznámka:</strong><br>'+esc(r.notes||"Bez poznámky").replace(/\n/g,"<br>")+'</p>')+'</section>').join("")+'</div>':'<p>Zatím nejsou uloženy žádné zápisy pro tuto jednotku.</p>';
  const quizBody=quizEntries.length?quizEntries.map(x=>{
-  const wrong=quizWrongAnswers(x),evaluation=quizBuildEvaluation(x);
-  return '<section class="record quiz-record"><h2>'+esc(x.name||"Bez jména")+' – '+esc(x.role||"role neuvedena")+'</h2><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně ('+Number(x.percentage||0)+' %)</p><p><strong>'+esc(evaluation.headline)+':</strong> '+esc(evaluation.body)+'</p><p>'+esc(evaluation.advice)+'</p>'+(Number(x.durationSeconds||0)?'<p><strong>Délka kvízu:</strong> '+Math.floor(Number(x.durationSeconds)/60)+':'+String(Number(x.durationSeconds)%60).padStart(2,"0")+'</p>':'')+(wrong.length?'<h3>Chybné odpovědi</h3><ul>'+wrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+'</section>';
+  const wrong=quizWrongAnswers(x),criticalWrong=quizCriticalErrors(x),evaluation=quizBuildEvaluation(x);
+  return '<section class="record quiz-record"><h2>'+esc(x.name||"Bez jména")+' – '+esc(x.role||"role neuvedena")+'</h2><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně ('+Number(x.percentage||0)+' %)</p><p><strong>'+esc(evaluation.headline)+':</strong> '+esc(evaluation.body)+'</p><p>'+esc(evaluation.advice)+'</p>'+(Number(x.durationSeconds||0)?'<p><strong>Délka kvízu:</strong> '+Math.floor(Number(x.durationSeconds)/60)+':'+String(Number(x.durationSeconds)%60).padStart(2,"0")+'</p>':'')+(criticalWrong.length?'<p class="warning"><strong>Kritická chyba – minimálně závažné nedostatky</strong></p><ul>'+criticalWrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+(wrong.length?'<h3>Chybné odpovědi</h3><ul>'+wrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+'</section>';
  }).join(""):'<p>Pro tuto jednotku zatím nejsou v systému uložené výsledky kvízu.</p>';
  const quizSummary=quizEntries.length?quizEntries.length+" účastníků, medián úspěšnosti "+quizWeightedMedian+" % (strojník a velitel mají dvojnásobnou váhu)":"Kvíz zatím bez uloženého výsledku";
+ const quizCriticalEntries=quizEntries.filter(x=>quizCriticalErrors(x).length);
  let quizControlStatus="Bez výsledku";
  if(quizEntries.length){
-  if(quizWeightedMedian>=90)quizControlStatus="V pořádku";
+  if(quizCriticalEntries.length)quizControlStatus="Závažné nedostatky – kritická chyba";
+  else if(quizWeightedMedian>=90)quizControlStatus="V pořádku";
   else if(quizWeightedMedian>=75)quizControlStatus="Drobné nedostatky";
   else quizControlStatus="Závažné nedostatky";
  }
