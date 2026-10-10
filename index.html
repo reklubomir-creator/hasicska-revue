@@ -21,19 +21,19 @@
 <div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Revizní den · pracovní prototyp</div><h1 id="pageTitle">Přehled revize</h1><div class="muted" id="pageSubtitle">Vše důležité na jednom místě.</div></div><span class="pill">● Ukázkový režim</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><h1 id="pageTitle">Přehled Hasičské revue</h1><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill">● Pracovní verze</span></header>
 <section id="home" class="page">
 <div class="cards">
-<div class="card"><div class="stat-label">Kontrolované jednotky</div><div class="stat" id="statUnits">8</div><div class="stat-label">v ukázkovém seznamu</div></div>
-<div class="card"><div class="stat-label">Dokončená stanoviště</div><div class="stat" id="statDone">3 / 8</div><div class="stat-label">pro vybranou jednotku</div></div>
-<div class="card"><div class="stat-label">Zaznamenané závady</div><div class="stat" id="statIssues">2</div><div class="stat-label">v ukázkových zápisech</div></div>
-<div class="card"><div class="stat-label">Kvíz – poslední výsledek</div><div class="stat" id="statQuiz">80 %</div><div class="stat-label">ukázkový výsledek</div></div>
+<div class="card"><div class="stat-label">Oslovené jednotky</div><div class="stat" id="statUnits">9</div><div class="stat-label">účast je třeba potvrdit</div></div>
+<div class="card"><div class="stat-label">Zapsaná stanoviště</div><div class="stat" id="statDone">0 / 8</div><div class="stat-label">pro vybranou jednotku</div></div>
+<div class="card"><div class="stat-label">Zaznamenané nedostatky</div><div class="stat" id="statIssues">0</div><div class="stat-label">v uložených zápisech</div></div>
+<div class="card"><div class="stat-label">Datum akce</div><div class="stat" style="font-size:24px">25. 10.</div><div class="stat-label">2026 · sraz ve 13:00</div></div>
 </div>
 <div class="content-grid">
 <div class="panel"><div class="panel-head"><div><h2>Jednotky</h2><div class="muted">Vyber jednotku a pokračuj v kontrole.</div></div><button class="soft" data-goto="units">Všechny jednotky</button></div><div class="unit-list" id="homeUnits"></div></div>
 <div class="panel"><div class="panel-head"><div><h2>Stanoviště</h2><div class="muted">Ukázkový kontrolní seznam</div></div></div><div class="station-grid" id="homeStations"></div></div>
 </div>
-<div class="notice">Toto je první prototyp. Zápisy se zatím ukládají pouze v tomto prohlížeči na tomto zařízení. Zatím nejsou sdílené mezi hodnotiteli.</div>
+<div class="notice"><strong>Organizační informace:</strong> 25. 10. 2026 · sraz jednotek ve 13:00 na točně pod mostem ve Starém Blansku · start ve 13:30. Přesuny mezi stanovišti bez majáků, jako při kondiční jízdě. Na stanoviště je nejvýše 20 minut + 10 minut na hodnocení.<br><br><strong>Pozor:</strong> zápisy se zatím ukládají pouze v tomto prohlížeči na tomto zařízení. Mezi hodnotiteli se nesdílejí.</div>
 </section>
 <section id="units" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>Výběr jednotky</h2><div class="muted">Zvol jednotku, pro kterou zapisuješ hodnocení.</div></div></div><div class="field"><label for="unitSelect">Hasičská jednotka</label><select id="unitSelect"></select></div><div class="station-grid" id="unitStations"></div></div></section>
 <section id="assessment" class="page hidden"><div class="panel"><h2>Hodnocení stanoviště</h2><div class="muted">Nadiktuj poznámku nebo ji napiš ručně. Před uložením zápis zkontroluj.</div>
@@ -52,8 +52,8 @@
 <footer>Hasičská revue · prototyp pro ověření pracovního postupu</footer>
 </main></div>
 <script>
-const stations=["Dokumentace a evidence","Vnější stav vozidla","Motor a pohonné ústrojí","Čerpadlo a armatury","Hadice a proudnice","Ochranné prostředky","Bezpečnostní vybavení","Závěrečné hodnocení"];
-const units=["SDH Letovice","JSDH Kunštát","SDH Boskovice","JSDH Blansko","SDH Lysice","JSDH Olešnice","SDH Svitávka","JSDH Velké Opatovice"];
+const stations=["Čerpání studny – Klepačov","Technický slalom – Staré Blansko","Transport osoby – kostel sv. Martina","Pohotovost na zbrojnici","Dopravní nehoda osobního auta","Záchrana tonoucího – Salmův mlýn","Požár lesního porostu – Bahňák","Kvíz – hasička Klepačov"];
+const units=["Klepačov","Olešná","Těchov","Lažánky","Horní Lhota","Obůrka","Dolní Lhota","Spešov","Olomučany"];
 let selectedUnit=units[0], records=JSON.parse(localStorage.getItem("hasicskaRevueRecords")||"[]"), doneByUnit={};
 function el(id){return document.getElementById(id)}
 function save(){localStorage.setItem("hasicskaRevueRecords",JSON.stringify(records))}
@@ -74,5 +74,5 @@ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition
 el("micButton").onclick=()=>{if(!SpeechRecognition){el("voiceStatus").textContent="Tento prohlížeč nepodporuje webové diktování. Použij diktování klávesnice/telefonu nebo otevři aplikaci v podporovaném prohlížeči.";return}if(recognition){recognition.stop();return}recognition=new SpeechRecognition();recognition.lang="cs-CZ";recognition.continuous=true;recognition.interimResults=true;let finalText=el("notes").value;recognition.onstart=()=>{el("micButton").textContent="■ Zastavit diktování";el("voiceStatus").textContent="Poslouchám… mluv přirozeně česky."};recognition.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)finalText+=" "+e.results[i][0].transcript;else interim+=e.results[i][0].transcript}el("notes").value=(finalText+" "+interim).trim()};recognition.onerror=e=>{el("voiceStatus").textContent="Diktování se nepodařilo ("+e.error+"). Zkontroluj oprávnění mikrofonu.";};recognition.onend=()=>{recognition=null;el("micButton").textContent="🎙 Nadiktovat hodnocení";el("voiceStatus").textContent="Diktování ukončeno. Zkontroluj přepis před uložením."};recognition.start()};
 el("checkQuiz").onclick=()=>{let a=document.querySelector('input[name="answer"]:checked');let correct=a&&a.value==="b";el("quizResult").textContent=correct?"Správně! Závadu je potřeba zaznamenat a uvést nápravné opatření.":"Tato odpověď není správná. Správně je možnost B: závadu zaznamenat a uvést nápravné opatření.";el("quizResult").classList.remove("hidden");el("statQuiz").textContent=correct?"100 %":"0 %"};
 el("exportCsv").onclick=()=>{let rows=[["Jednotka","Stanoviště","Stav","Hodnotitel","Datum","Poznámka","Nápravné opatření","Termín"],...records.map(r=>[r.unit,r.station,r.status,r.reviewer,r.date,r.notes,r.action,r.deadline])];let csv="\ufeff"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");let url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));let a=document.createElement("a");a.href=url;a.download="hasicska-revue-vysledky.csv";a.click();URL.revokeObjectURL(url)};
-renderUnits();renderStations("homeStations",selectedUnit);renderStations("unitStations",selectedUnit);renderResults();
+el("statUnits").textContent=units.length;renderUnits();renderStations("homeStations",selectedUnit);renderStations("unitStations",selectedUnit);renderResults();
 </script></body></html>
