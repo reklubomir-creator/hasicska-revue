@@ -212,6 +212,13 @@ async function quizClose(){
  try{const out=await quizPost({action:"close",pin});if(!out.ok)throw new Error(out.error||"Server odmítl uzavření.");quizStatus("Příjem kvízů byl uzavřen.");await quizRefreshState();}
  catch(e){quizStatus("Uzavření se nepodařilo: "+e.message,true)}
 }
+async function quizLoadQuestions(){
+ const role=el("quizRole").value;if(!role||!quizTokenFromUrl)return;
+ el("quizQuestionArea").innerHTML='<p class="muted">Načítám otázky…</p>';
+ try{const data=await quizGet({action:"questions",token:quizTokenFromUrl,role});if(!data.ok)throw new Error(data.error||"Otázky nejsou dostupné.");
+ el("quizQuestionArea").innerHTML=(data.questions||[]).map((q,i)=>'<div class="panel" style="margin:12px 0;padding:14px"><p><strong>'+(i+1)+'. '+escaped(q.question)+'</strong></p>'+q.options.map((o,j)=>'<label class="quiz-option"><input type="radio" name="quizq'+i+'" value="'+j+'"> '+escaped(o)+'</label>').join("")+'</div>').join("");
+ }catch(e){el("quizQuestionArea").textContent="Otázky se nepodařilo načíst. Zkus znovu vybrat roli."}
+}
 async function quizLoadParticipant(){
  el("quizOrganizer").classList.add("hidden");el("quizParticipant").classList.remove("hidden");
  if(!quizTokenFromUrl){el("quizParticipantState").textContent="Tento odkaz neobsahuje platný QR token. Na stanovišti naskenuj aktuální QR kód.";return}
@@ -220,8 +227,8 @@ async function quizLoadParticipant(){
   if(!s.ok||!s.active){el("quizParticipantState").textContent="Tento QR kód už není platný. Vrať se za hodnotitelem a naskenuj aktuální kód.";return}
   quizSession=s.session;el("quizParticipantState").textContent="Jednotka: "+s.session.unit+". Vyplň jméno a roli; čas začne až po stisknutí Zahájit.";
   el("quizParticipantForm").classList.remove("hidden");
-  const questions=s.questions||[];
-  el("quizQuestionArea").innerHTML=questions.map((q,i)=>'<div class="panel" style="margin:12px 0;padding:14px"><p><strong>'+(i+1)+'. '+escaped(q.question)+'</strong></p>'+q.options.map((o,j)=>'<label class="quiz-option"><input type="radio" name="quizq'+i+'" value="'+j+'"> '+escaped(o)+'</label>').join("")+'</div>').join("");
+  el("quizRole").onchange=quizLoadQuestions;
+  el("quizQuestionArea").innerHTML='<p class="muted">Po výběru role se načte odpovídající sada otázek.</p>';
  }catch(e){el("quizParticipantState").textContent="Kvíz se nepodařilo ověřit. Zkus načíst stránku znovu nebo požádej hodnotitele o nový QR kód."}
 }
 function quizBegin(){
