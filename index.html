@@ -330,6 +330,7 @@ async function exportUnitPdf(unit){
  const popup=window.open("","_blank");
  if(!popup){alert("Pro vytvoření PDF povol v prohlížeči vyskakovací okna pro tuto stránku.");return}
  popup.document.write('<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Připravuji zprávu jednotky</title></head><body style="font:16px Arial;padding:30px">Načítám celkové hodnocení jednotky…</body></html>');
+ try{
  const esc=escaped;
  const entries=records.filter(r=>r.unit===unit).sort((a,b)=>stations.indexOf(a.station)-stations.indexOf(b.station));
  let quizEntries=[],quizError="";
@@ -363,6 +364,11 @@ async function exportUnitPdf(unit){
  popup.document.open();
  popup.document.write('<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Zpráva jednotky – '+esc(unit)+'</title><style>@page{size:A4 landscape;margin:8mm}body{font:10px/1.25 Arial,sans-serif;color:#172b40;margin:10px}h1{font-size:17px;margin:0 0 3px}h2{font-size:12px;margin:0 0 4px}.section-title{font-size:13px;margin-top:9px;border-bottom:1px solid #102d4e;padding-bottom:3px}h3{font-size:10px;margin:4px 0 2px}p{margin:2px 0}.meta{color:#555;margin-bottom:8px}.summary{background:#f1f5f9;border:1px solid #ccd5df;border-radius:4px;padding:6px;margin:6px 0}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:5px 0}.stats div{background:#fff;border:1px solid #d8e0e8;border-radius:3px;padding:4px}.stats strong,.stats span{display:block}.stats span{font-size:9px;color:#555}.record{border:1px solid #ccd5df;border-radius:4px;padding:5px;margin:4px 0;break-inside:avoid}.station-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 8px;align-items:start}.station-grid .record{margin:3px 0}.quiz-record{border-left:3px solid #1d5688}.record ul{margin:2px 0;padding-left:14px}.record li{margin:1px 0}.warning{color:#a32121}.print{margin:0 0 8px;padding:6px 9px;border:0;background:#102d4e;color:#fff;border-radius:4px;cursor:pointer}@media print{body{margin:0}.print{display:none}.record,.summary{break-inside:avoid}.stats{grid-template-columns:repeat(4,1fr)}}</style></head><body><button class="print" onclick="window.print()">Tisknout / Uložit jako PDF</button><h1>Hasičská revue – celkové hodnocení jednotky</h1><div class="meta"><strong>'+esc(unit)+'</strong><br>Revue pro jednotky okrsku Blansko · 25. října 2026<br>Počet zápisů ze stanovišť: '+entries.length+' · Výsledky kvízu: '+quizEntries.length+'</div>'+report+'</body></html>');
  popup.document.close();popup.focus();
+ }catch(exportError){
+  popup.document.open();
+  popup.document.write("<!doctype html><html lang=\"cs\"><meta charset=\"utf-8\"><body style=\"font:15px Arial;padding:24px\"><h2>Export PDF se nepodařilo připravit</h2><p>"+String(exportError&&exportError.message||exportError).replace(/[&<>]/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[ch]})+"</p></body></html>");
+  popup.document.close();
+ }
 }
 
 renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderStations("homeStations",selectedUnit);renderStations("unitStations",selectedUnit);renderResults();renderProgress();renderStandby();
