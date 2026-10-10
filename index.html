@@ -285,7 +285,7 @@ function loadDemoData(){
  ["Zajištění místa nehody přehledné, velitel rozdělil úkoly a posádka správně komunikovala.","Označení prostoru bylo zřízeno, ale jedna část zóny zůstala krátce nezajištěná.","Průzkum a rozdělení rolí odpovídaly situaci. Na figuranty se nezapomnělo.","Členové vstoupili do neoznačeného prostoru před zajištěním provozu; nebyla stanovena bezpečná zóna. Simulace přerušena.","Třetí figurant byl prvotně opomenut. Po upozornění byl dohledán a ošetřen.","Komunikace s velitelem dobrá, postup u všech tří figurantů koordinovaný.","Bezpečné zajištění místa, přehledný průzkum a správné rozdělení úkolů."],
  ["Záchrana figuríny provedena bezpečně, následná KPR i práce s AED proběhly ve správném pořadí.","Záchrana proběhla dobře, při KPR bylo nutné připomenout nepřerušovanou kompresi.","Zajištění zachránce i vytažení figuríny bylo bezpečné. Tým navázal plynule KPR.","Záchranář vstoupil do vody bez zajištění a tým nezvolil bezpečný způsob vytažení. Cvičení přerušeno a postup vysvětlen.","AED připraven správně, ale elektrody byly přiloženy až po zbytečné prodlevě.","Postup u vody bezpečný, střídání při KPR organizované a komunikace jasná.","Všechny úkony provedeny bez připomínek, včetně kontroly okolí."],
  ["Průzkum zahrnul směr šíření, posádka správně upozornila na vodiče VN a požádala o potvrzení vypnutí.","Požár lokalizován, ale hlášení o možném šíření bylo předáno se zpožděním.","Velitel správně vyhodnotil rizika, vyžádal posily a určil bezpečné sektory.","Jednotka zahájila přiblížení k označeným vodičům bez potvrzení bezpečného stavu. Zásah zastaven, riziko znovu vysvětleno.","Rozvinutí vedení v pořádku, drobná nepřesnost v předání informace o rozsahu požáru.","Dobrá souhra při rozvinutí vedení a průběžném hlášení veliteli.","Bezpečné vyhodnocení místa a přiměřený postup podle dostupného vybavení."],
- ["Tým odpovídal věcně, velitel i strojník prokázali dobrou orientaci v postupech.","Většina odpovědí správně, u jedné otázky bylo třeba upřesnit postup při závadě.","Odpovědi byly rychlé a věcné, členové si rozdělili otázky bez zmatků.","U bezpečnostní otázky byl navržen nebezpečný postup a tým nedokázal určit správné řešení ani po doplňující otázce.","Několik odpovědí bylo neúplných, doporučeno zopakovat postupy pro práci s technikou.","Dobrá znalost základních postupů, pouze drobná nepřesnost v terminologii.","Kvíz vyplněn v limitu, odpovědi přesné a zdůvodněné."]
+ ["Tým odpovídal věcně, velitel i strojník prokázali dobrou orientaci v postupech.","Většina odpovědí správně, u jedné otázky bylo třeba upřesnit postup při závadě.","Odpovědi byly rychlé a věcné, členové si rozdělili otázky bez zmatků.","U bezpečnostní otázky byl navržen nebezpečný postup a tým nedokázal určit správné řešení ani po doplňující otázce.","Několik odpovědí bylo neúplných, doporučeno zopakovat postupy pro práci s technikou.","Dobrá znalost základních postupů, pouze drobná nepřesnost v terminologii.",""]
  ];
  const demoVersion=Number(localStorage.getItem("hasicskaRevueDemoVersion")||0);
  const targetDefects=16+(demoVersion%5)*4;
@@ -299,10 +299,10 @@ function loadDemoData(){
    : goodVariants[(generatedIndex+ui+si)%goodVariants.length];
   const minutes=(si*23+ui*7)%60;
   const hour=13+Math.floor((si*23+ui*7)/60);
-  demoRecords.push({unit,station,reviewer:stationDetails[si].reviewer,status:statusCycle[variant],notes:notesByStation[si<3?si:si-1][variant],date:"25. 10. 2026",time:String(hour).padStart(2,"0")+":"+String(minutes).padStart(2,"0")});
+  demoRecords.push({unit,station,reviewer:stationDetails[si].reviewer,status:statusCycle[variant],notes:si===7?"":notesByStation[si<3?si:si-1][variant],date:"25. 10. 2026",time:String(hour).padStart(2,"0")+":"+String(minutes).padStart(2,"0")});
   generatedIndex++;
  }));
- if(demoRecords.length!==56||demoRecords.filter(r=>r.status!=="V pořádku").length!==targetDefects||demoRecords.some(r=>!r.unit||!r.station||!r.notes)){
+ if(demoRecords.length!==56||demoRecords.filter(r=>r.status!=="V pořádku").length!==targetDefects||demoRecords.some(r=>!r.unit||!r.station||(r.station!=="Kvíz – hasička Klepačov"&&!r.notes))){
   alert("Testovací data se nepodařilo správně připravit. Původní zápisy zůstaly zachované.");
   return;
  }
