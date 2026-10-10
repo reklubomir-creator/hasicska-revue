@@ -192,6 +192,28 @@ function quizRenderQr(url,unit){
  if(window.QRCode){new QRCode(target,{text:url,width:260,height:260,correctLevel:QRCode.CorrectLevel.H});}
  else{target.innerHTML='<p>Generátor QR se nenačetl. Použij odkaz níže.</p>'}
 }
+function quizBuildEvaluation(x){
+ const pct=Math.max(0,Math.min(100,Number(x.percentage||0)));
+ const correct=Number(x.correct||0),total=Number(x.total||0);
+ let headline,body,advice;
+ if(pct>=90){headline="Výborný výsledek";body="Účastník prokázal velmi dobrou orientaci v ověřovaných znalostech a většinu otázek zodpověděl správně.";advice="Doporučení: udržovat znalosti průběžným opakováním a předávat správné postupy ostatním členům jednotky.";}
+ else if(pct>=75){headline="Velmi dobrý výsledek";body="Účastník prokázal dobrou znalost témat kvízu. V odpovědích se objevily jen dílčí mezery.";advice="Doporučení: zopakovat otázky, ve kterých došlo k chybě, a upevnit související postupy.";}
+ else if(pct>=60){headline="Dobrý základ, prostor ke zlepšení";body="Účastník zvládl podstatnou část otázek, ale výsledek ukazuje na několik oblastí, které je vhodné upevnit.";advice="Doporučení: projít chybné odpovědi a cíleně zopakovat související pravidla a bezpečné pracovní postupy.";}
+ else if(pct>=40){headline="Znalosti je potřeba doplnit";body="Výsledek ukazuje na výraznější mezery v ověřovaných znalostech. Je vhodné věnovat opakování více času.";advice="Doporučení: projít otázky znovu s hodnotitelem nebo velitelem a ověřit porozumění správným postupům.";}
+ else{headline="Doporučeno důkladné opakování";body="Výsledek ukazuje na významné mezery v ověřovaných znalostech. Doporučuje se cílené zopakování témat před další prověrkou.";advice="Doporučení: projít správná řešení s velitelem či instruktorem a následně znalosti znovu ověřit.";}
+ return {headline,body,advice,score:total?correct+" správně z "+total+" otázek ("+pct+" %)":"Údaje o počtu otázek nejsou k dispozici."};
+}
+function quizWrongAnswers(x){
+ let raw=x.wrongAnswers??x.wrong_answers??x.errors??[];
+ if(typeof raw==="string"){try{raw=JSON.parse(raw)}catch(e){return raw.trim()?[raw.trim()]:[]}}
+ if(!Array.isArray(raw))return [];
+ return raw.map(v=>typeof v==="string"?v:(v.question||v.text||v.title||JSON.stringify(v))).filter(Boolean);
+}
+function quizRenderResult(x,i){
+ const evaluation=quizBuildEvaluation(x),wrong=quizWrongAnswers(x),id="quiz-detail-"+i;
+ const duration=Number(x.durationSeconds??x.duration??x.duration_seconds??0);
+ return '<article class="panel" style="margin:10px 0;padding:16px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">'+escaped(x.name||"Bez jména")+'</h3><div class="muted">'+escaped(x.role||"Role neuvedena")+(x.unit?' · '+escaped(x.unit):'')+'</div></div><div style="font-weight:800;font-size:20px;color:var(--navy)">'+Number(x.percentage||0)+' %</div></div><div class="progress"><span style="width:'+Math.max(0,Math.min(100,Number(x.percentage||0)))+'%"></span></div><p style="margin:8px 0 12px"><strong>'+Number(x.correct||0)+' / '+Number(x.total||0)+' správně</strong>'+(duration?' · Čas: '+Math.floor(duration/60)+':'+String(duration%60).padStart(2,"0"):'')+'</p><button type="button" class="soft" data-quiz-detail="'+i+'">Detail výsledku a slovní hodnocení</button><div id="'+id+'" class="hidden" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)"><h3 style="margin:0 0 6px">'+escaped(evaluation.headline)+'</h3><p>'+escaped(evaluation.body)+'</p><p><strong>Výsledek:</strong> '+escaped(evaluation.score)+'</p><p><strong>Doporučení:</strong> '+escaped(evaluation.advice)+'</p>'+(wrong.length?'<h4>Chybné odpovědi</h4><ul>'+wrong.map(w=>'<li>'+escaped(w)+'</li>').join("")+'</ul>':'<p class="muted">Podrobný seznam chybných odpovědí server v tuto chvíli neposkytuje; slovní hodnocení je vytvořeno podle celkové úspěšnosti.</p>')+'<button type="button" class="soft" data-copy-evaluation="'+i+'">Zkopírovat slovní hodnocení</button></div></article>';
+}
 async function quizRefreshState(){
  try{
   const state=await quizGet({action:"state"});
@@ -199,7 +221,10 @@ async function quizRefreshState(){
   else{quizSession=null;el("quizQrPanel").classList.add("hidden");quizStatus("Momentálně není aktivní žádná jednotka.");}
   const results=await quizGet({action:"results"});
   const arr=results.results||[];
-  el("quizLiveResults").innerHTML=arr.length?'<div class="table-wrap"><table><thead><tr><th>Jméno</th><th>Role</th><th>Správně</th><th>Úspěšnost</th></tr></thead><tbody>'+arr.map(x=>'<tr><td>'+escaped(x.name||"")+'</td><td>'+escaped(x.role||"")+'</td><td>'+Number(x.correct||0)+' / '+Number(x.total||0)+'</td><td>'+Number(x.percentage||0)+' %</td></tr>').join("")+'</tbody></table></div>':'Zatím nikdo kvíz neodevzdal.';
+  el("quizLiveResults").innerHTML=arr.length?'<div class="quiz-result-list">'+arr.map((x,i)=>quizRenderResult(x,i)).join("")+'</div>':'<div class="empty">Zatím nikdo kvíz neodevzdal.</div>';
+  el("quizLiveResults").querySelectorAll("[data-quiz-detail]").forEach(b=>b.onclick=()=>{const d=el("quiz-detail-"+b.dataset.quizDetail);if(!d)return;const opening=d.classList.contains("hidden");d.classList.toggle("hidden");b.textContent=opening?"Skrýt detail":"Detail výsledku a slovní hodnocení";});
+  el("quizLiveResults").querySelectorAll("[data-copy-evaluation]").forEach(b=>b.onclick=()=>{const x=arr[Number(b.dataset.copyEvaluation)];if(!x)return;const e=quizBuildEvaluation(x);const text="Hodnocení kvízu – "+(x.name||"Bez jména")+" ("+(x.role||"role neuvedena")+")\n"+e.headline+"\n"+e.body+"\nVýsledek: "+e.score+"\nDoporučení: "+e.advice; if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>{b.textContent="Zkopírováno"}).catch(()=>alert(text));else alert(text);});
+
  }catch(e){quizStatus("Nepodařilo se spojit se serverem: "+e.message+". Zkontroluj nasazení Apps Scriptu a jeho oprávnění.",true)}
 }
 async function quizActivate(){
