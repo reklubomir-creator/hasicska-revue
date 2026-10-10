@@ -128,8 +128,8 @@ if(new URLSearchParams(location.search).get("reset")==="1"){localStorage.removeI
 let selectedUnit=units[0], records=JSON.parse(localStorage.getItem("hasicskaRevueRecords")||"[]"), doneByUnit={}, editingRecord=false, editStationSelection="";
 const combinedUnit="Lažánky + Horní Lhota";
 records=records.map(r=>({...r,unit:(r.unit==="Lažánky"||r.unit==="Horní Lhota")?combinedUnit:r.unit})).filter((r,i,a)=>a.findIndex(x=>x.unit===r.unit&&x.station===r.station)>i?a.lastIndexOf(r)===i:true);
-// Vyčistit uložená hodnocení všech stanovišť kromě kvízu; výsledky kvízu na serveru zůstávají nedotčené.
-records=records.filter(r=>r.station==="Kvíz – hasička Klepačov");
+// Vyčistit všechna uložená hodnocení stanovišť včetně kvízu; výsledky kvízu na serveru zůstávají nedotčené.
+records=[];
 localStorage.setItem("hasicskaRevueRecords",JSON.stringify(records));
 const defaultStartStations=Object.fromEntries(units.map((u,i)=>[u,(i%8)+1]));
 const savedStarts=JSON.parse(localStorage.getItem("hasicskaRevueStartStations")||"{}");
