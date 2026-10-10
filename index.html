@@ -175,6 +175,7 @@ const quizUrlParams=new URLSearchParams(location.search);
 const quizTokenFromUrl=quizUrlParams.get("quizToken");
 const quizRoles=["Hasič","Strojník","Velitel"];
 let quizSession=null, quizStartedAt=0, quizTicker=null, quizAnswers={};
+let quizResultsCache=[]; // Poslední úspěšně načtené výsledky z Apps Scriptu.
 function quizApiUrl(){return (el("quizApiUrl")?.value||QUIZ_API_DEFAULT).trim()}
 async function quizGet(params={}){
  const u=new URL(quizApiUrl());Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
@@ -227,6 +228,8 @@ async function quizRefreshState(){
   else{quizSession=null;el("quizQrPanel").classList.add("hidden");quizStatus("Momentálně není aktivní žádná jednotka.");}
   const results=await quizGet({action:"results"});
   const arr=results.results||[];
+  quizResultsCache=arr;
+  try{localStorage.setItem("hasicskaRevueQuizResultsCache",JSON.stringify(arr));}catch(storageError){}
   el("quizLiveResults").innerHTML=arr.length?'<div class="quiz-result-list">'+arr.map((x,i)=>quizRenderResult(x,i)).join("")+'</div>':'<div class="empty">Zatím nikdo kvíz neodevzdal.</div>';
   el("quizLiveResults").querySelectorAll("[data-quiz-detail]").forEach(b=>b.onclick=()=>{const d=el("quiz-detail-"+b.dataset.quizDetail);if(!d)return;const opening=d.classList.contains("hidden");d.classList.toggle("hidden");b.textContent=opening?"Skrýt detail":"Detail výsledku a slovní hodnocení";});
   el("quizLiveResults").querySelectorAll("[data-copy-evaluation]").forEach(b=>b.onclick=()=>{const x=arr[Number(b.dataset.copyEvaluation)];if(!x)return;const e=quizBuildEvaluation(x);const text="Hodnocení kvízu – "+(x.name||"Bez jména")+" ("+(x.role||"role neuvedena")+")\n"+e.headline+"\n"+e.body+"\nVýsledek: "+e.score+"\nDoporučení: "+e.advice; if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>{b.textContent="Zkopírováno"}).catch(()=>alert(text));else alert(text);});
@@ -329,11 +332,13 @@ async function exportUnitPdf(unit){
  const entries=records.filter(r=>r.unit===unit).sort((a,b)=>stations.indexOf(a.station)-stations.indexOf(b.station));
  let quizEntries=[],quizError="";
  try{
-  const response=await fetch(QUIZ_API_DEFAULT+"?action=results&t="+Date.now(),{method:"GET",cache:"no-store"});
-  if(!response.ok)throw new Error("HTTP "+response.status);
-  const data=await response.json();
-  quizEntries=(data.results||[]).filter(x=>String(x.unit||"").trim()===unit);
- }catch(err){quizError="Výsledky kvízu se nepodařilo načíst ("+String(err.message||err)+"). Zkontroluj připojení k Apps Scriptu a vytvoř PDF znovu."}
+  // PDF používá stejná data, která aplikace načetla do přehledu kvízu.
+  // Nedělá druhý nezávislý požadavek na Apps Script, který může selhat kvůli přesměrování/CORS.
+  if(!quizResultsCache.length){
+   try{quizResultsCache=JSON.parse(localStorage.getItem("hasicskaRevueQuizResultsCache")||"[]")}catch(storageError){quizResultsCache=[]}
+  }
+  quizEntries=quizResultsCache.filter(x=>String(x.unit||"").trim()===unit);
+ }catch(err){quizError="Uložené výsledky kvízu se nepodařilo načíst: "+String(err.message||err)}
  const good=entries.filter(r=>r.status==="V pořádku").length;
  const minor=entries.filter(r=>r.status==="Drobné nedostatky").length;
  const major=entries.filter(r=>r.status==="Závažné nedostatky").length;
