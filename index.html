@@ -207,6 +207,17 @@ function quizWrongAnswers(x){
   return question+" — odpověď: "+answer+"; správně: "+correct;
  }).filter(Boolean);
 }
+function quizBuildEvaluation(x){
+ const pct=Math.max(0,Math.min(100,Number(x.percentage||0)));
+ const correct=Number(x.correct||0),total=Number(x.total||0);
+ let headline,body,advice;
+ if(pct>=90){headline="Výborný výsledek";body="Účastník prokázal velmi dobrou orientaci v ověřovaných znalostech a většinu otázek zodpověděl správně.";advice="Doporučení: udržovat znalosti průběžným opakováním a předávat správné postupy ostatním členům jednotky.";}
+ else if(pct>=75){headline="Velmi dobrý výsledek";body="Účastník prokázal dobrou znalost témat kvízu. V odpovědích se objevily jen dílčí mezery.";advice="Doporučení: zopakovat otázky, ve kterých došlo k chybě, a upevnit související postupy.";}
+ else if(pct>=60){headline="Dobrý základ, prostor ke zlepšení";body="Účastník zvládl podstatnou část otázek, ale výsledek ukazuje na několik oblastí, které je vhodné upevnit.";advice="Doporučení: projít chybné odpovědi a cíleně zopakovat související pravidla a bezpečné pracovní postupy.";}
+ else if(pct>=40){headline="Znalosti je potřeba doplnit";body="Výsledek ukazuje na výraznější mezery v ověřovaných znalostech. Je vhodné věnovat opakování více času.";advice="Doporučení: projít otázky znovu s hodnotitelem nebo velitelem a ověřit porozumění správným postupům.";}
+ else{headline="Doporučeno důkladné opakování";body="Výsledek ukazuje na významné mezery v ověřovaných znalostech. Doporučuje se cílené zopakování témat před další prověrkou.";advice="Doporučení: projít správná řešení s velitelem či instruktorem a následně znalosti znovu ověřit.";}
+ return {headline,body,advice,score:total?correct+" správně z "+total+" otázek ("+pct+" %)":"Údaje o počtu otázek nejsou k dispozici."};
+}
 function quizRenderResult(x,i){
  const wrong=quizWrongAnswers(x),id="quiz-detail-"+i;
  const duration=Number(x.durationSeconds??x.duration??x.duration_seconds??0);
@@ -343,8 +354,8 @@ async function exportUnitPdf(unit){
  else overall="Zatím nejsou k dispozici zápisy ze stanovišť.";
  const stationBody=entries.length?entries.map(r=>'<section class="record"><h2>'+esc(r.station)+'</h2>'+(r.station==="Kvíz – hasička Klepačov"?'':'<p><strong>Stav kontroly:</strong> '+esc(r.status||"—")+'</p>')+'<p><strong>Hodnotitel:</strong> '+esc(r.reviewer||"—")+'</p>'+(r.station==="Kvíz – hasička Klepačov"?(r.notes&&r.notes.trim()?'<p><strong>Slovní hodnocení:</strong><br>'+esc(r.notes).replace(/\n/g,"<br>")+'</p>':''):'<p><strong>Poznámka:</strong><br>'+esc(r.notes||"Bez poznámky").replace(/\n/g,"<br>")+'</p>')+'</section>').join(""):'<p>Zatím nejsou uloženy žádné zápisy pro tuto jednotku.</p>';
  const quizBody=quizEntries.length?quizEntries.map(x=>{
-  const wrong=quizWrongAnswers(x);
-  return '<section class="record quiz-record"><h2>'+esc(x.name||"Bez jména")+' – '+esc(x.role||"role neuvedena")+'</h2><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně ('+Number(x.percentage||0)+' %)</p>'+(Number(x.durationSeconds||0)?'<p><strong>Délka kvízu:</strong> '+Math.floor(Number(x.durationSeconds)/60)+':'+String(Number(x.durationSeconds)%60).padStart(2,"0")+'</p>':'')+(wrong.length?'<h3>Chybné odpovědi</h3><ul>'+wrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+'</section>';
+  const wrong=quizWrongAnswers(x),evaluation=quizBuildEvaluation(x);
+  return '<section class="record quiz-record"><h2>'+esc(x.name||"Bez jména")+' – '+esc(x.role||"role neuvedena")+'</h2><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně ('+Number(x.percentage||0)+' %)</p><p><strong>'+esc(evaluation.headline)+':</strong> '+esc(evaluation.body)+'</p><p>'+esc(evaluation.advice)+'</p>'+(Number(x.durationSeconds||0)?'<p><strong>Délka kvízu:</strong> '+Math.floor(Number(x.durationSeconds)/60)+':'+String(Number(x.durationSeconds)%60).padStart(2,"0")+'</p>':'')+(wrong.length?'<h3>Chybné odpovědi</h3><ul>'+wrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+'</section>';
  }).join(""):'<p>Pro tuto jednotku zatím nejsou v systému uložené výsledky kvízu.</p>';
  const quizSummary=quizEntries.length?quizEntries.length+" účastníků, průměrná úspěšnost "+quizAvg+" %":"Kvíz zatím bez uloženého výsledku";
  const report='<div class="summary"><h2>Celkové hodnocení jednotky</h2><p><strong>Stav:</strong> '+esc(overall)+'</p><div class="stats"><div><strong>'+entries.length+' / 7</strong><span>vyhodnocených stanovišť</span></div><div><strong>'+good+'</strong><span>bez nedostatků</span></div><div><strong>'+minor+'</strong><span>drobné nedostatky</span></div><div><strong>'+major+'</strong><span>závažné nedostatky</span></div></div><p><strong>Chybějící zápisy:</strong> '+esc(missing.length?missing.join(", "):"Žádné")+'</p><p><strong>Vědomostní kvíz:</strong> '+esc(quizSummary)+'</p>'+(quizError?'<p class="warning">'+esc(quizError)+'</p>':'')+'</div><h2 class="section-title">Kontrola stanovišť</h2>'+stationBody+'<h2 class="section-title">Vědomostní kvíz – výsledky</h2>'+quizBody;
