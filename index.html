@@ -504,11 +504,16 @@ function loadProgressDemoData(){
   ["Jednotka správně vyhodnotila směr šíření požáru a zvolila bezpečný postup. Rozdělení rolí i vedení zásahu bylo přehledné.","Při rozvinutí vedení vznikla krátká prodleva a bylo nutné upřesnit postavení jednoho člena. Následně zásah pokračoval bezpečně.","Komunikace při simulovaném požáru byla dobrá. Doporučuje se zrychlit přípravu vedení, aniž by se omezila kontrola bezpečnosti."],
   ["Kvíz prověřil znalosti jednotky z požární ochrany a průběhu revue. Členové spolupracovali a své odpovědi společně zdůvodňovali.","Jednotka zvládla část otázek správně, u několika témat bylo potřeba diskutovat postupy a bezpečnostní zásady. Doporučeno zopakovat probírané předpisy.","Kvíz ukázal dobrou orientaci v základních tématech, ale také několik oblastí k procvičení. Doporučuje se krátké společné opakování před další akcí."]
  ];
+ // Každá jednotka začíná kolem 13:30 a mezi navazujícími stanovišti
+ // uběhne realisticky 20–35 minut. Časy se odvíjejí od trasy konkrétní jednotky.
+ const startOffsets=units.map((_,ui)=>ui*2);
+ const elapsedByUnit=Object.fromEntries(units.map((unit,ui)=>[unit,startOffsets[ui]]));
  for(let round=0;round<rounds;round++){
   units.forEach((unit,ui)=>{
    const route=routeForUnit(unit),stationNumber=route[round],si=stationNumber-1;
    if(si===3)return;
-   const minute=base+round*30+ui*2;
+   if(round>0)elapsedByUnit[unit]+=20+((scenario*7+ui*3+round*5)%16);
+   const minute=base+elapsedByUnit[unit];
    const variants=narrativeByStation[si],note=variants[(scenario+ui+round)%variants.length];
    demoRecords.push({unit,station:stations[si],reviewer:stationDetails[si].reviewer,status:statusCycle[(ui+round+scenario)%statusCycle.length],notes:note,date:"25. 10. 2026",time:String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0")});
   });
