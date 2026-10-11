@@ -485,7 +485,7 @@ function loadDemoData(){
  }
  records=demoRecords;
  localStorage.setItem("hasicskaRevueDemoVersion",String(demoVersion+1));
- save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();showPage("results");
+ save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();
  alert("Načteno 56 fiktivních zápisů, z toho "+targetDefects+" se závadami. Při dalším načtení se počet závad změní. Data jsou pouze pro vyzkoušení aplikace.");
 }
 function loadProgressDemoData(){
@@ -501,7 +501,7 @@ function loadProgressDemoData(){
    demoRecords.push({unit,station:stations[si],reviewer:stationDetails[si].reviewer,status:statusCycle[(ui+round)%statusCycle.length],notes:"TESTOVACÍ ZÁPIS – revue právě probíhá. Zápis představuje uzavřené stanoviště v průběžném scénáři.",date:"25. 10. 2026",time:String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0")});
   });
  }
- records=demoRecords;save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();showPage("home");
+ records=demoRecords;save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();
  alert("Načteno "+demoRecords.length+" fiktivních zápisů podle aktuálního rozlosování a tras. Jednotky mají nejvýše jedno stanoviště v každém kole; pohotovost se nepočítá jako stanoviště.");
 }
 el("loadDemoData").onclick=loadDemoData;
