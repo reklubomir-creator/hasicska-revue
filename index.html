@@ -132,7 +132,34 @@ table{min-width:620px}th,td{padding:10px 8px}
 .main{padding-left:8px;padding-right:8px}
 .brand{font-size:15px}
 }
-.readme-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}.readme-bar strong{font-size:15px;color:var(--navy)}.readme-panel.is-collapsed{padding:8px 12px!important;border-width:1px!important;background:#edf5fc!important}.readme-panel.is-collapsed #readmeContent{display:none}.readme-panel.is-collapsed .readme-bar button{padding:5px 11px;min-height:30px}.readme-panel.is-collapsed .readme-bar strong{font-size:13px}.qr-code canvas,.qr-code img{max-width:100%;height:auto}@media print{body.qr-print *{visibility:hidden!important}body.qr-print #quizQrPanel,body.qr-print #quizQrPanel *{visibility:visible!important}body.qr-print #quizQrPanel{position:absolute;left:0;top:0;width:100%;border:0!important}}</style>
+.readme-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}.readme-bar strong{font-size:15px;color:var(--navy)}.readme-panel.is-collapsed{padding:8px 12px!important;border-width:1px!important;background:#edf5fc!important}.readme-panel.is-collapsed #readmeContent{display:none}.readme-panel.is-collapsed .readme-bar button{padding:5px 11px;min-height:30px}.readme-panel.is-collapsed .readme-bar strong{font-size:13px}.qr-code canvas,.qr-code img{max-width:100%;height:auto}@media print{body.qr-print *{visibility:hidden!important}body.qr-print #quizQrPanel,body.qr-print #quizQrPanel *{visibility:visible!important}body.qr-print #quizQrPanel{position:absolute;left:0;top:0;width:100%;border:0!important}}
+/* Finální oprava mobilního viewportu a automatického přizpůsobení dlaždic */
+*,*::before,*::after{box-sizing:border-box}
+html{width:100%;max-width:100%;overflow-x:clip;-webkit-text-size-adjust:100%}
+body{width:100%;max-width:100%;margin:0;overflow-x:clip}
+.layout{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}
+.main{width:100%;min-width:0;max-width:100%;margin:0;padding-left:clamp(8px,2.5vw,30px);padding-right:clamp(8px,2.5vw,30px)}
+.page,.panel,.panel-head,.content-grid,.cards,.unit-grid,.station-choice-grid,#assessment,#assessment .panel,#assessment .field,#assessment .actions{min-width:0;max-width:100%}
+.cards,.unit-grid,.station-choice-grid,.page .unit-grid,.page .station-choice-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.station-choice-grid{grid-template-columns:minmax(0,1fr)!important;width:100%}
+.station-choice{min-width:0;max-width:100%;width:100%;overflow-wrap:anywhere}
+.status-tiles,#assessment .status-tiles{display:grid;width:100%;min-width:0;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:clamp(4px,1.5vw,8px)}
+.status-tile,#assessment .status-tile{width:100%;min-width:0;max-width:100%;aspect-ratio:1/1;overflow-wrap:anywhere;word-break:normal;padding:clamp(3px,1.2vw,8px);font-size:clamp(10px,3vw,15px)}
+img,canvas,svg,video,iframe{max-width:100%}
+input,select,textarea,button{max-width:100%;min-width:0}
+@media(max-width:600px){
+ .layout{grid-template-columns:minmax(0,1fr)}
+ .main{padding:12px 8px}
+ .top{min-width:0;max-width:100%;flex-wrap:wrap;gap:8px}
+ .top>div{min-width:0;max-width:100%}
+ .cards,.unit-grid,.page .unit-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr))}
+ #assessment .panel{padding:12px}
+ #assessment .status-tiles{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ #assessment .status-tile{font-size:clamp(10px,3.1vw,13px);padding:3px}
+ #assessment .actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+</style>
 </head>
 <body>
 <div class="layout">
