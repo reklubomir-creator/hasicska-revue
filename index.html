@@ -300,7 +300,7 @@ function save(){localStorage.setItem("hasicskaRevueRecords",JSON.stringify(recor
 function escaped(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function fillSelect(id,values){el(id).innerHTML=values.map(v=>'<option>'+escaped(v)+'</option>').join("")}
 function unitDone(unit){return new Set(records.filter(r=>r.unit===unit).map(r=>r.station)).size}
-function renderUnits(){const cells=[...units.slice(0,4),{center:true},...units.slice(4)];el("homeUnits").innerHTML=cells.map((item,i)=>{if(item.center)return '<div class="unit unit-center"><div class="center-icon">🚒</div><strong>Hasičská revue</strong><small class="center-caption">Jednotky spolu. Osm stanovišť. Jeden cíl.</small></div>';const u=item,n=unitDone(u);return '<div class="unit"><strong>'+escaped(u)+'</strong><small>'+n+' / 8 stanovišť</small><div class="progress"><span style="width:'+(n/8*100)+'%"></span></div></div>'}).join("")}
+function renderUnits(){const cells=[...units.slice(0,4),{center:true},...units.slice(4)];el("homeUnits").innerHTML=cells.map((item,i)=>{if(item.center)return '<div class="unit unit-center"><div class="center-icon">🚒</div><strong>Hasičská revue</strong><small class="center-caption">Jednotky spolu. Osm stanovišť. Jeden cíl.</small></div>';const u=item,done=records.filter(r=>r.unit===u&&r.station!==stations[3]).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.time||"").localeCompare(a.time||"")),n=unitDone(u),last=done[0];return '<div class="unit"><strong>'+escaped(u)+'</strong><small>'+n+' / 7 stanovišť</small><small class="muted">Poslední uzavřené místo: '+escaped(last?last.station:"zatím žádné")+'</small><div class="progress"><span style="width:'+(n/7*100)+'%"></span></div></div>'}).join("")}
 function renderHomeStations(){el("homeStations").innerHTML=stations.map((s,i)=>{const d=stationDetails[i];return '<div class="station"><div class="num">STANOVIŠTĚ '+String(i+1).padStart(2,"0")+'</div><h3>'+escaped(s)+'</h3><div class="muted" style="font-size:12px;margin:4px 0 8px">'+escaped(d.where)+'</div><p style="font-size:13px;margin:7px 0">'+escaped(d.task)+'</p></div>'}).join("")}
 function renderStations(target,unit){el(target).innerHTML=stations.map((s,i)=>{let d=stationDetails[i],found=records.some(r=>r.unit===unit&&r.station===s),standby=i===3&&records.some(r=>r.unit===unit&&r.station===stations[2])&&!records.some(r=>r.unit===unit&&r.station===stations[4]);return '<div class="station"><div class="num">STANOVIŠTĚ '+String(i+1).padStart(2,"0")+'</div><h3>'+escaped(s)+'</h3><div class="muted" style="font-size:12px;margin:4px 0 8px">'+escaped(d.where)+'</div><p style="font-size:13px;margin:7px 0">'+escaped(d.task)+'</p>'+(i===3?'<span class="tag '+(standby?"done":"")+'">'+(standby?"JEDNOTKA JE NA POHOTOVOSTI": "Pohotovost se aktivuje po stanovišti 3")+'</span>':'<details style="font-size:12px;margin:8px 0"><summary>Detaily stanoviště</summary><p><strong>Potřeby:</strong> '+escaped(d.needs)+'</p><p><strong>Hodnotící:</strong> '+escaped(d.reviewer||"—")+'</p><p><strong>Garant:</strong> '+escaped(d.guarantor||"—")+'</p><p><strong>Text SMS:</strong> '+escaped(d.sms||"—")+'</p></details>')+(i===3?"":'<div class="actions"><button class="soft" data-station="'+escaped(s)+'">Zapsat hodnocení</button></div>')+'</div>'}).join("");el(target).querySelectorAll("[data-station]").forEach(b=>b.onclick=()=>{el("stationSelect").value=b.dataset.station;syncReviewer();setAutomaticUnit(b.dataset.station);showPage("assessment")})}
 function standbyUnits(){return units.filter(u=>records.some(r=>r.unit===u&&r.station===stations[2])&&!records.some(r=>r.unit===u&&r.station===stations[4]))}function renderStandby(){const current=standbyUnits();el("statStandby").textContent=current.length;el("standbyUnitsLabel").textContent=current.length?current.join(", "):"žádná jednotka není na pohotovosti"}
@@ -490,10 +490,19 @@ function loadDemoData(){
 }
 function loadProgressDemoData(){
  if(!confirm("Načíst testovací data: revue právě probíhá? Dosavadní zápisy v tomto prohlížeči budou nahrazeny."))return;
- const activeStations=stations.filter((s,i)=>i!==3),demoRecords=[],statusCycle=["V pořádku","Drobné nedostatky","V pořádku","Závažné nedostatky"],counts=[3,2,4,1,3,0,2,1],startMinutes=13*60+35;
- units.forEach((unit,ui)=>{for(let j=0;j<counts[ui];j++){const station=activeStations[(j+ui)%activeStations.length],minute=startMinutes+ui*4+j*7;demoRecords.push({unit,station,reviewer:stationDetails[stations.indexOf(station)].reviewer,status:statusCycle[(ui+j)%statusCycle.length],notes:"TESTOVACÍ ZÁPIS – revue právě probíhá. Úkol je rozpracovaný nebo právě vyhodnocený; další jednotky a stanoviště ještě čekají.",date:"25. 10. 2026",time:String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0")});}});
+ const demoRecords=[],statusCycle=["V pořádku","Drobné nedostatky","V pořádku","Závažné nedostatky"],base=13*60+30;
+ // Simulace po kolech podle skutečně nastavených tras. V každém kole je každá jednotka na jiné pozici; pohotovost není hodnocené stanoviště.
+ const rounds=2;
+ for(let round=0;round<rounds;round++){
+  units.forEach((unit,ui)=>{
+   const route=routeForUnit(unit),stationNumber=route[round],si=stationNumber-1;
+   if(si===3)return;
+   const minute=base+round*30+ui*2;
+   demoRecords.push({unit,station:stations[si],reviewer:stationDetails[si].reviewer,status:statusCycle[(ui+round)%statusCycle.length],notes:"TESTOVACÍ ZÁPIS – revue právě probíhá. Zápis představuje uzavřené stanoviště v průběžném scénáři.",date:"25. 10. 2026",time:String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0")});
+  });
+ }
  records=demoRecords;save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();showPage("home");
- alert("Načteno "+demoRecords.length+" fiktivních zápisů pro průběh revue. Jednotky mají různý počet uzavřených stanovišť a část ještě nemá žádný zápis.");
+ alert("Načteno "+demoRecords.length+" fiktivních zápisů podle aktuálního rozlosování a tras. Jednotky mají nejvýše jedno stanoviště v každém kole; pohotovost se nepočítá jako stanoviště.");
 }
 el("loadDemoData").onclick=loadDemoData;
 el("loadDemoDataDashboard").onclick=loadDemoData;
