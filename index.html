@@ -40,6 +40,27 @@
 #assessment #backToStations{min-height:46px}
 #assessment .notice{margin:10px 0;overflow-wrap:anywhere}
 #assessment input,#assessment textarea,#assessment select{max-width:100%;min-width:0}
+/* Responzivita ostatních záložek */
+.page{min-width:0;max-width:100%}
+.page .panel,.page .panel-head,.page .field,.page .actions{min-width:0;max-width:100%}
+.page .panel-head{flex-wrap:wrap}
+.page .panel-head>div{min-width:0;flex:1 1 220px}
+.page .actions{flex-wrap:wrap}
+.page .actions button{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.page .unit-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+.page .station-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.page .table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.page table{min-width:600px}
+.page td,.page th{overflow-wrap:anywhere}
+.page .notice,.page .muted,.page p{overflow-wrap:anywhere}
+.page input,.page select,.page textarea{max-width:100%;min-width:0}
+#quiz .quiz-option{align-items:flex-start;min-width:0;overflow-wrap:anywhere}
+#quiz .quiz-option label,#quiz .quiz-option span{min-width:0;overflow-wrap:anywhere}
+#results .panel-head .actions{flex:1 1 100%}
+#results .panel-head .actions button{flex:1 1 140px}
+#results #unitPdfExports{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
+#edits #editRecordTiles .unit{align-items:flex-start;flex-wrap:wrap}
+#issues #issuesList{min-width:0;overflow-wrap:anywhere}
 body{font-size:16px}
 .station-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.station-choice{padding:11px;min-height:100px}.status-tile{font-size:12px;padding:10px 5px}
 .main{padding:13px 10px 24px;min-width:0;overflow-x:hidden}
@@ -47,6 +68,20 @@ body{font-size:16px}
 #assessment .actions{grid-template-columns:repeat(2,minmax(0,1fr))}
 #assessment #saveAssessment{grid-column:1 / -1}
 #assessment #confirmArrival,#assessment #backToStations{grid-column:1 / -1}
+/* Všechny další záložky na úzkém displeji */
+.page .panel-head{align-items:stretch;flex-direction:column;gap:10px}
+.page .panel-head>div{flex-basis:auto;width:100%}
+.page .panel-head .actions{display:grid;grid-template-columns:1fr; width:100%}
+.page .panel-head .actions button{width:100%}
+.page .station-choice-grid{grid-template-columns:1fr}
+.page .unit-grid{grid-template-columns:1fr}
+.page .actions{grid-template-columns:1fr}
+.page .actions button{width:100%}
+#results .panel-head .actions{grid-template-columns:1fr}
+#results .panel[style*="margin-top"]{padding:12px}
+#quiz .quiz-option{padding:10px;gap:8px}
+#quiz .field{min-width:0}
+#issues .panel-head>button{width:100%}
 .top{align-items:flex-start;flex-direction:column;gap:9px;margin-bottom:15px}
 h1{font-size:25px;line-height:1.2}h2{font-size:18px}
 .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
