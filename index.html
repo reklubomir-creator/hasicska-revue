@@ -690,7 +690,7 @@ async function exportUnitPdf(unit){
    const stream=new Blob([jsonPayload]).stream().pipeThrough(new CompressionStream("gzip"));
    const compressed=new Uint8Array(await new Response(stream).arrayBuffer());
    let binary="";for(let i=0;i<compressed.length;i+=0x8000)binary+=String.fromCharCode(...compressed.subarray(i,Math.min(i+0x8000,compressed.length)));
-   const zipped=btoa(binary).replace(/\\+/g,"-").replace(/\\//g,"_").replace(/=+$/,"");
+   const zipped=btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
    webReportUrl=location.origin+location.pathname+"?unitReportZip="+zipped;
   }else{
    const encoded=btoa(unescape(encodeURIComponent(jsonPayload)));
