@@ -226,8 +226,8 @@ function quizBuildEvaluation(x){
  if(pct>=90){headline="Výborný výsledek";body="Účastník prokázal velmi dobrou orientaci v ověřovaných znalostech a většinu otázek zodpověděl správně.";advice="Doporučení: udržovat znalosti průběžným opakováním a předávat správné postupy ostatním členům jednotky.";}
  else if(pct>=75){headline="Velmi dobrý výsledek";body="Účastník prokázal dobrou znalost témat kvízu. V odpovědích se objevily jen dílčí mezery.";advice="Doporučení: zopakovat otázky, ve kterých došlo k chybě, a upevnit související postupy.";}
  else if(pct>=60){headline="Dobrý základ, prostor ke zlepšení";body="Účastník zvládl podstatnou část otázek, ale výsledek ukazuje na několik oblastí, které je vhodné upevnit.";advice="Doporučení: projít chybné odpovědi a cíleně zopakovat související pravidla a bezpečné pracovní postupy.";}
- else if(pct>=40){headline="Znalosti je potřeba doplnit";body="Výsledek ukazuje na výraznější mezery v ověřovaných znalostech. Je vhodné věnovat opakování více času.";advice="Doporučení: projít otázky znovu s hodnotitelem nebo velitelem a ověřit porozumění správným postupům.";}
- else{headline="Doporučeno důkladné opakování";body="Výsledek ukazuje na významné mezery v ověřovaných znalostech. Doporučuje se cílené zopakování témat před další prověrkou.";advice="Doporučení: projít správná řešení s velitelem či instruktorem a následně znalosti znovu ověřit.";}
+ else if(pct>=40){headline="Znalosti je potřeba doplnit";body="Výsledek ukazuje na výraznější mezery v ověřovaných znalostech. Je vhodné věnovat opakování více času.";advice="Doporučení: zopakovat související pravidla a bezpečné pracovní postupy.";}
+ else{headline="Doporučeno důkladné opakování";body="Výsledek ukazuje na významné mezery v ověřovaných znalostech. Doporučuje se cílené zopakování témat před další prověrkou.";advice="Doporučení: cíleně zopakovat související témata a bezpečné pracovní postupy.";}
  return {headline,body,advice,score:total?correct+" správně z "+total+" otázek ("+pct+" %)":"Údaje o počtu otázek nejsou k dispozici."};
 }
 function quizRenderResult(x,i){
