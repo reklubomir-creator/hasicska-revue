@@ -491,18 +491,30 @@ function loadDemoData(){
 function loadProgressDemoData(){
  if(!confirm("Načíst testovací data: revue právě probíhá? Dosavadní zápisy v tomto prohlížeči budou nahrazeny."))return;
  const demoRecords=[],statusCycle=["V pořádku","Drobné nedostatky","V pořádku","Závažné nedostatky"],base=13*60+30;
- // Simulace po kolech podle skutečně nastavených tras. V každém kole je každá jednotka na jiné pozici; pohotovost není hodnocené stanoviště.
- const rounds=2;
+ // Pokaždé zvolíme jiný průběh: počet uzavřených kol a slovní formulace se obměňují.
+ const scenario=Number(localStorage.getItem("hasicskaRevueProgressDemoVersion")||0);
+ const rounds=2+(scenario%3);
+ const narrativeByStation=[
+  ["Čerpání bylo zahájeno bez prodlení. Hadice i ejektor byly připravené a velitel průběžně kontroloval bezpečnost pracoviště.","Při přípravě čerpání se objevila krátká prodleva kvůli rozmístění hadic. Po domluvě si členové rozdělili úkoly a činnost pokračovala plynule.","Pracoviště bylo zajištěné a komunikace strojníka s velitelem srozumitelná. Doporučuje se ještě důsledněji kontrolovat vedení hadic."],
+  ["Posádka projela slalom plynule a bez kontaktu s kužely. Technické úkony byly provedeny jistě a vybavení bylo po dokončení uklizeno.","Při couvání bylo nutné upravit navádění a jeden kužel se lehce posunul. Po upozornění posádka postup zpomalila a úkol dokončila bezpečně.","Rozdělení rolí bylo dobré, drobná prodleva vznikla při manipulaci s příslušenstvím. Příště pomůže jasnější příprava vybavení před startem."],
+  ["Figuranta jednotka zkontrolovala, poraněnou končetinu zafixovala a transport provedla koordinovaně. Předání informací bylo úplné.","Při přípravě transportu chyběla závěrečná kontrola fixačního popruhu. Po upozornění byla oprava provedena a další manipulace proběhla šetrně.","Velitel rozdělil úkoly přehledně a členové spolu komunikovali. Doporučuje se před přesunem ještě jednou ověřit stabilitu fixace."],
+  ["Pohotovost probíhala podle pokynů velitele a jednotka zůstala připravená k okamžitému výjezdu.","Jednotka byla na pohotovosti připravená, bylo však potřeba zpřesnit rozmístění vybavení a udržet volný příjezd ke zbrojnici.","Během pohotovosti byla komunikace srozumitelná a vybavení dostupné. Doporučuje se průběžně kontrolovat připravenost celé posádky."],
+  ["Místo nehody bylo přehledně označeno a úkoly rozděleny. Posádka myslela na bezpečnou zónu i komunikaci s okolím.","Při prvotním zajištění zůstala část prostoru krátce neoznačená. Velitel na nedostatek upozornil a jednotka opatření doplnila.","Průzkum byl pečlivý a figuranti byli dohledáni. Příště je vhodné jasněji potvrdit dokončení všech bezpečnostních opatření."],
+  ["Záchrana tonoucího byla provedena koordinovaně. Jednotka dbala na vlastní bezpečnost a po vytažení figuríny navázala správným postupem.","Při přiblížení k figuríně bylo potřeba upravit komunikaci mezi zachránci. Po sjednocení postupu proběhl transport bez další komplikace.","Posádka zvolila vhodný způsob záchrany a správně navázala kontrolou stavu figuríny. Doporučuje se ještě hlasitěji potvrzovat jednotlivé kroky."],
+  ["Jednotka správně vyhodnotila směr šíření požáru a zvolila bezpečný postup. Rozdělení rolí i vedení zásahu bylo přehledné.","Při rozvinutí vedení vznikla krátká prodleva a bylo nutné upřesnit postavení jednoho člena. Následně zásah pokračoval bezpečně.","Komunikace při simulovaném požáru byla dobrá. Doporučuje se zrychlit přípravu vedení, aniž by se omezila kontrola bezpečnosti."],
+  ["Kvíz prověřil znalosti jednotky z požární ochrany a průběhu revue. Členové spolupracovali a své odpovědi společně zdůvodňovali.","Jednotka zvládla část otázek správně, u několika témat bylo potřeba diskutovat postupy a bezpečnostní zásady. Doporučeno zopakovat probírané předpisy.","Kvíz ukázal dobrou orientaci v základních tématech, ale také několik oblastí k procvičení. Doporučuje se krátké společné opakování před další akcí."]
+ ];
  for(let round=0;round<rounds;round++){
   units.forEach((unit,ui)=>{
    const route=routeForUnit(unit),stationNumber=route[round],si=stationNumber-1;
    if(si===3)return;
    const minute=base+round*30+ui*2;
-   demoRecords.push({unit,station:stations[si],reviewer:stationDetails[si].reviewer,status:statusCycle[(ui+round)%statusCycle.length],notes:"TESTOVACÍ ZÁPIS – revue právě probíhá. Zápis představuje uzavřené stanoviště v průběžném scénáři.",date:"25. 10. 2026",time:String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0")});
+   const variants=narrativeByStation[si],note=variants[(scenario+ui+round)%variants.length];
+   demoRecords.push({unit,station:stations[si],reviewer:stationDetails[si].reviewer,status:statusCycle[(ui+round+scenario)%statusCycle.length],notes:note,date:"25. 10. 2026",time:String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0")});
   });
  }
- records=demoRecords;save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();
- alert("Načteno "+demoRecords.length+" fiktivních zápisů podle aktuálního rozlosování a tras. Jednotky mají nejvýše jedno stanoviště v každém kole; pohotovost se nepočítá jako stanoviště.");
+ records=demoRecords;localStorage.setItem("hasicskaRevueProgressDemoVersion",String(scenario+1));save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();
+ alert("Načteno "+demoRecords.length+" fiktivních zápisů s obměněným průběhem a slovním hodnocením. Data jsou pouze pro vyzkoušení aplikace.");
 }
 el("loadDemoData").onclick=loadDemoData;
 el("loadDemoDataDashboard").onclick=loadDemoData;
