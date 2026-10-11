@@ -18,6 +18,25 @@
 .side-note{display:none}.main{padding:18px 14px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.content-grid{grid-template-columns:1fr}
 }
 @media(max-width:600px){
+/* Rozhraní hodnotitele: ovládání pro mobil v terénu */
+#assessment .panel{padding:12px}
+#assessment h2{font-size:19px;margin-bottom:10px}
+#assessment .station-choice-grid{grid-template-columns:1fr;gap:8px;margin-top:10px}
+#assessment .station-choice{min-height:72px;padding:12px;display:grid;grid-template-columns:1fr;gap:3px}
+#assessment .station-choice strong{font-size:16px;line-height:1.25}
+#assessment .station-choice small{font-size:12px}
+#assessment .status-tiles{grid-template-columns:1fr;gap:7px}
+#assessment .status-tile{min-height:48px;text-align:left;padding:12px 14px;font-size:15px}
+#assessment .field{margin:12px 0;gap:6px}
+#assessment .field textarea{min-height:110px}
+#assessment .voice{gap:6px}
+#assessment .voice button{min-height:52px;font-size:16px}
+#assessment .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#assessment .actions button{min-height:48px;padding:10px 8px}
+#assessment #saveAssessment{grid-column:1 / -1;order:-1}
+#assessment #confirmArrival{min-height:54px}
+#assessment #backToStations{min-height:46px}
+#assessment .notice{margin:10px 0}
 body{font-size:16px}
 .station-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.station-choice{padding:11px;min-height:100px}.status-tile{font-size:12px;padding:10px 5px}
 .main{padding:13px 10px 24px}
