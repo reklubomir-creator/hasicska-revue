@@ -258,7 +258,7 @@ body.observer-mode #home .panel-head button{display:none!important}
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="assessment">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.24</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.25</div>
 </aside>
 <main class="main">
 <header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill">● Pracovní verze</span></header>
@@ -683,22 +683,40 @@ async function exportUnitPdf(unit){
    wrong:quizWrongAnswers(x)
   }))
  };
- const jsonPayload=JSON.stringify(payload);
- let webReportUrl="";
- try{
+ let webReportUrl="",compactLevel=0;
+ const baseUrl=location.origin+location.pathname;
+ async function encodeReport(p){
+  const json=JSON.stringify(p);
   if(typeof CompressionStream==="function"){
-   const stream=new Blob([jsonPayload]).stream().pipeThrough(new CompressionStream("gzip"));
+   const stream=new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"));
    const compressed=new Uint8Array(await new Response(stream).arrayBuffer());
    let binary="";for(let i=0;i<compressed.length;i+=0x8000)binary+=String.fromCharCode(...compressed.subarray(i,Math.min(i+0x8000,compressed.length)));
    const zipped=btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
-   webReportUrl=location.origin+location.pathname+"?unitReportZip="+zipped;
-  }else{
-   const encoded=btoa(unescape(encodeURIComponent(jsonPayload)));
-   webReportUrl=location.origin+location.pathname+"?unitReport="+encodeURIComponent(encoded);
+   return baseUrl+"?unitReportZip="+zipped;
   }
+  return baseUrl+"?unitReport="+encodeURIComponent(btoa(unescape(encodeURIComponent(json))));
+ }
+ try{
+  // Limit QR density by trimming verbose free-text details only for large reports.
+  const qrPayload=JSON.parse(JSON.stringify(payload));
+  for(compactLevel=0;compactLevel<=3;compactLevel++){
+   const candidate=await encodeReport(qrPayload);
+   if(candidate.length<=1250||compactLevel===3){webReportUrl=candidate;break;}
+   if(compactLevel===0){
+    qrPayload.e.forEach(x=>{if(x.notes)x.notes=String(x.notes).slice(0,140);});
+    qrPayload.q.forEach(x=>{x.wrong=(x.wrong||[]).slice(0,5).map(v=>String(v).slice(0,100));});
+   }else if(compactLevel===1){
+    qrPayload.e.forEach(x=>{if(x.notes)x.notes=String(x.notes).slice(0,70);});
+    qrPayload.q.forEach(x=>{x.wrong=(x.wrong||[]).slice(0,3).map(v=>String(v).slice(0,65));});
+   }else{
+    qrPayload.e.forEach(x=>{x.notes="";});
+    qrPayload.q.forEach(x=>{x.wrong=[];});
+   }
+  }
+  payload.compactLevel=compactLevel;
  }catch(payloadError){
-  const encoded=btoa(unescape(encodeURIComponent(jsonPayload)));
-  webReportUrl=location.origin+location.pathname+"?unitReport="+encodeURIComponent(encoded);
+  const compactPayload={u:payload.u,generatedAt:payload.generatedAt,compactLevel:3,e:payload.e.map(x=>({station:x.station,status:x.status,reviewer:x.reviewer,date:x.date,time:x.time,notes:""})),q:payload.q.map(x=>({name:x.name,role:x.role,correct:x.correct,total:x.total,percentage:x.percentage,durationSeconds:x.durationSeconds,wrong:[]}))};
+  webReportUrl=await encodeReport(compactPayload);
  }
  let unitReportQrMarkup='<span style="font-size:9px;color:#a32121">QR kód se nepodařilo vytvořit.</span>';
  try{if(window.QRCode){const qrTemp=document.createElement("div");qrTemp.style.cssText="position:fixed;left:-10000px;top:0;width:220px;height:220px;padding:16px;background:#fff;box-sizing:border-box;overflow:visible";document.body.appendChild(qrTemp);new QRCode(qrTemp,{text:webReportUrl,width:188,height:188,correctLevel:QRCode.CorrectLevel.L});const qrCanvas=qrTemp.querySelector("canvas"),qrImage=qrTemp.querySelector("img");const qrData=qrCanvas?qrCanvas.toDataURL("image/png"):(qrImage?qrImage.src:"");if(qrData)unitReportQrMarkup='<img alt="QR kód hodnocení jednotky" width="188" height="188" style="display:block;width:188px;height:188px;max-width:none;image-rendering:pixelated" src="'+qrData+'">';qrTemp.remove();}}catch(qrBuildError){}
@@ -765,7 +783,7 @@ async function decodeUnitReportPayload(){
   let median=null;if(quizWeighted.length){const total=quizWeighted.reduce((a,x)=>a+x.weight,0);let c=0;for(const x of quizWeighted){c+=x.weight;if(c>=total/2){median=x.score;break}}}
   const quizStatus=!quizEntries.length?"Bez výsledku":criticalCount?"Závažné nedostatky – kritická chyba":median>=90?"V pořádku":median>=75?"Drobné nedostatky":"Závažné nedostatky";
   const generated=p.generatedAt?new Date(p.generatedAt).toLocaleString("cs-CZ"):"neuvedeno";
-  target.innerHTML='<header class="unit-report-header"><div class="unit-report-brand">🚒 Hasičská revue</div><p class="unit-report-muted">Revue pro jednotky okrsku Blansko</p><h1>Celkové hodnocení jednotky</h1><h2>'+esc(p.u||"Neznámá jednotka")+'</h2><p class="unit-report-muted">Zpráva vygenerována: '+esc(generated)+'</p></header><section class="unit-report-summary"><h2>Souhrn kontroly</h2><p class="unit-report-overall">'+esc(overall)+'</p><div class="unit-report-stats"><div><strong>'+stationEntries.length+' / '+visibleStations.length+'</strong><span>zapsaných stanovišť</span></div><div><strong>'+good+'</strong><span>V pořádku</span></div><div><strong>'+minor+'</strong><span>Drobné nedostatky</span></div><div><strong>'+major+'</strong><span>Závažné nedostatky</span></div></div><p><strong>Chybějící zápisy:</strong> '+esc(missing.length?missing.join(", "):"Žádné")+'</p><p><strong>Vědomostní kvíz:</strong> '+esc(quizEntries.length?quizEntries.length+" účastníků · vážený medián "+median+" %":"Zatím bez výsledku")+'</p><p><strong>Souhrnné hodnocení kvízu:</strong> '+esc(quizStatus)+'</p></section><h2 class="unit-report-section-title">Kontrola jednotlivých stanovišť</h2>'+stationBody+'<h2 class="unit-report-section-title">Vědomostní kvíz – podrobné výsledky</h2>'+quizBody+'<footer class="unit-report-footer">Tento přehled zachycuje stav dat v okamžiku vytvoření zprávy. Pro aktualizované hodnocení je potřeba vygenerovat nový QR kód.</footer>';
+  target.innerHTML='<header class="unit-report-header"><div class="unit-report-brand">🚒 Hasičská revue</div><p class="unit-report-muted">Revue pro jednotky okrsku Blansko</p><h1>Celkové hodnocení jednotky</h1><h2>'+esc(p.u||"Neznámá jednotka")+'</h2><p class="unit-report-muted">Zpráva vygenerována: '+esc(generated)+'</p></header>'+(Number(p.compactLevel||0)>0?'<p class="unit-report-muted" style="padding:12px;background:#fff7e6;border-radius:10px">Zpráva byla zkrácena pro spolehlivé načtení QR kódu. Stav stanovišť a výsledky zůstávají zachované; některé dlouhé poznámky nebo seznamy chybných odpovědí mohou být zkrácené či vynechané.</p>':'')+'<section class="unit-report-summary"><h2>Souhrn kontroly</h2><p class="unit-report-overall">'+esc(overall)+'</p><div class="unit-report-stats"><div><strong>'+stationEntries.length+' / '+visibleStations.length+'</strong><span>zapsaných stanovišť</span></div><div><strong>'+good+'</strong><span>V pořádku</span></div><div><strong>'+minor+'</strong><span>Drobné nedostatky</span></div><div><strong>'+major+'</strong><span>Závažné nedostatky</span></div></div><p><strong>Chybějící zápisy:</strong> '+esc(missing.length?missing.join(", "):"Žádné")+'</p><p><strong>Vědomostní kvíz:</strong> '+esc(quizEntries.length?quizEntries.length+" účastníků · vážený medián "+median+" %":"Zatím bez výsledku")+'</p><p><strong>Souhrnné hodnocení kvízu:</strong> '+esc(quizStatus)+'</p></section><h2 class="unit-report-section-title">Kontrola jednotlivých stanovišť</h2>'+stationBody+'<h2 class="unit-report-section-title">Vědomostní kvíz – podrobné výsledky</h2>'+quizBody+'<footer class="unit-report-footer">Tento přehled zachycuje stav dat v okamžiku vytvoření zprávy. Pro aktualizované hodnocení je potřeba vygenerovat nový QR kód.</footer>';
   document.body.classList.add("unit-report-mode");document.title="Hodnocení jednotky · "+(p.u||"");
  }catch(e){
   target.style.display="block";
