@@ -213,6 +213,14 @@ body.unit-report-mode #unitReportWeb{display:block!important}
 .unit-report-record.status-ok p strong{color:#126536}
 .unit-report-record.status-minor p strong{color:#735b00}
 .unit-report-record.status-major p strong{color:#a31515}
+.unit-report-info{padding:12px 14px;border-radius:10px;margin-top:10px;border:1px solid transparent}
+.unit-report-info.status-ok{background:#e3f7e9;border-color:#a8dfb8;color:#126536}
+.unit-report-info.status-minor{background:#fff5c4;border-color:#f0d875;color:#735b00}
+.unit-report-info.status-major{background:#ffe2e2;border-color:#efb1b1;color:#a31515}
+.unit-report-info p{margin:5px 0}
+.unit-report-info.status-ok p strong{color:#126536}
+.unit-report-info.status-minor p strong{color:#735b00}
+.unit-report-info.status-major p strong{color:#a31515}
 .unit-report-status-badge{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:750;margin:4px 0 8px}
 .unit-report-status-badge.status-ok{background:#d9f5e2;color:#126536}
 .unit-report-status-badge.status-minor{background:#fff2a8;color:#735b00}
@@ -372,10 +380,10 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button type="button" id="openReviewerStandalone">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button><button data-page="unitAdmin">⚙ &nbsp; Kontakty na jednotky</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.75</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.76</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.75</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.76</span></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
@@ -872,7 +880,7 @@ async function exportUnitPdf(unit){
  else overall="Zatím nejsou k dispozici zápisy ze stanovišť.";
  const stationEntries=entries.filter(r=>r.station!=="Kvíz – hasička Klepačov");
  const statusClassForReport=status=>status==="V pořádku"?"status-ok":status==="Drobné nedostatky"?"status-minor":status==="Závažné nedostatky"?"status-major":"";
- const stationBody=stationEntries.length?'<div class="station-grid">'+stationEntries.map(r=>{const statusClass=statusClassForReport(r.status);return '<section class="record unit-report-record '+statusClass+'"><h2>'+esc(r.station)+'</h2>'+(r.station==="Kvíz – hasička Klepačov"?'':'<p><span class="unit-report-status-badge '+statusClass+'">'+esc(r.status||"Stav neuveden")+'</span></p>')+'<p><strong>Hodnotitel:</strong> '+esc(r.reviewer||"—")+'</p>'+(r.station==="Kvíz – hasička Klepačov"?(r.notes&&r.notes.trim()?'<p><strong>Slovní hodnocení:</strong><br>'+esc(r.notes).replace(/\n/g,"<br>")+'</p>':''):'<p><strong>Poznámka:</strong><br>'+esc(r.notes||"Bez poznámky").replace(/\n/g,"<br>")+'</p>')+'</section>'}).join("")+'</div>':'<p>Zatím nejsou uloženy žádné zápisy pro tuto jednotku.</p>';
+ const stationBody=stationEntries.length?'<div class="station-grid">'+stationEntries.map(r=>{const statusClass=statusClassForReport(r.status);return '<section class="record unit-report-record '+statusClass+'"><h2>'+esc(r.station)+'</h2><div class="unit-report-info '+statusClass+'">'+(r.station==="Kvíz – hasička Klepačov"?'':'<p><span class="unit-report-status-badge '+statusClass+'">'+esc(r.status||"Stav neuveden")+'</span></p>')+'<p><strong>Hodnotitel:</strong> '+esc(r.reviewer||"—")+'</p>'+(r.station==="Kvíz – hasička Klepačov"?(r.notes&&r.notes.trim()?'<p><strong>Slovní hodnocení:</strong><br>'+esc(r.notes).replace(/\n/g,"<br>")+'</p>':''):'<p><strong>Poznámka:</strong><br>'+esc(r.notes||"Bez poznámky").replace(/\n/g,"<br>")+'</p>')+'</div></section>'}).join("")+'</div>':'<p>Zatím nejsou uloženy žádné zápisy pro tuto jednotku.</p>';
  const quizBody=quizEntries.length?quizEntries.map(x=>{
   const wrong=quizWrongAnswers(x),criticalWrong=quizCriticalErrors(x),evaluation=quizBuildEvaluation(x);
   return '<section class="record quiz-record"><h2>'+esc(x.name||"Bez jména")+' – '+esc(x.role||"role neuvedena")+'</h2><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně ('+Number(x.percentage||0)+' %)</p><p><strong>'+esc(evaluation.headline)+':</strong> '+esc(evaluation.body)+'</p><p>'+esc(evaluation.advice)+'</p>'+(Number(x.durationSeconds||0)?'<p><strong>Délka kvízu:</strong> '+Math.floor(Number(x.durationSeconds)/60)+':'+String(Number(x.durationSeconds)%60).padStart(2,"0")+'</p>':'')+(criticalWrong.length?'<p class="warning"><strong>Kritická chyba – minimálně závažné nedostatky</strong></p><ul>'+criticalWrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+(wrong.length?'<h3>Chybné odpovědi</h3><ul>'+wrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+'</section>';
