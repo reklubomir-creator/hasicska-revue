@@ -224,7 +224,7 @@ body.unit-report-mode #unitReportWeb{display:block!important}
 body.unit-report-mode #unitReportWeb{display:block!important}
 #unitReportWeb{display:none;max-width:1100px;margin:0 auto;padding:24px;font:15px/1.5 Arial,sans-serif;color:#172b40}
 #unitReportWeb table{border-collapse:collapse;width:100%}#unitReportWeb th,#unitReportWeb td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top}#unitReportWeb th{background:#eaf0f6}
-/* Samostatné rozhraní hodnotitele: bez dashboardu a navigace, ale se sdílenými zápisy v tomto prohlížeči. */
+/* Rozhraní hodnotitele: bez dashboardu a navigace, ale se sdílenými zápisy v tomto prohlížeči. */
 body.reviewer-mode .layout{grid-template-columns:minmax(0,1fr)!important;width:100%;max-width:100%}
 body.reviewer-mode .side{display:none!important}
 body.reviewer-mode .main{grid-column:1/-1;box-sizing:border-box;min-width:0;margin:0;width:100%;max-width:none;padding:clamp(12px,3vw,28px)}
@@ -309,13 +309,13 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <aside class="side">
 <div class="brand"><div class="crest">🚒</div><div>Hasičská<br>revue</div></div>
 <nav class="nav" aria-label="Hlavní navigace">
-<button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button type="button" id="openReviewerStandalone">🎙 &nbsp; Samostatné rozhraní hodnotitele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button><button data-page="unitAdmin">⚙ &nbsp; Administrace jednotek</button>
+<button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button type="button" id="openReviewerStandalone">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button><button data-page="unitAdmin">⚙ &nbsp; Administrace jednotek</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.57</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.58</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.57</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.58</span></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
@@ -333,7 +333,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px">
 <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>1. 📊 Přehled</strong><p class="muted" style="margin:5px 0 0">Prohlédni si stav jednotek, stanovišť, pohotovosti a celkového průběhu. Přehled se v otevřené aplikaci obnovuje automaticky každých 30 sekund.</p></div>
 <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>2. 🚒 Rozlosování</strong><p class="muted" style="margin:5px 0 0">Nastav pevné starty vybraných jednotek, vylosuj zbytek a prohlédni si jejich pořadí stanovišť.</p></div>
-<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>3. 🎙 Samostatné rozhraní hodnotitele</strong><p class="muted" style="margin:5px 0 0">Hodnotitelé používají výhradně samostatné rozhraní, které se otevře v nové kartě. Vyber své jméno a stanoviště, potvrď příjezd jednotky, zvol stav, doplň poznámku a zápis ulož. K dispozici je také diktování a závěrečná kontrola všech hodnocení stanoviště.</p><p style="margin:7px 0 0"><button type="button" class="primary" id="openReviewerStandaloneHelp">Otevřít samostatné rozhraní hodnotitele</button></p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>3. 🎙 Rozhraní hodnotitele</strong><p class="muted" style="margin:5px 0 0">Hodnotitelé používají výhradně samostatné rozhraní, které se otevře v nové kartě. Vyber své jméno a stanoviště, potvrď příjezd jednotky, zvol stav, doplň poznámku a zápis ulož. K dispozici je také diktování a závěrečná kontrola všech hodnocení stanoviště.</p><p style="margin:7px 0 0"><button type="button" class="primary" id="openReviewerStandaloneHelp">Otevřít samostatné rozhraní hodnotitele</button></p></div>
 <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>4. ☑ Kvíz</strong><p class="muted" style="margin:5px 0 0">Vyzkoušej organizační část kvízu, aktivaci jednotky a kontrolu výsledků. <strong>Testovací organizační PIN:</strong> <code>900330</code> – v administraci je uveden šedě přímo v poli.</p><p class="muted" style="margin:7px 0 0">Administraci otevřeš přímo v této aplikaci tlačítkem níže. Samotná adresa Google Apps Script je technické rozhraní pro účastnický kvíz, ne administrační stránka.</p><button type="button" class="primary" data-goto="quiz" style="margin-top:8px">Otevřít administraci kvízu</button></div>
 <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>5. 📑 Výsledky a zprávy</strong><p class="muted" style="margin:5px 0 0">Prohlédni si uložené zápisy a nedostatky, vyzkoušej export CSV a přípravu zpráv pro tisk nebo PDF.</p></div>
 <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>6. ✏ Upravit zápis</strong><p class="muted" style="margin:5px 0 0">Najdi již uložený zápis a vyzkoušej jeho opravu. Po změně se vrať do přehledu a zkontroluj, zda se údaje projevily i tam.</p></div>
@@ -926,7 +926,7 @@ const reviewerMode=pageParams.get("hodnotitel")==="1";
 if(reviewerMode){
  document.body.classList.add("reviewer-mode");
  document.title="Hasičská revue · Rozhraní hodnotitele";
- const notice=el("observerNotice");if(notice)notice.textContent="🎙 Samostatné rozhraní hodnotitele · zápisy se ukládají do tohoto prohlížeče";
+ const notice=el("observerNotice");if(notice)notice.textContent="🎙 Rozhraní hodnotitele · zápisy se ukládají do tohoto prohlížeče";
  showPage("assessment");
  initStandaloneReviewer();
 }
