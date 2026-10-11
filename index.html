@@ -506,13 +506,16 @@ function loadProgressDemoData(){
  ];
  // Každá jednotka začíná kolem 13:30 a mezi navazujícími stanovišti
  // uběhne realisticky 20–35 minut. Časy se odvíjejí od trasy konkrétní jednotky.
- const startOffsets=units.map((_,ui)=>ui*2);
- const elapsedByUnit=Object.fromEntries(units.map((unit,ui)=>[unit,startOffsets[ui]]));
+ const elapsedByUnit=Object.fromEntries(units.map(unit=>[unit,0]));
  for(let round=0;round<rounds;round++){
   units.forEach((unit,ui)=>{
    const route=routeForUnit(unit),stationNumber=route[round],si=stationNumber-1;
    if(si===3)return;
-   if(round>0)elapsedByUnit[unit]+=20+((scenario*7+ui*3+round*5)%16);
+   // Zápis se ukládá až při uzavření stanoviště: první trvá 20–35 min.
+   // Další stanoviště navazuje po 5–12 minutách přesunu a dalších 20–35 min práce.
+   const duration=20+((scenario*7+ui*3+round*5)%16);
+   const transfer=round===0?0:5+((scenario*3+ui*2+round)%8);
+   elapsedByUnit[unit]+=transfer+duration;
    const minute=base+elapsedByUnit[unit];
    const variants=narrativeByStation[si],note=variants[(scenario+ui+round)%variants.length];
    demoRecords.push({unit,station:stations[si],reviewer:stationDetails[si].reviewer,status:statusCycle[(ui+round+scenario)%statusCycle.length],notes:note,date:"25. 10. 2026",time:String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0")});
