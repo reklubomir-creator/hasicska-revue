@@ -312,10 +312,10 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button type="button" id="openReviewerStandalone">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button><button data-page="unitAdmin">⚙ &nbsp; Kontakty na jednotky</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.61</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.62</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.61</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.62</span></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
@@ -344,6 +344,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <h3 style="margin:16px 0 8px">Jak funguje ukládání</h3>
 <div class="notice"><strong>Každý testuje samostatně.</strong> Zápisy hodnocení, rozlosování, výběr hodnotitele, potvrzení závěrečné kontroly i kontakty na jednotky se ukládají pouze do úložiště prohlížeče na daném zařízení. Automaticky se nesynchronizují mezi kolegy ani mezi různými zařízeními; smazání dat prohlížeče je může odstranit. Kvíz používá externí Google Apps Script. Uložení kompletní zprávy pro QR odkaz vyžaduje také serverové funkce popsané v souboru <code>REPORT_STORAGE_SETUP.md</code> a jejich nasazení.</div>
 <p style="margin:12px 0 0"><strong>Prosba při testování:</strong> zkoušej různé postupy a všímej si, co je nejasné nebo co by se mělo ovládat jednodušeji. Testovací scénáře přepisují dosavadní zápisy v tomto prohlížeči. Kvíz a ukládání zpráv přes QR závisí na správném nastavení a nasazení Google Apps Scriptu. Skutečné zápisy z akce do této testovací verze nezadávej.</p>
+<div style="display:flex;justify-content:flex-end;margin-top:14px"><button type="button" class="soft" id="readmeToggleBottom">Sbalit</button></div>
 </div>
 </div>
 <div class="cards">
@@ -851,7 +852,7 @@ async function exportUnitPdf(unit){
  }
 }
 
-const readmePanel=el("readmePanel"),readmeToggle=el("readmeToggle");readmeToggle.addEventListener("click",()=>{const collapsed=readmePanel.classList.toggle("is-collapsed");readmeToggle.textContent=collapsed?"Rozbalit":"Sbalit";readmeToggle.setAttribute("aria-expanded",String(!collapsed));localStorage.setItem("hasicskaRevueReadmeCollapsed",String(collapsed))});if(localStorage.getItem("hasicskaRevueReadmeCollapsed")==="true"){readmePanel.classList.add("is-collapsed");readmeToggle.textContent="Rozbalit";readmeToggle.setAttribute("aria-expanded","false")}
+const readmePanel=el("readmePanel"),readmeToggle=el("readmeToggle");el("readmeToggleBottom").addEventListener("click",()=>readmeToggle.click());readmeToggle.addEventListener("click",()=>{const collapsed=readmePanel.classList.toggle("is-collapsed");readmeToggle.textContent=collapsed?"Rozbalit":"Sbalit";readmeToggle.setAttribute("aria-expanded",String(!collapsed));localStorage.setItem("hasicskaRevueReadmeCollapsed",String(collapsed))});if(localStorage.getItem("hasicskaRevueReadmeCollapsed")==="true"){readmePanel.classList.add("is-collapsed");readmeToggle.textContent="Rozbalit";readmeToggle.setAttribute("aria-expanded","false")}
 async function decodeUnitReportPayload(){
  const params=new URLSearchParams(location.search);
  const zipped=params.get("unitReportZip");
