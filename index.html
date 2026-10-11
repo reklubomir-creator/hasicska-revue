@@ -185,7 +185,42 @@ table{min-width:620px}th,td{padding:10px 8px}
 .unit-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:stretch}.unit-board .unit{min-width:0;min-height:112px;justify-content:center;flex-direction:column;text-align:center;padding:12px;background:#f8fbff}.unit-board .unit strong{font-size:14px;line-height:1.25;overflow-wrap:anywhere}.unit-board .unit small{font-size:12px}.unit-board .progress{width:100%;max-width:160px}.unit-board .unit-center{background:linear-gradient(145deg,#102d4e,#1d5079);border-color:#102d4e;color:#fff;justify-content:center}.unit-board .unit-center small{color:#d6e6f6}.unit-board .unit-center .center-icon{font-size:25px;line-height:1.1;margin-bottom:4px}.unit-board .unit-center strong{font-size:15px}.unit-board .unit-center .center-caption{font-size:11px;line-height:1.3;margin-top:4px}@media(max-width:640px){.unit-board{gap:7px}.unit-board .unit{min-height:100px;padding:8px}.unit-board .unit strong{font-size:12px}.unit-board .unit small{font-size:10px}.unit-board .unit-center .center-icon{font-size:21px}}
 /* Pozorovatelský náhled: read-only prezentace dashboardu */
 body.observer-mode .layout{grid-template-columns:minmax(0,1fr)!important;width:100%;max-width:100%}
-body.unit-report-mode .layout,body.unit-report-mode footer{display:none!important}
+body.unit-report-mode .layout{display:none!important}
+body.unit-report-mode #unitReportWeb{display:block!important}
+#unitReportWeb{display:none;max-width:1000px;margin:0 auto;padding:clamp(16px,4vw,34px);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#172b40}
+.unit-report-header{padding:0 0 20px;border-bottom:2px solid #d84343;margin-bottom:20px}
+.unit-report-brand{font-weight:850;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:#b42323}
+.unit-report-header h1{font-size:clamp(26px,5vw,38px);margin:14px 0 3px}
+.unit-report-header h2{font-size:clamp(20px,3vw,26px);margin:0}
+.unit-report-muted{color:#64748b;font-size:14px;margin:4px 0}
+.unit-report-summary{background:#f1f5f9;border:1px solid #d5dee8;border-radius:16px;padding:clamp(16px,3vw,24px);margin:20px 0}
+.unit-report-summary h2,.unit-report-section-title{font-size:21px;margin:0 0 12px}
+.unit-report-overall{font-size:17px;font-weight:700}
+.unit-report-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}
+.unit-report-stats div{background:#fff;border:1px solid #d5dee8;border-radius:12px;padding:14px 10px}
+.unit-report-stats strong,.unit-report-stats span{display:block}
+.unit-report-stats strong{font-size:clamp(20px,3vw,28px);line-height:1.2}
+.unit-report-stats span{font-size:12px;color:#64748b;margin-top:5px}
+.unit-report-section-title{margin-top:28px;padding-bottom:8px;border-bottom:1px solid #d5dee8}
+.unit-report-stations{display:grid;gap:14px}
+.unit-report-record{background:#fff;border:1px solid #d5dee8;border-radius:14px;padding:clamp(14px,3vw,22px);margin:12px 0;box-shadow:0 3px 12px #102d4e08;overflow-wrap:anywhere}
+.unit-report-record-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.unit-report-record h2{font-size:19px;margin:0 0 6px}
+.unit-report-record h3{font-size:15px;margin:18px 0 6px}
+.unit-report-status{display:inline-block;border-radius:20px;padding:5px 10px;background:#e8eff7;color:#102d4e;font-size:12px;font-weight:750}
+.unit-report-record dl{display:grid;grid-template-columns:130px 1fr;gap:5px 12px;margin:15px 0}
+.unit-report-record dt{font-size:13px;color:#64748b}
+.unit-report-record dd{margin:0;font-weight:600}
+.unit-report-notes{white-space:normal;margin:0}
+.unit-report-quiz{border-left:4px solid #1d5688}
+.unit-report-score{font-size:24px;color:#102d4e}
+.unit-report-progress{height:8px;background:#e8edf3;border-radius:9px;overflow:hidden;margin:10px 0}
+.unit-report-progress span{display:block;height:100%;background:#16845b;border-radius:9px}
+.unit-report-wrong{padding-left:22px}
+.unit-report-wrong li{margin:8px 0}
+.unit-report-critical{background:#fff0f0;border:1px solid #f3b5b5;border-radius:10px;padding:12px;color:#9f1d1d;margin:14px 0}
+.unit-report-footer{display:block!important;color:#64748b;font-size:12px;border-top:1px solid #d5dee8;margin-top:28px;padding-top:14px}
+@media(max-width:560px){#unitReportWeb{padding:16px}.unit-report-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.unit-report-record dl{grid-template-columns:1fr;gap:2px}.unit-report-record dd{margin-bottom:8px}}
 body.unit-report-mode #unitReportWeb{display:block!important}
 #unitReportWeb{display:none;max-width:1100px;margin:0 auto;padding:24px;font:15px/1.5 Arial,sans-serif;color:#172b40}
 #unitReportWeb table{border-collapse:collapse;width:100%}#unitReportWeb th,#unitReportWeb td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top}#unitReportWeb th{background:#eaf0f6}
@@ -637,9 +672,34 @@ async function exportUnitPdf(unit){
   else if(quizWeightedMedian>=75)quizControlStatus="Drobné nedostatky";
   else quizControlStatus="Závažné nedostatky";
  }
- const payload={u:unit,e:entries.map(r=>[stations.indexOf(r.station),r.status||""]),q:quizEntries.map(x=>[String(x.name||"").slice(0,24),String(x.role||"").slice(0,12),Number(x.correct||0),Number(x.total||0),Number(x.percentage||0)])};
- const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
- const webReportUrl=location.origin+location.pathname+"?unitReport="+encodeURIComponent(encoded);
+ const payload={
+  u:unit,
+  generatedAt:new Date().toISOString(),
+  e:entries.map(r=>({station:r.station||"",status:r.status||"",reviewer:r.reviewer||"",date:r.date||"",time:r.time||"",notes:r.notes||""})),
+  q:quizEntries.map(x=>({
+   name:x.name||"Bez jména",role:x.role||"Role neuvedena",
+   correct:Number(x.correct||0),total:Number(x.total||0),percentage:Number(x.percentage||0),
+   durationSeconds:Number(x.durationSeconds??x.duration??x.duration_seconds??0),
+   evaluation:quizBuildEvaluation(x),wrong:quizWrongAnswers(x),critical:quizCriticalErrors(x)
+  }))
+ };
+ const jsonPayload=JSON.stringify(payload);
+ let webReportUrl="";
+ try{
+  if(typeof CompressionStream==="function"){
+   const stream=new Blob([jsonPayload]).stream().pipeThrough(new CompressionStream("gzip"));
+   const compressed=new Uint8Array(await new Response(stream).arrayBuffer());
+   let binary="";for(let i=0;i<compressed.length;i+=0x8000)binary+=String.fromCharCode(...compressed.subarray(i,Math.min(i+0x8000,compressed.length)));
+   const zipped=btoa(binary).replace(/\\+/g,"-").replace(/\\//g,"_").replace(/=+$/,"");
+   webReportUrl=location.origin+location.pathname+"?unitReportZip="+zipped;
+  }else{
+   const encoded=btoa(unescape(encodeURIComponent(jsonPayload)));
+   webReportUrl=location.origin+location.pathname+"?unitReport="+encodeURIComponent(encoded);
+  }
+ }catch(payloadError){
+  const encoded=btoa(unescape(encodeURIComponent(jsonPayload)));
+  webReportUrl=location.origin+location.pathname+"?unitReport="+encodeURIComponent(encoded);
+ }
  let unitReportQrMarkup='<span style="font-size:9px;color:#a32121">QR kód se nepodařilo vytvořit.</span>';
  try{if(window.QRCode){const qrTemp=document.createElement("div");qrTemp.style.cssText="position:fixed;left:-10000px;top:0;width:220px;height:220px;padding:16px;background:#fff;box-sizing:border-box;overflow:visible";document.body.appendChild(qrTemp);new QRCode(qrTemp,{text:webReportUrl,width:188,height:188,correctLevel:QRCode.CorrectLevel.L});const qrCanvas=qrTemp.querySelector("canvas"),qrImage=qrTemp.querySelector("img");const qrData=qrCanvas?qrCanvas.toDataURL("image/png"):(qrImage?qrImage.src:"");if(qrData)unitReportQrMarkup='<img alt="QR kód hodnocení jednotky" width="188" height="188" style="display:block;width:188px;height:188px;max-width:none;image-rendering:pixelated" src="'+qrData+'">';qrTemp.remove();}}catch(qrBuildError){}
  const report='<div class="summary"><div style="display:flex;align-items:center;gap:14px"><div style="width:220px;height:220px;min-width:220px;flex:none;padding:16px;box-sizing:border-box;background:#fff;overflow:visible">'+unitReportQrMarkup+'</div><div><h2>Webová verze hodnocení</h2><p>Naskenuj QR kód pro otevření přehledu této jednotky na telefonu.</p></div></div></div><div class="summary"><h2>Celkové hodnocení jednotky</h2><p><strong>Stav:</strong> '+esc(overall)+'</p><div class="stats"><div><strong>'+entries.length+' / 7</strong><span>vyhodnocených stanovišť</span></div><div><strong>'+good+'</strong><span>bez nedostatků</span></div><div><strong>'+minor+'</strong><span>drobné nedostatky</span></div><div><strong>'+major+'</strong><span>závažné nedostatky</span></div></div><p><strong>Chybějící zápisy:</strong> '+esc(missing.length?missing.join(", "):"Žádné")+'</p><p><strong>Vědomostní kvíz:</strong> '+esc(quizSummary)+'</p>'+(quizError?'<p class="warning">'+esc(quizError)+'</p>':'')+'</div><h2 class="section-title">Kontrola stanovišť</h2>'+stationBody+'<h2 class="section-title">Vědomostní kvíz – výsledky <span class="quiz-control-status">('+esc(quizControlStatus)+')</span></h2>'+quizBody;
@@ -654,17 +714,62 @@ async function exportUnitPdf(unit){
 }
 
 const readmePanel=el("readmePanel"),readmeToggle=el("readmeToggle");readmeToggle.addEventListener("click",()=>{const collapsed=readmePanel.classList.toggle("is-collapsed");readmeToggle.textContent=collapsed?"Rozbalit":"Sbalit";readmeToggle.setAttribute("aria-expanded",String(!collapsed));localStorage.setItem("hasicskaRevueReadmeCollapsed",String(collapsed))});if(localStorage.getItem("hasicskaRevueReadmeCollapsed")==="true"){readmePanel.classList.add("is-collapsed");readmeToggle.textContent="Rozbalit";readmeToggle.setAttribute("aria-expanded","false")}
-const unitReportParam=new URLSearchParams(location.search).get("unitReport");
-if(unitReportParam){
- try{
-  const p=JSON.parse(decodeURIComponent(escape(atob(unitReportParam))));
-  const names=Array.isArray(p.e)?p.e.map(x=>stations[x[0]]||"Neznámé stanoviště"):[];
-  const statuses=(p.e||[]).map(x=>x[1]);
-  const rows=(p.e||[]).map(x=>'<tr><td>'+escaped(stations[x[0]]||"Stanoviště")+'</td><td>'+escaped(x[1]||"Bez hodnocení")+'</td><td>'+escaped(x[2]||"—")+'</td><td>'+escaped(x[3]||"—")+'</td><td>'+escaped(x[4]||"Bez poznámky")+'</td></tr>').join("");
-  el("unitReportWeb").innerHTML='<h1>Hasičská revue – hodnocení jednotky '+escaped(p.u||"")+'</h1><p>Webový přehled vytvořený při generování zprávy. Obsahuje stručný souhrn hodnocení uložený při vytvoření QR kódu.</p><p><strong>V pořádku:</strong> '+statuses.filter(x=>x==="V pořádku").length+' · <strong>Drobné nedostatky:</strong> '+statuses.filter(x=>x==="Drobné nedostatky").length+' · <strong>Závažné nedostatky:</strong> '+statuses.filter(x=>x==="Závažné nedostatky").length+'</p><div style="overflow-x:auto"><table><thead><tr><th>Stanoviště</th><th>Stav</th><th>Hodnotitel</th><th>Datum</th><th>Poznámka</th></tr></thead><tbody>'+rows+'</tbody></table></div><h2>Vědomostní kvíz</h2>'+((p.q||[]).length?(p.q||[]).map(x=>'<section style="border:1px solid #cbd5e1;padding:10px;margin:8px 0"><strong>'+escaped(x[0])+'</strong> · '+escaped(x[1])+'<p>'+x[2]+' / '+x[3]+' správně ('+x[4]+' %)</p>'+(x[5]?'<p>Chybné odpovědi: '+escaped(x[5])+'</p>':'')+'</section>').join(""):'<p>Bez výsledku kvízu.</p>')+'<p style="margin-top:20px;color:#64748b;font-size:12px">Tento odkaz obsahuje kopii hodnocení z okamžiku vytvoření. Pro aktualizovaný přehled vygeneruj nový QR kód.</p>';
-  document.body.classList.add("unit-report-mode");document.title="Hodnocení jednotky · "+(p.u||"");
- }catch(e){el("unitReportWeb").style.display="block";el("unitReportWeb").textContent="Odkaz na hodnocení je poškozený nebo neúplný."}
+async function decodeUnitReportPayload(){
+ const params=new URLSearchParams(location.search);
+ const zipped=params.get("unitReportZip");
+ if(zipped){
+  if(typeof DecompressionStream!=="function")throw new Error("Tento prohlížeč neumí otevřít komprimovaný přehled. Otevři odkaz v aktuálním Safari nebo Chrome.");
+  const binary=atob(zipped.replace(/-/g,"+").replace(/_/g,"/")+"=".repeat((4-zipped.length%4)%4));
+  const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+  return JSON.parse(await new Response(stream).text());
+ }
+ const plain=params.get("unitReport");
+ if(plain)return JSON.parse(decodeURIComponent(escape(atob(plain))));
+ return null;
 }
+(async()=>{
+ const params=new URLSearchParams(location.search);
+ if(!params.has("unitReportZip")&&!params.has("unitReport"))return;
+ const target=el("unitReportWeb");
+ try{
+  const p=await decodeUnitReportPayload();
+  if(!p)throw new Error("Odkaz neobsahuje data hodnocení.");
+  const entries=Array.isArray(p.e)?p.e.map((x,i)=>Array.isArray(x)?{
+   station:stations[x[0]]||"Neznámé stanoviště",status:x[1]||"",reviewer:x[2]||"",date:x[3]||"",time:"",notes:x[4]||""
+  }:x):[];
+  const quizEntries=Array.isArray(p.q)?p.q.map(x=>Array.isArray(x)?{
+   name:x[0]||"Bez jména",role:x[1]||"Role neuvedena",correct:Number(x[2]||0),total:Number(x[3]||0),percentage:Number(x[4]||0),wrong:x[5]||[],critical:[]
+  }:x):[];
+  const good=entries.filter(x=>x.station!=="Kvíz – hasička Klepačov"&&x.status==="V pořádku").length;
+  const minor=entries.filter(x=>x.station!=="Kvíz – hasička Klepačov"&&x.status==="Drobné nedostatky").length;
+  const major=entries.filter(x=>x.station!=="Kvíz – hasička Klepačov"&&x.status==="Závažné nedostatky").length;
+  const visibleStations=stations.filter((st,i)=>i!==3&&st!=="Kvíz – hasička Klepačov");
+  const missing=visibleStations.filter(st=>!entries.some(x=>x.station===st));
+  const overall=major?"Zjištěny závažné nedostatky – je potřeba jejich náprava.":minor?"Zjištěny drobné nedostatky – doporučuje se jejich odstranění.":entries.length&&missing.length===0?"Kontrolní stanoviště jsou bez zaznamenaných nedostatků.":entries.length?"Dosavadní zápisy neobsahují nedostatky, kontrola ale není kompletní.":"Zatím nejsou k dispozici zápisy ze stanovišť.";
+  const esc=escaped;
+  const stationEntries=entries.filter(x=>x.station!=="Kvíz – hasička Klepačov");
+  const stationBody=stationEntries.length?'<div class="unit-report-stations">'+stationEntries.map(x=>'<section class="unit-report-record"><div class="unit-report-record-head"><h2>'+esc(x.station||"Stanoviště")+'</h2><span class="unit-report-status">'+esc(x.status||"Bez hodnocení")+'</span></div><dl><dt>Hodnotitel</dt><dd>'+esc(x.reviewer||"Neuveden")+'</dd><dt>Datum a čas</dt><dd>'+esc([x.date,x.time].filter(Boolean).join(" · ")||"Neuvedeno")+'</dd></dl><h3>Poznámka a slovní hodnocení</h3><p class="unit-report-notes">'+esc(x.notes||"Bez poznámky").replace(/\\n/g,"<br>")+'</p></section>').join("")+'</div>':'<p>Zatím nejsou uloženy žádné zápisy pro tuto jednotku.</p>';
+  const quizBody=quizEntries.length?quizEntries.map(x=>{
+   const wrong=Array.isArray(x.wrong)?x.wrong:(typeof x.wrong==="string"&&x.wrong?[x.wrong]:[]);
+   const critical=Array.isArray(x.critical)?x.critical:[];
+   const evaluation=x.evaluation||quizBuildEvaluation(x);
+   const duration=Number(x.durationSeconds||0);
+   return '<section class="unit-report-record unit-report-quiz"><div class="unit-report-record-head"><div><h2>'+esc(x.name||"Bez jména")+'</h2><p class="unit-report-muted">'+esc(x.role||"Role neuvedena")+'</p></div><strong class="unit-report-score">'+Number(x.percentage||0)+' %</strong></div><div class="unit-report-progress"><span style="width:'+Math.max(0,Math.min(100,Number(x.percentage||0)))+'%"></span></div><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně'+(duration?' · <strong>Délka:</strong> '+Math.floor(duration/60)+':'+String(duration%60).padStart(2,"0"):'')+'</p><h3>'+esc(evaluation.headline||"Vyhodnocení")+'</h3><p>'+esc(evaluation.body||"")+'</p><p>'+esc(evaluation.advice||"")+'</p>'+(critical.length?'<div class="unit-report-critical"><strong>Kritická chyba – minimálně závažné nedostatky</strong><ul>'+critical.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul></div>':'')+(wrong.length?'<h3>Chybné odpovědi a správná řešení</h3><ul class="unit-report-wrong">'+wrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'<p class="unit-report-muted">Bez zaznamenaných chybných odpovědí.</p>')+'</section>';
+  }).join(""):'<p>Pro tuto jednotku zatím nejsou v systému uložené výsledky kvízu.</p>';
+  const criticalCount=quizEntries.filter(x=>Array.isArray(x.critical)&&x.critical.length).length;
+  const quizWeighted=quizEntries.map(x=>({score:Number(x.percentage||0),weight:/^(strojník|velitel)$/i.test(String(x.role||"").trim())?2:1})).sort((a,b)=>a.score-b.score);
+  let median=null;if(quizWeighted.length){const total=quizWeighted.reduce((a,x)=>a+x.weight,0);let c=0;for(const x of quizWeighted){c+=x.weight;if(c>=total/2){median=x.score;break}}}
+  const quizStatus=!quizEntries.length?"Bez výsledku":criticalCount?"Závažné nedostatky – kritická chyba":median>=90?"V pořádku":median>=75?"Drobné nedostatky":"Závažné nedostatky";
+  const generated=p.generatedAt?new Date(p.generatedAt).toLocaleString("cs-CZ"):"neuvedeno";
+  target.innerHTML='<header class="unit-report-header"><div class="unit-report-brand">🚒 Hasičská revue</div><p class="unit-report-muted">Revue pro jednotky okrsku Blansko</p><h1>Celkové hodnocení jednotky</h1><h2>'+esc(p.u||"Neznámá jednotka")+'</h2><p class="unit-report-muted">Zpráva vygenerována: '+esc(generated)+'</p></header><section class="unit-report-summary"><h2>Souhrn kontroly</h2><p class="unit-report-overall">'+esc(overall)+'</p><div class="unit-report-stats"><div><strong>'+stationEntries.length+' / '+visibleStations.length+'</strong><span>zapsaných stanovišť</span></div><div><strong>'+good+'</strong><span>V pořádku</span></div><div><strong>'+minor+'</strong><span>Drobné nedostatky</span></div><div><strong>'+major+'</strong><span>Závažné nedostatky</span></div></div><p><strong>Chybějící zápisy:</strong> '+esc(missing.length?missing.join(", "):"Žádné")+'</p><p><strong>Vědomostní kvíz:</strong> '+esc(quizEntries.length?quizEntries.length+" účastníků · vážený medián "+median+" %":"Zatím bez výsledku")+'</p><p><strong>Souhrnné hodnocení kvízu:</strong> '+esc(quizStatus)+'</p></section><h2 class="unit-report-section-title">Kontrola jednotlivých stanovišť</h2>'+stationBody+'<h2 class="unit-report-section-title">Vědomostní kvíz – podrobné výsledky</h2>'+quizBody+'<footer class="unit-report-footer">Tento přehled zachycuje stav dat v okamžiku vytvoření zprávy. Pro aktualizované hodnocení je potřeba vygenerovat nový QR kód.</footer>';
+  document.body.classList.add("unit-report-mode");document.title="Hodnocení jednotky · "+(p.u||"");
+ }catch(e){
+  target.style.display="block";
+  target.innerHTML='<h1>Hodnocení jednotky se nepodařilo načíst</h1><p>'+escaped(String(e&&e.message||e))+'</p><p>Zkus otevřít QR odkaz znovu nebo požádej o nové vygenerování zprávy.</p>';
+  document.body.classList.add("unit-report-mode");
+ }
+})();
 renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderHomeStations();renderResults();renderProgress();renderStandby();
 renderUnitPdfExports();
 // Samostatný náhled pro pozorovatele: ?observer=1. Bez navigace a organizačních akcí.
