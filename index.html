@@ -860,5 +860,5 @@ if(observerMode){
  showPage("home");
  const subtitle=el("pageSubtitle");if(subtitle)subtitle.textContent="Aktuální průběh revue";
 }
-const savedPage=localStorage.getItem("hasicskaRevueCurrentPage");if(savedPage&&document.getElementById(savedPage)?.classList.contains("page"))showPage(savedPage);
+const savedPage=localStorage.getItem("hasicskaRevueCurrentPage");if(!reviewerMode&&savedPage&&document.getElementById(savedPage)?.classList.contains("page"))showPage(savedPage);
 </script></body></html>
