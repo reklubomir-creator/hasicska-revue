@@ -205,23 +205,23 @@ body.unit-report-mode #unitReportWeb{display:block!important}
 .unit-report-stations{display:grid;gap:14px}
 .unit-report-record{background:#fff;border:1px solid #d5dee8;border-radius:14px;padding:clamp(14px,3vw,22px);margin:12px 0;box-shadow:0 3px 12px #102d4e08;overflow-wrap:anywhere}
 .unit-report-record.status-ok{border-left:6px solid #16834a;background:#f0fbf3}
-.unit-report-record.status-minor{border-left:6px solid #e58a00;background:#fff8e8}
+.unit-report-record.status-minor{border-left:6px solid #d6a600;background:#fffbe6}
 .unit-report-record.status-major{border-left:6px solid #c62828;background:#fff1f1}
 .unit-report-status-badge{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:750;margin:4px 0 8px}
 .unit-report-status-badge.status-ok{background:#d9f5e2;color:#126536}
-.unit-report-status-badge.status-minor{background:#ffedc2;color:#8a4b00}
+.unit-report-status-badge.status-minor{background:#fff2a8;color:#735b00}
 .unit-report-status-badge.status-major{background:#ffdddd;color:#a31515}
 .unit-report-summary.status-ok{border-left:6px solid #16834a;background:#f0fbf3}
-.unit-report-summary.status-minor{border-left:6px solid #e58a00;background:#fff8e8}
+.unit-report-summary.status-minor{border-left:6px solid #d6a600;background:#fffbe6}
 .unit-report-summary.status-major{border-left:6px solid #c62828;background:#fff1f1}
 .unit-report-quiz.status-ok{border-left:6px solid #16834a}
-.unit-report-quiz.status-minor{border-left:6px solid #e58a00}
+.unit-report-quiz.status-minor{border-left:6px solid #d6a600}
 .unit-report-quiz.status-major{border-left:6px solid #c62828}
 .unit-report-quiz.status-ok .unit-report-quiz-quality strong{color:#16834a}
-.unit-report-quiz.status-minor .unit-report-quiz-quality strong{color:#b76b00}
+.unit-report-quiz.status-minor .unit-report-quiz-quality strong{color:#9a7a00}
 .unit-report-quiz.status-major .unit-report-quiz-quality strong{color:#c62828}
 .unit-report-progress.status-ok span{background:#16834a}
-.unit-report-progress.status-minor span{background:#e58a00}
+.unit-report-progress.status-minor span{background:#d6a600}
 .unit-report-progress.status-major span{background:#c62828}
 .unit-report-record-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .unit-report-record h2{font-size:19px;margin:0 0 6px}
@@ -366,10 +366,10 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button type="button" id="openReviewerStandalone">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button><button data-page="unitAdmin">⚙ &nbsp; Kontakty na jednotky</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.73</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.74</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.73</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.74</span></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
