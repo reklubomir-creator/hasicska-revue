@@ -58,6 +58,18 @@ table{min-width:620px}th,td{padding:10px 8px}
 <main class="main">
 <header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><h1 id="pageTitle">Přehled Hasičské revue</h1><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill">● Pracovní verze</span></header>
 <section id="home" class="page">
+<div class="panel" style="margin-bottom:20px;border:2px solid var(--blue);background:linear-gradient(135deg,#fff 0%,#edf5fc 100%);padding:24px">
+<div class="eyebrow">Důležité informace</div>
+<h2 style="font-size:25px;margin:4px 0 12px">📖 Přečti mě – jak aplikace funguje</h2>
+<p><strong>Hasičská revue</strong> je pracovní prototyp pro organizaci prověřovací akce jednotek SDH. Pomáhá plánovat stanoviště, zapisovat průběh a hodnocení, sledovat nedostatky a zpracovat výsledky.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>🚒 Jednotky a stanoviště</strong><p class="muted" style="margin:5px 0 0">Zobrazíš jednotky, přiřadíš jim výchozí stanoviště a sleduješ průběh jednotlivých úkolů.</p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>🎙 Rozhraní hodnotitele</strong><p class="muted" style="margin:5px 0 0">Vybereš jednotku a stanoviště, zaznamenáš hodnocení a poznámky. Podporované prohlížeče umožňují diktování česky; přepis před uložením zkontroluj.</p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>☑ Vědomostní kvíz</strong><p class="muted" style="margin:5px 0 0">Kvíz lze spustit a spravovat v sekci Kvíz. Výsledky se vyhodnocují a mohou se promítnout do přehledu a zprávy jednotky.</p><p style="margin:7px 0 0"><strong>Heslo pro generování kvízu:</strong> <code>900330</code></p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>📊 Výsledky a zprávy</strong><p class="muted" style="margin:5px 0 0">Přehledneš uložené zápisy a nedostatky, stáhneš CSV a připravíš zprávu jednotky pro tisk nebo uložení do PDF.</p></div>
+</div>
+<div class="notice" style="margin-top:14px"><strong>Jak to funguje zatím:</strong> jde o testovací verzi, ne hotový víceuživatelský systém. Běžné zápisy se ukládají pouze v aktuálním prohlížeči a na tomto zařízení – automaticky se nesdílejí mezi hodnotiteli. Kvíz využívá samostatné webové rozhraní pro otázky. Tlačítko „Načíst testovací data“ vloží fiktivní zápisy a přepíše stávající zápisy uložené v tomto prohlížeči. Před skutečným nasazením je potřeba ověřit celý postup a vyřešit společné ukládání dat.</div>
+</div>
 <div class="cards">
 <div class="card"><div class="stat-label">Jednotky na pohotovosti</div><div class="stat" id="statStandby">0</div><div class="stat-label" id="standbyUnitsLabel">žádná jednotka</div></div>
 <button type="button" class="card" id="issuesCard" style="text-align:left;color:inherit;width:100%;background:white;border:1px solid var(--line);box-shadow:0 3px 12px #102d4e06"><div class="stat-label">Zaznamenané nedostatky</div><div class="stat" id="statIssues">0</div><div class="stat-label">Kliknutím zobrazíš seznam a popis</div></button>
