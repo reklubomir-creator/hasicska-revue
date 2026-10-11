@@ -301,10 +301,10 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="assessment">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.40</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.43</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.42</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.43</span></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
@@ -375,7 +375,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
  <div style="margin-top:18px"><h3>Automatické výsledky kvízu</h3><p class="muted">Aplikace vyhodnotí odpovědi automaticky. Výsledky znovu načteš tlačítkem „Obnovit stav“.</p><div id="quizLiveResults" class="muted">Načítám výsledky…</div></div>
 </div>
 <div id="quizParticipant" class="panel hidden">
- <h2>Vědomostní kvíz jednotky SDH</h2><div id="quizParticipantState" class="notice">Ověřuji platnost QR kódu…</div>
+ <h2>Účastnický kvíz jednotky SDH</h2><p class="muted">Toto je obrazovka pro člena jednotky, který vyplňuje kvíz. Pokud potřebuješ spravovat jednotky, QR kód nebo výsledky, otevři organizační administraci.</p><div class="actions" style="margin:0 0 12px"><button type="button" class="primary" id="quizOpenOrganizer">Otevřít administraci kvízu</button></div><div id="quizParticipantState" class="notice">Ověřuji platnost QR kódu…</div>
  <div id="quizParticipantForm" class="hidden">
   <div class="field"><label for="quizPerson">Jméno a příjmení</label><input id="quizPerson" autocomplete="name" placeholder="Jméno a příjmení" maxlength="100"></div>
   <div class="field"><label for="quizRole">Role</label><select id="quizRole"><option value="">Vyber roli</option><option>Hasič</option><option>Strojník</option><option>Velitel</option></select></div>
@@ -577,7 +577,7 @@ async function quizSubmit(){
  try{const out=await quizPost({action:"submit",token:quizTokenFromUrl,name:el("quizPerson").value.trim(),role:el("quizRole").value,answers,durationSeconds:Math.min(1200,Math.round((Date.now()-quizStartedAt)/1000))});if(!out.ok)throw new Error(out.error||"Server odmítl odpovědi.");el("quizParticipantState").textContent="Hotovo. Kvíz byl odevzdán. Děkujeme.";el("quizParticipantForm").classList.add("hidden");}
  catch(e){el("quizParticipantState").textContent="Odeslání se nezdařilo: "+e.message+". Nezavírej stránku a kontaktuj hodnotitele.";el("quizSubmit").disabled=false}
 }
-if(el("quizActiveUnit")){quizFillUnits();el("quizActivate").onclick=quizActivate;el("quizClose").onclick=quizClose;el("quizRefresh").onclick=quizRefreshState;el("quizPrintQr").onclick=()=>{document.body.classList.add("qr-print");window.print();setTimeout(()=>document.body.classList.remove("qr-print"),500)};el("quizBegin").onclick=quizBegin;el("quizSubmit").onclick=quizSubmit;
+if(el("quizActiveUnit")){quizFillUnits();if(el("quizOpenOrganizer"))el("quizOpenOrganizer").onclick=()=>{el("quizParticipant").classList.add("hidden");el("quizOrganizer").classList.remove("hidden");};el("quizActivate").onclick=quizActivate;el("quizClose").onclick=quizClose;el("quizRefresh").onclick=quizRefreshState;el("quizPrintQr").onclick=()=>{document.body.classList.add("qr-print");window.print();setTimeout(()=>document.body.classList.remove("qr-print"),500)};el("quizBegin").onclick=quizBegin;el("quizSubmit").onclick=quizSubmit;
  if(quizTokenFromUrl)quizLoadParticipant();else{const script=document.createElement("script");script.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";script.onload=quizRefreshState;script.onerror=()=>quizStatus("QR knihovnu se nepodařilo načíst. Zkontroluj připojení k internetu.",true);document.head.appendChild(script);}}
 
 function loadDemoData(){
