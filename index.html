@@ -226,7 +226,7 @@ body.unit-report-mode #unitReportWeb{display:block!important}
 #unitReportWeb table{border-collapse:collapse;width:100%}#unitReportWeb th,#unitReportWeb td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top}#unitReportWeb th{background:#eaf0f6}
 body.observer-mode .side{display:none!important}
 body.observer-mode .main{grid-column:1/-1;box-sizing:border-box;min-width:0;margin-left:0;width:100%;max-width:none;padding:clamp(14px,3vw,34px)}
-body.observer-mode .top .eyebrow{display:none} .observer-notice{display:none;align-items:center;background:#f9e9e7;color:var(--menu-red);border:1px solid var(--menu-red);border-radius:10px;padding:7px 11px;font-size:12px;font-weight:750;line-height:1.35} body.observer-mode .observer-notice{display:inline-flex} body.observer-mode #lastDashboardRefresh{display:none!important}
+body.observer-mode .top .eyebrow{display:none} .observer-notice{display:none;align-items:center;background:#f1f5f9;color:#475569;border:1px solid #d8e0e8;border-radius:10px;padding:7px 11px;font-size:12px;font-weight:650;line-height:1.35} body.observer-mode .observer-notice{display:inline-flex} body.observer-mode #lastDashboardRefresh{display:none!important}
 body.observer-mode .top .pill{display:none}
 body.observer-mode #readmePanel,
 body.observer-mode #issuesCard,
@@ -258,25 +258,26 @@ body.observer-mode #home .panel-head button{display:none!important}
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="assessment">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.30</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.31</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.30</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.31</span></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
 <div id="readmeContent">
-<div class="eyebrow" style="color:var(--menu-red)">Důležité informace</div>
-<h2 style="font-size:25px;margin:4px 0 12px">📖 Přečti mě – jak aplikace funguje</h2>
-<p><strong>👁 Náhled pozorovatele:</strong> otevře zjednodušený, pouze pro čtení určený přehled aktuálního průběhu revue bez organizačního menu a ovládacích prvků. V horní části náhledu je toto omezení viditelně označeno. Odkaz najdeš v levém menu; otevře se v nové záložce. Pozor: v této prototypové verzi se data ukládají do prohlížeče, takže náhled na jiném zařízení zatím automaticky nesdílí zápisy.</p>
-<p><strong>Hasičská revue</strong> slouží k rozlosování jednotek, evidenci průběhu stanovišť a pohotovosti, zápisu hodnocení a přípravě výsledných zpráv. Akce je plánována na 25. 10. 2026, sraz ve 13:00 a start ve 13:30.</p>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">
-<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>🚒 Rozlosování</strong><p class="muted" style="margin:5px 0 0">Nastavíš výchozí stanoviště jednotek a prohlédneš si jejich pořadí stanovišť.</p></div>
-<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>🎙 Rozhraní hodnotitele</strong><p class="muted" style="margin:5px 0 0">Vybereš jednotku a stanoviště, zaznamenáš hodnocení a poznámky. Podporované prohlížeče umožňují diktování česky; přepis před uložením zkontroluj.</p></div>
-<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>☑ Vědomostní kvíz</strong><p class="muted" style="margin:5px 0 0">Kvíz lze spustit a spravovat v sekci Kvíz. Výsledky se vyhodnocují a mohou se promítnout do přehledu a zprávy jednotky.</p><p style="margin:7px 0 0"><strong>Heslo pro generování kvízu:</strong> <code>900330</code></p></div>
-<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>📊 Výsledky a zprávy</strong><p class="muted" style="margin:5px 0 0">Prohlédneš uzavřené zápisy a nedostatky, stáhneš CSV a připravíš zprávu jednotky pro tisk nebo PDF.</p></div>
+<div class="eyebrow" style="color:var(--menu-red)">Jak s aplikací pracovat</div>
+<h2 style="font-size:25px;margin:4px 0 12px">📖 Hasičská revue – stručný návod</h2>
+<p><strong>Hasičská revue</strong> slouží k rozlosování jednotek, evidenci průběhu stanovišť a pohotovosti, zápisu hodnocení a přípravě výsledných zpráv. Akce se koná 25. 10. 2026; sraz jednotek je ve 13:00 a start ve 13:30.</p>
+<h3 style="margin:16px 0 8px">Postup a hlavní části aplikace</h3>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px">
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>1. 🚒 Rozlosování</strong><p class="muted" style="margin:5px 0 0">Nastavíš výchozí stanoviště jednotek a zkontroluješ jejich pořadí stanovišť.</p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>2. 🎙 Hodnocení stanovišť</strong><p class="muted" style="margin:5px 0 0">Vybereš jednotku a stanoviště, zaznamenáš stav kontroly a doplníš poznámku. V podporovaném prohlížeči můžeš diktovat česky; přepis před uložením vždy zkontroluj.</p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>3. ☑ Vědomostní kvíz</strong><p class="muted" style="margin:5px 0 0">V sekci Kvíz spustíš a spravuješ kvíz. Výsledky se vyhodnotí a mohou se promítnout do přehledu a zprávy jednotky.</p><p style="margin:7px 0 0"><strong>Heslo pro generování kvízu:</strong> <code>900330</code></p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>4. 📊 Výsledky a zprávy</strong><p class="muted" style="margin:5px 0 0">Zkontroluješ uzavřené zápisy a nedostatky, můžeš stáhnout CSV a připravit zprávu jednotky pro tisk nebo PDF.</p></div>
 </div>
-<div class="notice" style="margin-top:14px"><strong>Ukládání a obnovování:</strong> běžné zápisy se ukládají pouze v tomto prohlížeči a na tomto zařízení, mezi hodnotiteli se automaticky nesdílejí. Dashboard se obnovuje každých 30 sekund; ostatní záložky se automaticky neobnovují. Čas v levém menu ukazuje aktuální čas a odpočet do další obnovy dashboardu. Testovací data jsou fiktivní a při načtení přepíší dosavadní zápisy.</div>
+<div class="notice" style="margin-top:14px"><strong>Ukládání a obnovování:</strong> běžné zápisy se ukládají pouze v tomto prohlížeči a na tomto zařízení; mezi hodnotiteli se automaticky nesdílejí. Dashboard se obnovuje každých 30 sekund, ostatní záložky nikoli. Čas v levém menu ukazuje aktuální čas a odpočet do další obnovy. Testovací data jsou fiktivní a jejich načtení přepíše dosavadní zápisy.</div>
+<p style="margin:14px 0 0"><strong>👁 Náhled pozorovatele:</strong> otevře zjednodušený přehled aktuálního průběhu revue pouze pro čtení, bez organizačního menu a ovládacích prvků. Omezení je označeno nahoře v náhledu. Odkaz najdeš v levém menu a otevře se v nové záložce. Protože se data v této prototypové verzi ukládají jen do prohlížeče a zařízení, náhled na jiném zařízení zatím automaticky nesdílí zápisy.</p>
 </div>
 </div>
 <div class="cards">
