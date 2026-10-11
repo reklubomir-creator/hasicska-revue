@@ -344,7 +344,7 @@ function loadDemoData(){
  }
  records=demoRecords;
  localStorage.setItem("hasicskaRevueDemoVersion",String(demoVersion+1));
- save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();showPage("home");
+ save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();showPage("results");
  alert("Načteno 56 fiktivních zápisů, z toho "+targetDefects+" se závadami. Při dalším načtení se počet závad změní. Data jsou pouze pro vyzkoušení aplikace.");
 }
 el("loadDemoData").onclick=loadDemoData;
