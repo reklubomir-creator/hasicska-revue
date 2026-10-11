@@ -44,7 +44,7 @@ table{min-width:620px}th,td{padding:10px 8px}
 .main{padding-left:8px;padding-right:8px}
 .brand{font-size:15px}
 }
-.qr-code canvas,.qr-code img{max-width:100%;height:auto}@media print{body.qr-print *{visibility:hidden!important}body.qr-print #quizQrPanel,body.qr-print #quizQrPanel *{visibility:visible!important}body.qr-print #quizQrPanel{position:absolute;left:0;top:0;width:100%;border:0!important}}</style>
+.readme-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}.readme-bar strong{font-size:15px;color:var(--navy)}.readme-panel.is-collapsed{padding:8px 12px!important;border-width:1px!important;background:#edf5fc!important}.readme-panel.is-collapsed #readmeContent{display:none}.readme-panel.is-collapsed .readme-bar button{padding:5px 11px;min-height:30px}.readme-panel.is-collapsed .readme-bar strong{font-size:13px}.qr-code canvas,.qr-code img{max-width:100%;height:auto}@media print{body.qr-print *{visibility:hidden!important}body.qr-print #quizQrPanel,body.qr-print #quizQrPanel *{visibility:visible!important}body.qr-print #quizQrPanel{position:absolute;left:0;top:0;width:100%;border:0!important}}</style>
 </head>
 <body>
 <div class="layout">
@@ -58,7 +58,9 @@ table{min-width:620px}th,td{padding:10px 8px}
 <main class="main">
 <header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><h1 id="pageTitle">Přehled Hasičské revue</h1><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill">● Pracovní verze</span></header>
 <section id="home" class="page">
-<div class="panel" style="margin-bottom:20px;border:2px solid var(--blue);background:linear-gradient(135deg,#fff 0%,#edf5fc 100%);padding:24px">
+<div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--blue);background:linear-gradient(135deg,#fff 0%,#edf5fc 100%);padding:18px 24px">
+<div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
+<div id="readmeContent">
 <div class="eyebrow">Důležité informace</div>
 <h2 style="font-size:25px;margin:4px 0 12px">📖 Přečti mě – jak aplikace funguje</h2>
 <p><strong>Hasičská revue</strong> je pracovní prototyp pro organizaci prověřovací akce jednotek SDH. Pomáhá plánovat stanoviště, zapisovat průběh a hodnocení, sledovat nedostatky a zpracovat výsledky.</p>
@@ -69,6 +71,7 @@ table{min-width:620px}th,td{padding:10px 8px}
 <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>📊 Výsledky a zprávy</strong><p class="muted" style="margin:5px 0 0">Přehledneš uložené zápisy a nedostatky, stáhneš CSV a připravíš zprávu jednotky pro tisk nebo uložení do PDF.</p></div>
 </div>
 <div class="notice" style="margin-top:14px"><strong>Jak to funguje zatím:</strong> jde o testovací verzi, ne hotový víceuživatelský systém. Běžné zápisy se ukládají pouze v aktuálním prohlížeči a na tomto zařízení – automaticky se nesdílejí mezi hodnotiteli. Kvíz využívá samostatné webové rozhraní pro otázky. Tlačítko „Načíst testovací data“ vloží fiktivní zápisy a přepíše stávající zápisy uložené v tomto prohlížeči. Před skutečným nasazením je potřeba ověřit celý postup a vyřešit společné ukládání dat.</div>
+</div>
 </div>
 <div class="cards">
 <div class="card"><div class="stat-label">Jednotky na pohotovosti</div><div class="stat" id="statStandby">0</div><div class="stat-label" id="standbyUnitsLabel">žádná jednotka</div></div>
@@ -412,6 +415,7 @@ async function exportUnitPdf(unit){
  }
 }
 
+const readmePanel=el("readmePanel"),readmeToggle=el("readmeToggle");readmeToggle.addEventListener("click",()=>{const collapsed=readmePanel.classList.toggle("is-collapsed");readmeToggle.textContent=collapsed?"Rozbalit":"Sbalit";readmeToggle.setAttribute("aria-expanded",String(!collapsed));localStorage.setItem("hasicskaRevueReadmeCollapsed",String(collapsed))});if(localStorage.getItem("hasicskaRevueReadmeCollapsed")==="true"){readmePanel.classList.add("is-collapsed");readmeToggle.textContent="Rozbalit";readmeToggle.setAttribute("aria-expanded","false")}
 renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderStations("homeStations",selectedUnit);renderStations("unitStations",selectedUnit);renderResults();renderProgress();renderStandby();
 renderUnitPdfExports();
 const savedPage=localStorage.getItem("hasicskaRevueCurrentPage");if(savedPage&&document.getElementById(savedPage)?.classList.contains("page"))showPage(savedPage);
