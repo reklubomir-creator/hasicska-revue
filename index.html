@@ -301,10 +301,10 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="assessment">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.43</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.44</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.43</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.44</span></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
@@ -578,7 +578,15 @@ async function quizSubmit(){
  catch(e){el("quizParticipantState").textContent="Odeslání se nezdařilo: "+e.message+". Nezavírej stránku a kontaktuj hodnotitele.";el("quizSubmit").disabled=false}
 }
 if(el("quizActiveUnit")){quizFillUnits();if(el("quizOpenOrganizer"))el("quizOpenOrganizer").onclick=()=>{el("quizParticipant").classList.add("hidden");el("quizOrganizer").classList.remove("hidden");};el("quizActivate").onclick=quizActivate;el("quizClose").onclick=quizClose;el("quizRefresh").onclick=quizRefreshState;el("quizPrintQr").onclick=()=>{document.body.classList.add("qr-print");window.print();setTimeout(()=>document.body.classList.remove("qr-print"),500)};el("quizBegin").onclick=quizBegin;el("quizSubmit").onclick=quizSubmit;
- if(quizTokenFromUrl)quizLoadParticipant();else{const script=document.createElement("script");script.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";script.onload=quizRefreshState;script.onerror=()=>quizStatus("QR knihovnu se nepodařilo načíst. Zkontroluj připojení k internetu.",true);document.head.appendChild(script);}}
+ if(quizTokenFromUrl)quizLoadParticipant();else{loadQrLibrary().then(quizRefreshState).catch(()=>quizStatus("Generátor QR se nepodařilo načíst z žádného dostupného zdroje. Zkontroluj připojení k internetu; můžeš zatím použít zobrazený odkaz pod QR kódem.",true));}}
+async function loadQrLibrary(){
+ if(window.QRCode)return;
+ const sources=["https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js","https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js","https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"];
+ for(const src of sources){
+  try{await new Promise((resolve,reject)=>{const script=document.createElement("script");script.src=src;script.onload=()=>window.QRCode?resolve():reject(new Error("Knihovna se nenačetla"));script.onerror=()=>reject(new Error("Zdroj není dostupný"));document.head.appendChild(script)});return;}catch(e){}
+ }
+ throw new Error("QR knihovna není dostupná");
+}
 
 function loadDemoData(){
  if(!confirm("Načíst testovací data: hotová revue? Dosavadní zápisy v tomto prohlížeči budou nahrazeny."))return;
