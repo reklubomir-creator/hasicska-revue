@@ -199,7 +199,14 @@ body.observer-mode .page:not(#home){display:none!important}
 body.observer-mode .main>header.top{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:18px}
 body.observer-mode .main>header.top h1{font-size:clamp(26px,4vw,38px)}
 body.observer-mode #home .station-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-body.observer-mode #home .unit-board{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+body.observer-mode #home .unit-board{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(4px,1vw,10px)}
+body.observer-mode #home .unit-board .unit{aspect-ratio:1/1;min-height:0;height:auto;box-sizing:border-box;padding:clamp(4px,1.2vw,12px);overflow:hidden}
+body.observer-mode #home .unit-board .unit strong{font-size:clamp(9px,1.15vw,14px);line-height:1.2}
+body.observer-mode #home .unit-board .unit small{font-size:clamp(8px,.95vw,12px);line-height:1.2;overflow-wrap:anywhere}
+body.observer-mode #home .unit-board .unit .progress{max-width:100%}
+body.observer-mode #home .unit-board .unit-center .center-icon{font-size:clamp(15px,2vw,25px)}
+body.observer-mode #home .unit-board .unit-center strong{font-size:clamp(10px,1.25vw,15px)}
+body.observer-mode #home .unit-board .unit-center .center-caption{font-size:clamp(8px,.9vw,11px)}
 body.observer-mode #home .panel-head button{display:none!important}
 @media(max-width:700px){body.observer-mode .main{padding:14px}body.observer-mode #progressTable{font-size:11px}}
 </style>
@@ -212,7 +219,7 @@ body.observer-mode #home .panel-head button{display:none!important}
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="assessment">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.14</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.15</div>
 </aside>
 <main class="main">
 <header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill">● Pracovní verze</span></header>
