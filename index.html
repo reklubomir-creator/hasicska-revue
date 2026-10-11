@@ -133,7 +133,7 @@ table{min-width:620px}th,td{padding:10px 8px}
 .main{padding-left:8px;padding-right:8px}
 .brand{font-size:15px}
 }
-.readme-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}.readme-bar strong{font-size:15px;color:var(--navy)}.readme-panel.is-collapsed{padding:8px 12px!important;border-width:1px!important;background:#fde8e8!important;border-color:#dc2626!important}.readme-panel.is-collapsed .readme-bar strong{color:#b91c1c!important}.readme-panel.is-collapsed .readme-bar button{background:#b91c1c!important;color:#fff!important;border-color:#b91c1c!important}.readme-panel.is-collapsed #readmeContent{display:none}.readme-panel.is-collapsed .readme-bar button{padding:5px 11px;min-height:30px}.readme-panel.is-collapsed .readme-bar strong{font-size:13px}.qr-code canvas,.qr-code img{max-width:100%;height:auto}@media print{body.qr-print *{visibility:hidden!important}body.qr-print #quizQrPanel,body.qr-print #quizQrPanel *{visibility:visible!important}body.qr-print #quizQrPanel{position:absolute;left:0;top:0;width:100%;border:0!important}}
+.readme-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}.readme-bar strong{font-size:15px;color:var(--menu-red)}.readme-panel.is-collapsed{padding:8px 12px!important;border-width:1px!important;background:#f9e9e7!important;border-color:var(--menu-red)!important}.readme-panel.is-collapsed .readme-bar strong{color:var(--menu-red)!important}.readme-panel.is-collapsed .readme-bar button{background:var(--menu-red)!important;color:#fff!important;border-color:var(--menu-red)!important}.readme-panel.is-collapsed #readmeContent{display:none}.readme-panel.is-collapsed .readme-bar button{padding:5px 11px;min-height:30px}.readme-panel.is-collapsed .readme-bar strong{font-size:13px}.qr-code canvas,.qr-code img{max-width:100%;height:auto}@media print{body.qr-print *{visibility:hidden!important}body.qr-print #quizQrPanel,body.qr-print #quizQrPanel *{visibility:visible!important}body.qr-print #quizQrPanel{position:absolute;left:0;top:0;width:100%;border:0!important}}
 /* Oprava mobilního rozložení: přebití starších pravidel níže v CSS */
 @media screen and (max-width: 600px) {
   html, body { width: 100% !important; max-width: 100% !important; overflow-x: hidden !important; }
@@ -226,7 +226,7 @@ body.unit-report-mode #unitReportWeb{display:block!important}
 #unitReportWeb table{border-collapse:collapse;width:100%}#unitReportWeb th,#unitReportWeb td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top}#unitReportWeb th{background:#eaf0f6}
 body.observer-mode .side{display:none!important}
 body.observer-mode .main{grid-column:1/-1;box-sizing:border-box;min-width:0;margin-left:0;width:100%;max-width:none;padding:clamp(14px,3vw,34px)}
-body.observer-mode .top .eyebrow{display:none}
+body.observer-mode .top .eyebrow{display:none} .observer-notice{display:none;align-items:center;background:#f9e9e7;color:var(--menu-red);border:1px solid var(--menu-red);border-radius:10px;padding:7px 11px;font-size:12px;font-weight:750;line-height:1.35} body.observer-mode .observer-notice{display:inline-flex} body.observer-mode #lastDashboardRefresh{display:none!important}
 body.observer-mode .top .pill{display:none}
 body.observer-mode #readmePanel,
 body.observer-mode #issuesCard,
@@ -258,17 +258,17 @@ body.observer-mode #home .panel-head button{display:none!important}
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="assessment">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.29</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.30</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.29</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.30</span></header>
 <section id="home" class="page">
-<div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--blue);background:linear-gradient(135deg,#fff 0%,#edf5fc 100%);padding:18px 24px">
+<div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
 <div id="readmeContent">
-<div class="eyebrow">Důležité informace</div>
+<div class="eyebrow" style="color:var(--menu-red)">Důležité informace</div>
 <h2 style="font-size:25px;margin:4px 0 12px">📖 Přečti mě – jak aplikace funguje</h2>
-<p><strong>👁 Náhled pozorovatele:</strong> otevře zjednodušený přehled aktuálního průběhu revue bez organizačního menu a ovládacích prvků. Odkaz najdeš v levém menu; otevře se v nové záložce. Pozor: v této prototypové verzi se data ukládají do prohlížeče, takže náhled na jiném zařízení zatím automaticky nesdílí zápisy.</p>
+<p><strong>👁 Náhled pozorovatele:</strong> otevře zjednodušený, pouze pro čtení určený přehled aktuálního průběhu revue bez organizačního menu a ovládacích prvků. V horní části náhledu je toto omezení viditelně označeno. Odkaz najdeš v levém menu; otevře se v nové záložce. Pozor: v této prototypové verzi se data ukládají do prohlížeče, takže náhled na jiném zařízení zatím automaticky nesdílí zápisy.</p>
 <p><strong>Hasičská revue</strong> slouží k rozlosování jednotek, evidenci průběhu stanovišť a pohotovosti, zápisu hodnocení a přípravě výsledných zpráv. Akce je plánována na 25. 10. 2026, sraz ve 13:00 a start ve 13:30.</p>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">
 <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>🚒 Rozlosování</strong><p class="muted" style="margin:5px 0 0">Nastavíš výchozí stanoviště jednotek a prohlédneš si jejich pořadí stanovišť.</p></div>
