@@ -185,6 +185,10 @@ table{min-width:620px}th,td{padding:10px 8px}
 .unit-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:stretch}.unit-board .unit{min-width:0;min-height:112px;justify-content:center;flex-direction:column;text-align:center;padding:12px;background:#f8fbff}.unit-board .unit strong{font-size:14px;line-height:1.25;overflow-wrap:anywhere}.unit-board .unit small{font-size:12px}.unit-board .progress{width:100%;max-width:160px}.unit-board .unit-center{background:linear-gradient(145deg,#102d4e,#1d5079);border-color:#102d4e;color:#fff;justify-content:center}.unit-board .unit-center small{color:#d6e6f6}.unit-board .unit-center .center-icon{font-size:25px;line-height:1.1;margin-bottom:4px}.unit-board .unit-center strong{font-size:15px}.unit-board .unit-center .center-caption{font-size:11px;line-height:1.3;margin-top:4px}@media(max-width:640px){.unit-board{gap:7px}.unit-board .unit{min-height:100px;padding:8px}.unit-board .unit strong{font-size:12px}.unit-board .unit small{font-size:10px}.unit-board .unit-center .center-icon{font-size:21px}}
 /* Pozorovatelský náhled: read-only prezentace dashboardu */
 body.observer-mode .layout{grid-template-columns:minmax(0,1fr)!important;width:100%;max-width:100%}
+body.unit-report-mode .layout,body.unit-report-mode footer{display:none!important}
+body.unit-report-mode #unitReportWeb{display:block!important}
+#unitReportWeb{display:none;max-width:1100px;margin:0 auto;padding:24px;font:15px/1.5 Arial,sans-serif;color:#172b40}
+#unitReportWeb table{border-collapse:collapse;width:100%}#unitReportWeb th,#unitReportWeb td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top}#unitReportWeb th{background:#eaf0f6}
 body.observer-mode .side{display:none!important}
 body.observer-mode .main{grid-column:1/-1;box-sizing:border-box;min-width:0;margin-left:0;width:100%;max-width:none;padding:clamp(14px,3vw,34px)}
 body.observer-mode .top .eyebrow{display:none}
@@ -212,14 +216,14 @@ body.observer-mode #home .panel-head button{display:none!important}
 </style>
 </head>
 <body>
-<div class="layout">
+<main id="unitReportWeb"></main><div class="layout">
 <aside class="side">
 <div class="brand"><div class="crest">🚒</div><div>Hasičská<br>revue</div></div>
 <nav class="nav" aria-label="Hlavní navigace">
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="assessment">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.16</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.17</div>
 </aside>
 <main class="main">
 <header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill">● Pracovní verze</span></header>
@@ -633,10 +637,14 @@ async function exportUnitPdf(unit){
   else if(quizWeightedMedian>=75)quizControlStatus="Drobné nedostatky";
   else quizControlStatus="Závažné nedostatky";
  }
- const report='<div class="summary"><h2>Celkové hodnocení jednotky</h2><p><strong>Stav:</strong> '+esc(overall)+'</p><div class="stats"><div><strong>'+entries.length+' / 7</strong><span>vyhodnocených stanovišť</span></div><div><strong>'+good+'</strong><span>bez nedostatků</span></div><div><strong>'+minor+'</strong><span>drobné nedostatky</span></div><div><strong>'+major+'</strong><span>závažné nedostatky</span></div></div><p><strong>Chybějící zápisy:</strong> '+esc(missing.length?missing.join(", "):"Žádné")+'</p><p><strong>Vědomostní kvíz:</strong> '+esc(quizSummary)+'</p>'+(quizError?'<p class="warning">'+esc(quizError)+'</p>':'')+'</div><h2 class="section-title">Kontrola stanovišť</h2>'+stationBody+'<h2 class="section-title">Vědomostní kvíz – výsledky <span class="quiz-control-status">('+esc(quizControlStatus)+')</span></h2>'+quizBody;
+ const payload={u:unit,e:entries.map(r=>[stations.indexOf(r.station),r.status||"",r.reviewer||"",r.date||"",String(r.notes||"").slice(0,110)]),q:quizEntries.map(x=>[x.name||"",x.role||"",Number(x.correct||0),Number(x.total||0),Number(x.percentage||0),quizWrongAnswers(x).slice(0,3).join("; ").slice(0,120)])};
+ const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+ const webReportUrl=location.origin+location.pathname+"?unitReport="+encodeURIComponent(encoded);
+ const report='<div class="summary"><div style="display:flex;align-items:center;gap:14px"><div id="unitReportQr" style="width:112px;height:112px;flex:none"></div><div><h2>Webová verze hodnocení</h2><p>Naskenuj QR kód pro otevření přehledu této jednotky na telefonu.</p><p style="overflow-wrap:anywhere;font-size:9px">'+esc(webReportUrl)+'</p></div></div></div><div class="summary"><h2>Celkové hodnocení jednotky</h2><p><strong>Stav:</strong> '+esc(overall)+'</p><div class="stats"><div><strong>'+entries.length+' / 7</strong><span>vyhodnocených stanovišť</span></div><div><strong>'+good+'</strong><span>bez nedostatků</span></div><div><strong>'+minor+'</strong><span>drobné nedostatky</span></div><div><strong>'+major+'</strong><span>závažné nedostatky</span></div></div><p><strong>Chybějící zápisy:</strong> '+esc(missing.length?missing.join(", "):"Žádné")+'</p><p><strong>Vědomostní kvíz:</strong> '+esc(quizSummary)+'</p>'+(quizError?'<p class="warning">'+esc(quizError)+'</p>':'')+'</div><h2 class="section-title">Kontrola stanovišť</h2>'+stationBody+'<h2 class="section-title">Vědomostní kvíz – výsledky <span class="quiz-control-status">('+esc(quizControlStatus)+')</span></h2>'+quizBody;
  popup.document.open();
  popup.document.write('<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Zpráva jednotky – '+esc(unit)+'</title><style>@page{size:A4 landscape;margin:8mm}body{font:10px/1.25 Arial,sans-serif;color:#172b40;margin:10px}h1{font-size:17px;margin:0 0 3px}h2{font-size:12px;margin:0 0 4px}.section-title{font-size:13px;margin-top:9px;border-bottom:1px solid #102d4e;padding-bottom:3px}.quiz-control-status{font-size:10px;font-weight:normal;color:#334155}h3{font-size:10px;margin:4px 0 2px}p{margin:2px 0}.meta{color:#555;margin-bottom:8px}.summary{background:#f1f5f9;border:1px solid #ccd5df;border-radius:4px;padding:6px;margin:6px 0}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:5px 0}.stats div{background:#fff;border:1px solid #d8e0e8;border-radius:3px;padding:4px}.stats strong,.stats span{display:block}.stats span{font-size:9px;color:#555}.record{border:1px solid #ccd5df;border-radius:4px;padding:5px;margin:4px 0;break-inside:avoid}.station-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 8px;align-items:start}.station-grid .record{margin:3px 0}.quiz-record{border-left:3px solid #1d5688}.record ul{margin:2px 0;padding-left:14px}.record li{margin:1px 0}.warning{color:#a32121}.print{margin:0 0 8px;padding:6px 9px;border:0;background:#102d4e;color:#fff;border-radius:4px;cursor:pointer}@media print{body{margin:0}.print{display:none}.record,.summary{break-inside:avoid}.stats{grid-template-columns:repeat(4,1fr)}}</style></head><body><button class="print" onclick="window.print()">Tisknout / Uložit jako PDF</button><h1>Hasičská revue – celkové hodnocení jednotky</h1><div class="meta"><strong>'+esc(unit)+'</strong><br>Revue pro jednotky okrsku Blansko · 25. října 2026<br>Počet zápisů ze stanovišť: '+entries.length+' · Výsledky kvízu: '+quizEntries.length+'</div>'+report+'</body></html>');
  popup.document.close();popup.focus();
+  const qrScript=popup.document.createElement("script");qrScript.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";qrScript.onload=()=>{const qr=popup.document.getElementById("unitReportQr");if(qr&&popup.QRCode)new popup.QRCode(qr,{text:webReportUrl,width:112,height:112,correctLevel:popup.QRCode.CorrectLevel.M});};popup.document.body.appendChild(qrScript);
  }catch(exportError){
   popup.document.open();
   popup.document.write("<!doctype html><html lang=\"cs\"><meta charset=\"utf-8\"><body style=\"font:15px Arial;padding:24px\"><h2>Export PDF se nepodařilo připravit</h2><p>"+String(exportError&&exportError.message||exportError).replace(/[&<>]/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[ch]})+"</p></body></html>");
@@ -645,6 +653,17 @@ async function exportUnitPdf(unit){
 }
 
 const readmePanel=el("readmePanel"),readmeToggle=el("readmeToggle");readmeToggle.addEventListener("click",()=>{const collapsed=readmePanel.classList.toggle("is-collapsed");readmeToggle.textContent=collapsed?"Rozbalit":"Sbalit";readmeToggle.setAttribute("aria-expanded",String(!collapsed));localStorage.setItem("hasicskaRevueReadmeCollapsed",String(collapsed))});if(localStorage.getItem("hasicskaRevueReadmeCollapsed")==="true"){readmePanel.classList.add("is-collapsed");readmeToggle.textContent="Rozbalit";readmeToggle.setAttribute("aria-expanded","false")}
+const unitReportParam=new URLSearchParams(location.search).get("unitReport");
+if(unitReportParam){
+ try{
+  const p=JSON.parse(decodeURIComponent(escape(atob(unitReportParam))));
+  const names=Array.isArray(p.e)?p.e.map(x=>stations[x[0]]||"Neznámé stanoviště"):[];
+  const statuses=(p.e||[]).map(x=>x[1]);
+  const rows=(p.e||[]).map(x=>'<tr><td>'+escaped(stations[x[0]]||"Stanoviště")+'</td><td>'+escaped(x[1]||"Bez hodnocení")+'</td><td>'+escaped(x[2]||"—")+'</td><td>'+escaped(x[3]||"—")+'</td><td>'+escaped(x[4]||"Bez poznámky")+'</td></tr>').join("");
+  el("unitReportWeb").innerHTML='<h1>Hasičská revue – hodnocení jednotky '+escaped(p.u||"")+'</h1><p>Webový přehled vytvořený při generování zprávy. Obsahuje kopii zápisů v okamžiku vytvoření QR kódu.</p><p><strong>V pořádku:</strong> '+statuses.filter(x=>x==="V pořádku").length+' · <strong>Drobné nedostatky:</strong> '+statuses.filter(x=>x==="Drobné nedostatky").length+' · <strong>Závažné nedostatky:</strong> '+statuses.filter(x=>x==="Závažné nedostatky").length+'</p><div style="overflow-x:auto"><table><thead><tr><th>Stanoviště</th><th>Stav</th><th>Hodnotitel</th><th>Datum</th><th>Poznámka</th></tr></thead><tbody>'+rows+'</tbody></table></div><h2>Vědomostní kvíz</h2>'+((p.q||[]).length?(p.q||[]).map(x=>'<section style="border:1px solid #cbd5e1;padding:10px;margin:8px 0"><strong>'+escaped(x[0])+'</strong> · '+escaped(x[1])+'<p>'+x[2]+' / '+x[3]+' správně ('+x[4]+' %)</p>'+(x[5]?'<p>Chybné odpovědi: '+escaped(x[5])+'</p>':'')+'</section>').join(""):'<p>Bez výsledku kvízu.</p>')+'<p style="margin-top:20px;color:#64748b;font-size:12px">Tento odkaz obsahuje kopii hodnocení z okamžiku vytvoření. Pro aktualizovaný přehled vygeneruj nový QR kód.</p>';
+  document.body.classList.add("unit-report-mode");document.title="Hodnocení jednotky · "+(p.u||"");
+ }catch(e){el("unitReportWeb").style.display="block";el("unitReportWeb").textContent="Odkaz na hodnocení je poškozený nebo neúplný."}
+}
 renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderHomeStations();renderResults();renderProgress();renderStandby();
 renderUnitPdfExports();
 // Samostatný náhled pro pozorovatele: ?observer=1. Bez navigace a organizačních akcí.
