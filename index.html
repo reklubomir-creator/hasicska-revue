@@ -556,7 +556,7 @@ async function exportUnitPdf(unit){
 }
 
 const readmePanel=el("readmePanel"),readmeToggle=el("readmeToggle");readmeToggle.addEventListener("click",()=>{const collapsed=readmePanel.classList.toggle("is-collapsed");readmeToggle.textContent=collapsed?"Rozbalit":"Sbalit";readmeToggle.setAttribute("aria-expanded",String(!collapsed));localStorage.setItem("hasicskaRevueReadmeCollapsed",String(collapsed))});if(localStorage.getItem("hasicskaRevueReadmeCollapsed")==="true"){readmePanel.classList.add("is-collapsed");readmeToggle.textContent="Rozbalit";readmeToggle.setAttribute("aria-expanded","false")}
-renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderStations("homeStations",selectedUnit);renderStations("unitStations",selectedUnit);renderResults();renderProgress();renderStandby();
+renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderStations("homeStations",selectedUnit);renderResults();renderProgress();renderStandby();
 renderUnitPdfExports();
 const savedPage=localStorage.getItem("hasicskaRevueCurrentPage");if(savedPage&&document.getElementById(savedPage)?.classList.contains("page"))showPage(savedPage);
 </script></body></html>
