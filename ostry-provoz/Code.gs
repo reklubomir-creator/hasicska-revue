@@ -2,6 +2,7 @@ const SHEET_RESULTS = 'Výsledky';
 const SHEET_REPORTS = 'Hodnocení';
 const SHEET_ASSESSMENTS = 'Zápisy stanovišť';
 const PROP_ACTIVE = 'ACTIVE_QUIZ_SESSION';
+const PROP_APP_STATE = 'APP_SHARED_STATE';
 
 const QUIZZES = {
   'Hasič': [
@@ -155,6 +156,12 @@ function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'getReport') return json(reportStorageGet_(p.id));
   if (p.action === 'assessments') return json({ok:true,records:assessmentList_()});
+  if (p.action === 'appState') {
+    const raw = PropertiesService.getScriptProperties().getProperty(PROP_APP_STATE);
+    if (!raw) return json({ok:true,state:null});
+    try { return json({ok:true,state:JSON.parse(raw)}); }
+    catch (err) { return json({ok:false,error:'Sdílené rozlosování je poškozené.'}); }
+  }
   const active = getActive();
   if (p.action === 'state') return json({active:!!active,session:active ? {unit:active.unit,token:active.token} : null});
   if (p.action === 'validate' || p.action === 'questions') {
@@ -185,6 +192,22 @@ function doPost(e) {
     if (data.action === 'saveReport') return json(reportStorageSave_(data));
     if (data.action === 'saveAssessment') return json(assessmentSave_(data.record));
     if (data.action === 'deleteAssessment') return json(assessmentDelete_(data.unit,data.station));
+    if (data.action === 'saveAppState') {
+      const state = data.state;
+      if (!state || typeof state !== 'object' || Array.isArray(state) || !state.startStations || typeof state.startStations !== 'object' || Array.isArray(state.startStations) || !Array.isArray(state.fixedStartUnits)) {
+        return json({ok:false,error:'Neplatná data rozlosování.'});
+      }
+      const safeStarts = {};
+      Object.keys(state.startStations).forEach(unit => {
+        const station = Number(state.startStations[unit]);
+        if (unit && Number.isInteger(station) && station >= 1 && station <= 8) safeStarts[String(unit)] = station;
+      });
+      const safeFixed = state.fixedStartUnits.filter(unit => typeof unit === 'string' && unit.length <= 120).slice(0,100);
+      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,updatedAt:new Date().toISOString()});
+      if (serialized.length > 50000) return json({ok:false,error:'Rozlosování je příliš velké.'});
+      PropertiesService.getScriptProperties().setProperty(PROP_APP_STATE,serialized);
+      return json({ok:true,updatedAt:new Date().toISOString()});
+    }
     const props=PropertiesService.getScriptProperties();
     if (data.action === 'resetProduction') {
       const pin=props.getProperty('ORGANIZER_PIN');
