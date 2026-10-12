@@ -909,7 +909,7 @@ async function exportUnitPdf(unit){
  popup.document.write('<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Připravuji zprávu jednotky</title></head><body style="font:16px Arial;padding:30px">Načítám celkové hodnocení jednotky…</body></html>');
  try{
  const esc=escaped;
- const entries=unitReportStationEntries(unit).sort((a,b)=>stations.indexOf(a.station)-stations.indexOf(b.station));
+ const entries=unitReportStationEntries(unit).filter(r=>r.station!=="Kvíz – hasička Klepačov").sort((a,b)=>stations.indexOf(a.station)-stations.indexOf(b.station));
  let quizEntries=[],quizError="";
  try{
   // PDF používá stejná data, která aplikace načetla do přehledu kvízu.
@@ -922,7 +922,7 @@ async function exportUnitPdf(unit){
  const good=entries.filter(r=>r.status==="V pořádku").length;
  const minor=entries.filter(r=>r.status==="Drobné nedostatky").length;
  const major=entries.filter(r=>r.status==="Závažné nedostatky").length;
- const missing=stations.filter((s,i)=>i!==3&&!entries.some(r=>r.station===s));
+ const missing=stations.filter((s,i)=>i!==3&&s!=="Kvíz – hasička Klepačov"&&!entries.some(r=>r.station===s));
  const quizAvg=quizEntries.length?Math.round(quizEntries.reduce((sum,x)=>sum+Number(x.percentage||0),0)/quizEntries.length):null;
  const quizWeightedScores=quizEntries.map(x=>({score:Math.max(0,Math.min(100,Number(x.percentage||0))),weight:/^(strojník|velitel)$/i.test(String(x.role||"").trim())?2:1,role:String(x.role||"").trim()})).sort((a,b)=>a.score-b.score);
  let quizWeightedMedian=null;
