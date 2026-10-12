@@ -383,10 +383,10 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <button class="active" data-page="home">▦ &nbsp; Přehled</button><button type="button" id="openObserverPreview">👁 &nbsp; Náhled pozorovatele</button><button type="button" id="openReviewerStandalone">🎙 &nbsp; Rozhraní hodnotitele</button><button data-page="units">▣ &nbsp; Rozlosování</button><button data-page="quiz">☑ &nbsp; Kvíz</button><button data-page="results">▤ &nbsp; Výsledky a zprávy</button><button data-page="edits">✎ &nbsp; Upravit zápis</button><button data-page="unitAdmin">⚙ &nbsp; Kontakty na jednotky</button>
 </nav>
 <div class="side-clock" style="margin-top:18px;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#eaf0f6;color:#102d4e"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#52657a">Aktuální čas</div><strong id="liveClock" style="display:block;font-size:22px;font-variant-numeric:tabular-nums;color:#102d4e">--:--:--</strong><div id="refreshInfo" style="font-size:12px;margin-top:5px;color:#52657a">Obnovení dashboardu za <strong id="refreshCountdown" style="color:#102d4e">30 s</strong></div></div>
-<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.87</div>
+<div class="side-note">Pracovní prototyp<br>Ukázková data · verze 0.1.88</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.87</span></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><span class="pill" title="Aktuální verze aplikace">● Pracovní verze · v0.1.88</span></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – důležité</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="true">Sbalit</button></div>
@@ -780,9 +780,11 @@ function loadDemoData(){
  let generatedIndex=0;
  units.forEach((unit,ui)=>stations.forEach((station,si)=>{
   if(si===3)return;
+  // Při každém načtení obměň konkrétní slovní hodnocení, ale zachovej soulad
+  // mezi závažností zápisu a textem poznámky.
   const variant=generatedIndex<targetDefects
-   ? defectVariants[generatedIndex%defectVariants.length]
-   : goodVariants[(generatedIndex+ui+si)%goodVariants.length];
+   ? defectVariants[(generatedIndex+demoVersion+ui+si)%defectVariants.length]
+   : goodVariants[(generatedIndex+ui+si+demoVersion)%goodVariants.length];
   const minutes=(si*23+ui*7)%60;
   const hour=13+Math.floor((si*23+ui*7)/60);
   demoRecords.push({unit,station,reviewer:stationDetails[si].reviewer,status:statusCycle[variant],notes:si===7?"":notesByStation[si<3?si:si-1][variant],date:"25. 10. 2026",time:String(hour).padStart(2,"0")+":"+String(minutes).padStart(2,"0")});
