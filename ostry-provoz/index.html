@@ -501,7 +501,7 @@ let selectedUnit=units[0], records=[], doneByUnit={}, editingRecord=false, editS
 let standbyCompletedUnits=JSON.parse(localStorage.getItem("hasicskaRevueStandbyCompleted")||"[]");
 function completeStandby(unit){if(unit&&!standbyCompletedUnits.includes(unit)){standbyCompletedUnits.push(unit);localStorage.setItem("hasicskaRevueStandbyCompleted",JSON.stringify(standbyCompletedUnits));}}
 const combinedUnit="Lažánky + Horní Lhota";
-records=records.map(r=>({...r,unit:(r.unit==="Lažánky"||r.unit==="Horní Lhota")?combinedUnit:r.unit})).filter((r,i,a)=>a.findIndex(x=>x.unit===r.unit&&x.station===r.station)>i?a.lastIndexOf(r)===i:true);
+records=records.map(r=>({...r,unit:(r.unit==="Lažánky"||r.unit==="Horní Lhota")?combinedUnit:r.unit})).reduce((acc,r)=>{const i=acc.findIndex(x=>x.unit===r.unit&&x.station===r.station);if(i<0){acc.push(r);return acc}if(r.station==="Kvíz – hasička Klepačov"){const prev=acc[i],statuses=[prev.status,r.status];acc[i]={...r,status:statuses.includes("Závažné nedostatky")?"Závažné nedostatky":statuses.includes("Drobné nedostatky")?"Drobné nedostatky":"V pořádku",notes:[prev.notes,r.notes].filter(Boolean).join("\n\n")}}else acc[i]=r;return acc},[]);
 const defaultStartStations={};
 const savedStarts=JSON.parse(localStorage.getItem("hasicskaRevueStartStations")||"{}");
 if(!savedStarts[combinedUnit]&&(savedStarts["Lažánky"]||savedStarts["Horní Lhota"]))savedStarts[combinedUnit]=savedStarts["Lažánky"]||savedStarts["Horní Lhota"];
