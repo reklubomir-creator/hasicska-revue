@@ -156,6 +156,14 @@ function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'getReport') return json(reportStorageGet_(p.id));
   if (p.action === 'assessments') return json({ok:true,records:assessmentList_()});
+  if (p.action === 'appStateVersion') {
+    const raw = PropertiesService.getScriptProperties().getProperty(PROP_APP_STATE);
+    if (!raw) return json({ok:true,updatedAt:''});
+    try {
+      const state = JSON.parse(raw);
+      return json({ok:true,updatedAt:String(state.updatedAt || '')});
+    } catch (err) { return json({ok:false,error:'Sdílené rozlosování je poškozené.'}); }
+  }
   if (p.action === 'appState') {
     const raw = PropertiesService.getScriptProperties().getProperty(PROP_APP_STATE);
     if (!raw) return json({ok:true,state:null});
