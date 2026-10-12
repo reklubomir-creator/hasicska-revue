@@ -145,6 +145,43 @@ function assessmentDelete_(unit, station) {
   }
   return {ok:true,deleted:false};
 }
+
+function closeQuizSession_(active) {
+  if (!active || !unitsAllowed_(active.unit)) return {ok:false,error:'Aktivní relace nemá platnou jednotku.'};
+  const sh = getSheet();
+  const rows = sh.getLastRow() >= 2 ? sh.getRange(2,1,sh.getLastRow()-1,11).getValues() : [];
+  const submitted = rows.filter(r => String(r[9] || '') === String(active.token || '') && String(r[1] || '') === active.unit);
+  const now = new Date();
+  let totalQuestions = 0, correctAnswers = 0;
+  const lines = submitted.map(r => {
+    const name = String(r[2] || 'Bez jména');
+    const role = String(r[3] || 'Role neuvedena');
+    const total = Number(r[4]) || 0, correct = Number(r[5]) || 0, pct = Number(r[6]) || 0;
+    totalQuestions += total; correctAnswers += correct;
+    return name + ' (' + role + '): ' + correct + '/' + total + ' (' + pct + ' %)';
+  });
+  const average = totalQuestions ? Math.round(correctAnswers / totalQuestions * 100) : 0;
+  let status = 'V pořádku';
+  if (!submitted.length) status = 'Drobné nedostatky';
+  else if (average < 40) status = 'Závažné nedostatky';
+  else if (average < 75) status = 'Drobné nedostatky';
+  const notes = submitted.length
+    ? 'Příjem kvízů ručně uzavřen. Odevzdané kvízy: ' + submitted.length + '. Celkem správně: ' + correctAnswers + '/' + totalQuestions + ' (' + average + ' %).\\n' + lines.join('\\n')
+    : 'Příjem kvízů ručně uzavřen bez odevzdaných kvízů.';
+  const record = {
+    unit: active.unit,
+    station: 'Kvíz – hasička Klepačov',
+    reviewer: 'Automatické hodnocení kvízu',
+    status,
+    notes,
+    date: Utilities.formatDate(now, Session.getScriptTimeZone(), 'd. M. yyyy'),
+    time: Utilities.formatDate(now, Session.getScriptTimeZone(), 'HH:mm')
+  };
+  const saved = assessmentSave_(record);
+  if (!saved.ok) return saved;
+  return {ok:true,unit:active.unit,submitted:submitted.length,percentage:submitted.length?average:null,status};
+}
+
 function unitsAllowed_(unit) {
   return ['Klepačov','Olešná','Těchov','Lažánky + Horní Lhota','Obůrka','Dolní Lhota','Spešov','Olomučany'].indexOf(unit) !== -1;
 }
@@ -235,7 +272,7 @@ function doPost(e) {
     if (data.action === 'activate' || data.action === 'close') {
       const pin=props.getProperty('ORGANIZER_PIN');
       if (!pin || String(data.pin || '') !== pin) return json({ok:false,error:'Nesprávný organizační PIN nebo PIN není nastaven.'});
-      if (data.action === 'close') { props.deleteProperty(PROP_ACTIVE); return json({ok:true}); }
+      if (data.action === 'close') { const closed=closeQuizSession_(getActive()); if (!closed.ok) return json(closed); props.deleteProperty(PROP_ACTIVE); return json(closed); }
       if (!unitsAllowed_(data.unit)) return json({ok:false,error:'Neznámá jednotka.'});
       const session={unit:data.unit,token:Utilities.getUuid().replace(/-/g,''),startedAt:new Date().toISOString()};
       props.setProperty(PROP_ACTIVE,JSON.stringify(session));
