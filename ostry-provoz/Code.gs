@@ -214,7 +214,15 @@ function doPost(e) {
       if (!pin || String(data.pin || '') !== pin) return json({ok:false,error:'Nesprávný organizační PIN nebo PIN není nastaven.'});
       clearDataRows_(SHEET_RESULTS); clearDataRows_(SHEET_REPORTS); clearDataRows_(SHEET_ASSESSMENTS);
       props.deleteProperty(PROP_ACTIVE);
-      return json({ok:true,message:'Testovací výsledky, QR zprávy a hodnocení stanovišť byly vymazány.'});
+      // Ulož prázdné sdílené rozlosování místo smazání vlastnosti.
+      // Klienti, kteří ještě mají stará data lokálně, tak při dalším pollingu
+      // dostanou prázdný stav a nepošlou staré rozlosování zpět na server.
+      props.setProperty(PROP_APP_STATE, JSON.stringify({
+        startStations: {},
+        fixedStartUnits: [],
+        updatedAt: new Date().toISOString()
+      }));
+      return json({ok:true,message:'Výsledky, QR zprávy, hodnocení stanovišť i sdílené rozlosování byly vymazány.'});
     }
     if (data.action === 'activate' || data.action === 'close') {
       const pin=props.getProperty('ORGANIZER_PIN');
