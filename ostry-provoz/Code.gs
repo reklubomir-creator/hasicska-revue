@@ -150,40 +150,44 @@ function closeQuizSession_(active) {
   if (!active || !unitsAllowed_(active.unit)) return {ok:false,error:'Aktivní relace nemá platnou jednotku.'};
   const sh = getSheet();
   const rows = sh.getLastRow() >= 2 ? sh.getRange(2,1,sh.getLastRow()-1,11).getValues() : [];
-  const submitted = rows.filter(r => String(r[9] || '') === String(active.token || '') && String(r[1] || '') === active.unit);
+  const submitted = rows.filter(r => String(r[9] || '') === String(active.token || ''));
   const now = new Date();
-  let totalQuestions = 0, correctAnswers = 0;
-  const lines = submitted.map(r => {
-    const name = String(r[2] || 'Bez jména');
-    const role = String(r[3] || 'Role neuvedena');
-    const total = Number(r[4]) || 0, correct = Number(r[5]) || 0, pct = Number(r[6]) || 0;
-    totalQuestions += total; correctAnswers += correct;
-    return name + ' (' + role + '): ' + correct + '/' + total + ' (' + pct + ' %)';
-  });
-  const average = totalQuestions ? Math.round(correctAnswers / totalQuestions * 100) : 0;
-  let status = 'V pořádku';
-  if (!submitted.length) status = 'Drobné nedostatky';
-  else if (average < 40) status = 'Závažné nedostatky';
-  else if (average < 75) status = 'Drobné nedostatky';
-  const notes = submitted.length
-    ? 'Příjem kvízů ručně uzavřen. Odevzdané kvízy: ' + submitted.length + '. Celkem správně: ' + correctAnswers + '/' + totalQuestions + ' (' + average + ' %).\\n' + lines.join('\\n')
-    : 'Příjem kvízů ručně uzavřen bez odevzdaných kvízů.';
-  const record = {
-    unit: active.unit,
-    station: 'Kvíz – hasička Klepačov',
-    reviewer: 'Automatické hodnocení kvízu',
-    status,
-    notes,
-    date: Utilities.formatDate(now, Session.getScriptTimeZone(), 'd. M. yyyy'),
-    time: Utilities.formatDate(now, Session.getScriptTimeZone(), 'HH:mm')
-  };
-  const saved = assessmentSave_(record);
-  if (!saved.ok) return saved;
-  return {ok:true,unit:active.unit,submitted:submitted.length,percentage:submitted.length?average:null,status};
+  const combined = active.unit === 'Lažánky + Horní Lhota';
+  const targetUnits = combined ? ['Lažánky','Horní Lhota'] : [active.unit];
+  const summaries = [];
+  for (const unit of targetUnits) {
+    const group = submitted.filter(r => String(r[1] || '') === unit || (!combined && String(r[1] || '') === active.unit));
+    let totalQuestions = 0, correctAnswers = 0;
+    const lines = group.map(r => {
+      const name = String(r[2] || 'Bez jména'), role = String(r[3] || 'Role neuvedena');
+      const total = Number(r[4]) || 0, correct = Number(r[5]) || 0, pct = Number(r[6]) || 0;
+      totalQuestions += total; correctAnswers += correct;
+      return name + ' (' + role + '): ' + correct + '/' + total + ' (' + pct + ' %)';
+    });
+    const average = totalQuestions ? Math.round(correctAnswers / totalQuestions * 100) : 0;
+    let status = 'V pořádku';
+    if (!group.length) status = 'Drobné nedostatky';
+    else if (average < 40) status = 'Závažné nedostatky';
+    else if (average < 75) status = 'Drobné nedostatky';
+    const notes = group.length
+      ? 'Příjem kvízů ručně uzavřen. Jednotka: ' + unit + '. Odevzdané kvízy: ' + group.length + '. Celkem správně: ' + correctAnswers + '/' + totalQuestions + ' (' + average + ' %).\\n' + lines.join('\\n')
+      : 'Příjem kvízů ručně uzavřen. Za jednotku ' + unit + ' nebyl odevzdán žádný kvíz.';
+    const saved = assessmentSave_({
+      unit, station:'Kvíz – hasička Klepačov', reviewer:'Automatické hodnocení kvízu', status, notes,
+      date:Utilities.formatDate(now,Session.getScriptTimeZone(),'d. M. yyyy'),
+      time:Utilities.formatDate(now,Session.getScriptTimeZone(),'HH:mm')
+    });
+    if (!saved.ok) return saved;
+    summaries.push({unit,submitted:group.length,percentage:group.length?average:null,status});
+  }
+  const totalQuestions=submitted.reduce((sum,r)=>sum+(Number(r[4])||0),0);
+  const correctAnswers=submitted.reduce((sum,r)=>sum+(Number(r[5])||0),0);
+  const overall=totalQuestions?Math.round(correctAnswers/totalQuestions*100):null;
+  return {ok:true,unit:active.unit,submitted:submitted.length,percentage:overall,status:summaries.every(x=>x.status==='V pořádku')?'V pořádku':summaries.some(x=>x.status==='Závažné nedostatky')?'Závažné nedostatky':'Drobné nedostatky',unitSummaries:summaries};
 }
 
 function unitsAllowed_(unit) {
-  return ['Klepačov','Olešná','Těchov','Lažánky + Horní Lhota','Obůrka','Dolní Lhota','Spešov','Olomučany'].indexOf(unit) !== -1;
+  return ['Klepačov','Olešná','Těchov','Lažánky + Horní Lhota','Lažánky','Horní Lhota','Obůrka','Dolní Lhota','Spešov','Olomučany'].indexOf(unit) !== -1;
 }
 function clearDataRows_(sheetName) {
   const sh = spreadsheet_().getSheetByName(sheetName);
@@ -282,7 +286,10 @@ function doPost(e) {
       const active=getActive();
       if (!active || data.token !== active.token) return json({ok:false,error:'Relace už není aktivní. Odpovědi nebyly přijaty.'});
       const name=String(data.name || '').trim(), role=String(data.role || '');
+      const isCombined=active.unit==='Lažánky + Horní Lhota';
+      const unit=isCombined?String(data.unit||'').trim():active.unit;
       if (!name || !QUIZZES[role]) return json({ok:false,error:'Chybí jméno nebo role.'});
+      if (isCombined && ['Lažánky','Horní Lhota'].indexOf(unit)===-1) return json({ok:false,error:'Vyber Lažánky nebo Horní Lhotu.'});
       const quiz=QUIZZES[role], answers=Array.isArray(data.answers)?data.answers:[], byQuestion={};
       answers.forEach(a => {
         const qi=Number(a.question), ai=Number(a.answer);
@@ -291,7 +298,7 @@ function doPost(e) {
       let correct=0; const wrong=[];
       quiz.forEach((q,i)=>{const answer=byQuestion[i];if(answer===q.correct)correct++;else wrong.push({question:q.question,answer:answer===undefined?null:q.options[answer],correct:q.options[q.correct]});});
       const total=quiz.length, percentage=Math.round(correct/total*100), duration=Math.min(1200,Math.max(0,Number(data.durationSeconds)||0));
-      getSheet().appendRow([new Date(),active.unit,name,role,total,correct,percentage,duration,JSON.stringify(wrong),active.token,JSON.stringify(byQuestion)]);
+      getSheet().appendRow([new Date(),unit,name,role,total,correct,percentage,duration,JSON.stringify(wrong),active.token,JSON.stringify(byQuestion)]);
       return json({ok:true,correct,total,percentage});
     }
     return json({ok:false,error:'Neznámá operace.'});
