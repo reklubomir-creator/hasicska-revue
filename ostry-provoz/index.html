@@ -1124,8 +1124,8 @@ async function decodeUnitReportPayload(){
  }
 })();
 renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderHomeStations();renderResults();renderProgress();renderStandby();
-if(!localStorage.getItem("hasicskaRevueClearContactsOnce072")){localStorage.removeItem("hasicskaRevueUnitContacts");localStorage.setItem("hasicskaRevueClearContactsOnce072","1");}
- loadUnitContactsFromGoogle(true).then(()=>{if(document.getElementById("unitAdmin")&&!document.getElementById("unitAdmin").classList.contains("hidden"))renderUnitAdmin()});loadProductionAssessments().then(()=>restoreEditingDraft()).catch(err=>{quizStatus("Nepodařilo se načíst centrální hodnocení: "+(err&&err.message||err),true);console.error(err)});setInterval(()=>{if(el("assessmentFormPanel")?.classList.contains("hidden"))loadProductionAssessments().catch(err=>console.warn("Obnovení centrálních hodnocení selhalo",err))},15000);
+if(!localStorage.getItem("hasicskaRevueClearContactsOnce073")){localStorage.removeItem("hasicskaRevueUnitContacts");localStorage.setItem("hasicskaRevueClearContactsOnce073","1");}
+ loadUnitContactsFromGoogle(false).then(()=>{if(document.getElementById("unitAdmin")&&!document.getElementById("unitAdmin").classList.contains("hidden"))renderUnitAdmin()});loadProductionAssessments().then(()=>restoreEditingDraft()).catch(err=>{quizStatus("Nepodařilo se načíst centrální hodnocení: "+(err&&err.message||err),true);console.error(err)});setInterval(()=>{if(el("assessmentFormPanel")?.classList.contains("hidden"))loadProductionAssessments().catch(err=>console.warn("Obnovení centrálních hodnocení selhalo",err))},15000);
 renderUnitPdfExports();
 // Samostatné režimy se otevírají přes URL parametry.
 const pageParams=new URLSearchParams(location.search);
