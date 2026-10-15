@@ -283,8 +283,10 @@ function doPost(e) {
       });
       const safeFixed = state.fixedStartUnits.filter(unit => typeof unit === 'string' && unit.length <= 120).slice(0,100);
       const safeAutoCompletedStation1Units = Array.isArray(state.autoCompletedStation1Units) ? state.autoCompletedStation1Units.filter(unit => typeof unit === "string" && unit.length <= 120).slice(0,100) : [];
+      const rawDrawnAt = Number(state.startStationsDrawnAt);
+      const safeStartStationsDrawnAt = Number.isFinite(rawDrawnAt) && rawDrawnAt > 0 ? rawDrawnAt : 0;
       const safeCombinedSmsCommanderUnit = ['Lažánky','Horní Lhota'].includes(state.combinedSmsCommanderUnit) ? state.combinedSmsCommanderUnit : 'Horní Lhota';
-      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,autoCompletedStation1Units:safeAutoCompletedStation1Units,combinedSmsCommanderUnit:safeCombinedSmsCommanderUnit,updatedAt:new Date().toISOString()});
+      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,autoCompletedStation1Units:safeAutoCompletedStation1Units,startStationsDrawnAt:safeStartStationsDrawnAt,combinedSmsCommanderUnit:safeCombinedSmsCommanderUnit,updatedAt:new Date().toISOString()});
       if (serialized.length > 50000) return json({ok:false,error:'Rozlosování je příliš velké.'});
       PropertiesService.getScriptProperties().setProperty(PROP_APP_STATE,serialized);
       return json({ok:true,updatedAt:new Date().toISOString()});
