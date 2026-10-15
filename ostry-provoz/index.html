@@ -401,7 +401,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div class="side-note">Příprava ostrého provozu<br>verze 0.1.73</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Příprava ostrého provozu · v0.1.82</span></div></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Příprava ostrého provozu · v0.1.83</span></div></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
@@ -900,6 +900,13 @@ function loadDemoData(){
   return;
  }
  records=demoRecords;
+ quizResultsCache=units.flatMap((unit,ui)=>[
+  {unit,name:"Fiktivní hasič",role:"Hasič",correct:15+((demoVersion+ui)%6),total:20,percentage:Math.round((15+((demoVersion+ui)%6))*5),date:"25. 10. 2026",durationSeconds:480+((demoVersion+ui)*37)%360},
+  {unit,name:"Fiktivní strojník",role:"Strojník",correct:16+((demoVersion+ui+2)%5),total:20,percentage:Math.round((16+((demoVersion+ui+2)%5))*5),date:"25. 10. 2026",durationSeconds:520+((demoVersion+ui)*29)%360},
+  {unit,name:"Fiktivní velitel",role:"Velitel",correct:14+((demoVersion+ui+1)%7),total:20,percentage:Math.round((14+((demoVersion+ui+1)%7))*5),date:"25. 10. 2026",durationSeconds:560+((demoVersion+ui)*31)%360}
+ ]);
+ localStorage.setItem("hasicskaRevueQuizResultsCache",JSON.stringify(quizResultsCache));
+ localStorage.setItem("hasicskaRevueLocalProgressDemo","1");
  localStorage.setItem("hasicskaRevueDemoVersion",String(demoVersion+1));
  save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();renderRoutePlanner();
  alert("Načteno 56 fiktivních zápisů, z toho "+targetDefects+" se závadami. Při dalším načtení se počet závad změní. Data jsou pouze pro vyzkoušení aplikace.");
@@ -983,6 +990,16 @@ function exportChiefReport(){
 const reportUnits=units.flatMap(u=>u==="Lažánky + Horní Lhota"?["Lažánky","Horní Lhota"]:[u]);
 function unitReportStationEntries(unit){return records.filter(r=>r.unit===unit||((unit==="Lažánky"||unit==="Horní Lhota")&&r.unit==="Lažánky + Horní Lhota"))}
 function renderUnitPdfExports(){const target=el("unitPdfExports");if(!target)return;target.innerHTML=reportUnits.map(u=>{const n=unitReportStationEntries(u).length;return '<div class="unit-tile"><strong>'+escaped(u)+'</strong><span>'+n+' uložených zápisů</span><button type="button" class="primary" data-unit-pdf="'+escaped(u)+'">Vytvořit PDF zprávu</button></div>'}).join("");target.querySelectorAll("[data-unit-pdf]").forEach(b=>b.onclick=()=>exportUnitPdf(b.dataset.unitPdf))}
+async function encodeUnitReportPayload(payload){
+ const json=JSON.stringify(payload);
+ if(typeof CompressionStream==="function"){
+  const stream=new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"));
+  const bytes=new Uint8Array(await new Response(stream).arrayBuffer());
+  let binary="";for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));
+  return {key:"unitReportZip",value:btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")};
+ }
+ return {key:"unitReport",value:btoa(unescape(encodeURIComponent(json)))};
+}
 async function exportUnitPdf(unit){
  const popup=window.open("","_blank");
  if(!popup){alert("Pro vytvoření PDF povol v prohlížeči vyskakovací okna pro tuto stránku.");return}
@@ -1046,9 +1063,15 @@ async function exportUnitPdf(unit){
  };
  // Uložení celé zprávy na server; QR obsahuje jen krátké ID konkrétního hodnocení.
  const reportId=Array.from(crypto.getRandomValues(new Uint8Array(6))).map(x=>x.toString(16).padStart(2,"0")).join("").toUpperCase();
- const saveResponse=await quizPost({action:"saveReport",id:reportId,report:payload});
- if(!saveResponse||!saveResponse.ok)throw new Error(saveResponse&&saveResponse.error||"Zprávu se nepodařilo uložit na server. Aktualizuj Google Apps Script podle souboru REPORT_STORAGE_SETUP.md.");
- const webReportUrl=location.origin+location.pathname+"?reportId="+encodeURIComponent(reportId);
+ let webReportUrl;
+ if(localStorage.getItem("hasicskaRevueLocalProgressDemo")==="1"){
+  const encodedReport=await encodeUnitReportPayload(payload);
+  webReportUrl=location.origin+location.pathname+"?"+encodedReport.key+"="+encodeURIComponent(encodedReport.value);
+ }else{
+  const saveResponse=await quizPost({action:"saveReport",id:reportId,report:payload});
+  if(!saveResponse||!saveResponse.ok)throw new Error(saveResponse&&saveResponse.error||"Zprávu se nepodařilo uložit na server. Aktualizuj Google Apps Script podle souboru REPORT_STORAGE_SETUP.md.");
+  webReportUrl=location.origin+location.pathname+"?reportId="+encodeURIComponent(reportId);
+ }
  let unitReportQrMarkup='<span style="font-size:9px;color:#a32121">QR kód se nepodařilo vytvořit.</span>';
  try{if(window.QRCode){const qrTemp=document.createElement("div");qrTemp.style.cssText="position:fixed;left:-10000px;top:0;width:150px;height:150px;padding:10px;background:#fff;box-sizing:border-box;overflow:visible";document.body.appendChild(qrTemp);new QRCode(qrTemp,{text:webReportUrl,width:130,height:130,correctLevel:QRCode.CorrectLevel.L});const qrCanvas=qrTemp.querySelector("canvas"),qrImage=qrTemp.querySelector("img");const qrData=qrCanvas?qrCanvas.toDataURL("image/png"):(qrImage?qrImage.src:"");if(qrData)unitReportQrMarkup='<img alt="QR kód konkrétního hodnocení jednotky" width="130" height="130" style="display:block;width:130px;height:130px;max-width:none;image-rendering:pixelated" src="'+qrData+'">';qrTemp.remove();}}catch(qrBuildError){}
  const report='<div class="summary"><div style="display:flex;align-items:center;gap:14px"><div style="width:150px;height:150px;min-width:150px;flex:none;padding:10px;box-sizing:border-box;background:#fff;overflow:visible">'+unitReportQrMarkup+'</div><div><h2>Webová verze hodnocení</h2><p>Naskenuj QR kód pro otevření tohoto konkrétního hodnocení jednotky.</p></div></div></div><div class="summary"><h2>Celkové hodnocení jednotky</h2><p><strong>Stav:</strong> '+esc(overall)+'</p><div class="stats"><div><strong>'+entries.length+' / 7</strong><span>vyhodnocených stanovišť</span></div><div><strong>'+good+'</strong><span>bez nedostatků</span></div><div><strong>'+minor+'</strong><span>drobné nedostatky</span></div><div><strong>'+major+'</strong><span>závažné nedostatky</span></div></div><p><strong>Chybějící zápisy:</strong> '+esc(missing.length?missing.join(", "):"Žádné")+'</p><p><strong>Vědomostní kvíz:</strong> '+esc(quizSummary)+'</p>'+(quizError?'<p class="warning">'+esc(quizError)+'</p>':'')+'</div><h2 class="section-title">Kontrola stanovišť</h2>'+stationBody+'<section class="quiz-print-section"><h2 class="section-title">Vědomostní kvíz – výsledky <span class="quiz-control-status">('+esc(quizControlStatus)+')</span></h2>'+quizBody+'</section>';
