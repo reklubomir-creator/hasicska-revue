@@ -15,7 +15,17 @@ const QUIZZES = {
     {question:'Jak správně předáváš důležitou informaci?',options:['Dlouhým neověřeným popisem','Stručně, věcně a s potvrzením porozumění, je-li potřeba','Pouze gestem z dálky'],correct:1},
     {question:'Co je důležité před vstupem do nebezpečného prostoru?',options:['Ověřit rizika a dodržet stanovené zajištění','Vstoupit jako první bez domluvy','Nechat rozhodnutí náhodě'],correct:0},
     {question:'Co uděláš, když se podmínky na místě náhle změní?',options:['Pokračuješ podle původního plánu za každou cenu','Upozorníš velitele a znovu vyhodnotíš situaci podle pokynů','Odejdeš bez oznámení'],correct:1},
-    {question:'Jak naložíš s použitým vybavením po činnosti?',options:['Vrátíš ho bez kontroly','Zkontroluješ stav, oznámíš závady a uložíš ho podle pravidel','Necháš ho na místě'],correct:1}
+    {question:'Jak naložíš s použitým vybavením po činnosti?',options:['Vrátíš ho bez kontroly','Zkontroluješ stav, oznámíš závady a uložíš ho podle pravidel','Necháš ho na místě'],correct:1},
+    {question:'Jak se zachováš při práci v blízkosti pohybující se techniky?',options:['Vstoupíš do prostoru bez upozornění','Dodržíš vymezený bezpečný prostor a domluvené signály','Spolehneš se pouze na oční kontakt'],correct:1},
+    {question:'Co uděláš, když nerozumíš pokynu velitele?',options:['Ověříš si pokyn dříve, než začneš jednat','Provedeš vlastní odhad','Počkáš bez oznámení'],correct:0},
+    {question:'Jak postupuješ při předávání použitého vybavení?',options:['Předáš ho bez kontroly','Zkontroluješ stav a upozorníš na závady','Uložíš ho kamkoliv'],correct:1},
+    {question:'Co je důležité při pohybu v zakouřeném prostoru?',options:['Postupovat bez zajištění','Dodržet určený postup, ochranu a jištění','Oddělit se od ostatních'],correct:1},
+    {question:'Jak reaguješ na zjištěnou překážku v únikové cestě?',options:['Ignoruješ ji','Oznámíš ji a podle situace zajistíš bezpečný průchod','Pokračuješ bez upozornění'],correct:1},
+    {question:'Co uděláš, když se člen týmu ztratí z dohledu?',options:['Pokračuješ bez ověření','Upozorníš velitele a postupuješ podle pravidel spojení a jištění','Předpokládáš, že je v pořádku'],correct:1},
+    {question:'Jak správně zacházíš s hadicovým vedením?',options:['Vedeš ho tak, aby zbytečně neohrožovalo pohyb a provoz','Ponecháš ho přes všechny průchody bez zajištění','Použiješ poškozenou hadici'],correct:0},
+    {question:'Kdy oznámíš závadu ochranného prostředku?',options:['Až při další akci','Bez odkladu a před dalším použitím','Jen pokud si jí někdo všimne'],correct:1},
+    {question:'Co je správné při střídání člena na úkolu?',options:['Předat stručně stav, rizika a rozpracované činnosti','Odejít bez předání','Předat pouze název úkolu'],correct:0},
+    {question:'Jak se zachováš, když dostaneš pokyn, který může být nebezpečný?',options:['Provedeš ho bez ověření','Upozorníš na riziko a vyžádáš si upřesnění postupu','Ignoruješ všechny další pokyny'],correct:1}
   ],
   'Strojník': [
     {question:'Co je důležité před vyjetím vozidla?',options:['Provést předepsanou kontrolu a ověřit připravenost','Zkontrolovat jen množství paliva','Vyjet a závady řešit až potom'],correct:0},
@@ -27,7 +37,17 @@ const QUIZZES = {
     {question:'Proč je důležitá komunikace strojníka s velitelem?',options:['Aby byly změny provozu a stav techniky koordinované','Aby se nemusel kontrolovat stav vozidla','Jen kvůli evidenci docházky'],correct:0},
     {question:'Co patří po návratu k běžné péči o vozidlo?',options:['Kontrola, doplnění prostředků a hlášení závad podle pravidel','Pouze umytí karoserie','Nic, pokud vozidlo dojelo'],correct:0},
     {question:'Jak zacházet s technikou, jejíž obsluhu neznáš?',options:['Vyzkoušet ji bez přípravy','Postupovat podle návodu a pokynů oprávněné osoby','Požádat nezkušeného člena o odhad'],correct:1},
-    {question:'Co je prioritou při pohybu zásahového vozidla?',options:['Co nejvyšší rychlost za všech okolností','Bezpečná jízda v souladu s pravidly a podmínkami','Předjet každé pomalejší vozidlo'],correct:1}
+    {question:'Co je prioritou při pohybu zásahového vozidla?',options:['Co nejvyšší rychlost za všech okolností','Bezpečná jízda v souladu s pravidly a podmínkami','Předjet každé pomalejší vozidlo'],correct:1},
+    {question:'Co zkontroluješ před použitím čerpadla?',options:['Pouze barvu krytu','Stav zařízení, připojení a bezpečné provozní podmínky','Jen množství paliva'],correct:1},
+    {question:'Jak postupuješ při neobvyklém hluku motoru?',options:['Pokračuješ bez kontroly','Bezpečně přerušíš činnost a závadu prověříš podle pokynů','Zvýšíš otáčky'],correct:1},
+    {question:'Co je důležité při ustavení vozidla na místě zásahu?',options:['Zvolit bezpečné místo s ohledem na provoz a okolní rizika','Zastavit co nejblíže bez ohledu na okolí','Blokovat příjezd dalším jednotkám'],correct:0},
+    {question:'Jak se zachováš při úniku provozních kapalin?',options:['Únik ignoruješ','Zajistíš bezpečnost, oznámíš událost a postupuješ podle pokynů','Spláchneš kapalinu do kanalizace'],correct:1},
+    {question:'Kdy smíš obsluhovat konkrétní zařízení?',options:['Kdykoliv je zařízení dostupné','Když jsi k obsluze určený a znáš bezpečný postup','Po krátkém odhadu bez zaučení'],correct:1},
+    {question:'Co uděláš při ztrátě tlaku v hadicovém vedení?',options:['Ověříš situaci a bezpečně informuješ velitele','Bez upozornění zvýšíš výkon na maximum','Odpojíš vedení bez domluvy'],correct:0},
+    {question:'Jak má být zajištěno vozidlo při stání ve svahu?',options:['Pouze vypnutím rádia','Podle pravidel proti samovolnému pohybu a místních podmínek','Stačí ponechat motor běžet'],correct:1},
+    {question:'Co uděláš po doplnění paliva nebo provozních kapalin?',options:['Zkontroluješ uzavření a bezpečný stav před dalším provozem','Necháš uzávěry volné','Okamžitě odjedeš bez kontroly'],correct:0},
+    {question:'Jak reaguješ na pokyn k přemístění vozidla v nepřehledném prostoru?',options:['Rozjedeš se bez kontroly okolí','Ověříš bezpečný prostor a případně využiješ navádění','Spolehneš se na odhad vzdálenosti'],correct:1},
+    {question:'Co patří k bezpečnému ukončení provozu čerpadla?',options:['Vypnout vše bez ohledu na postup','Postupovat podle návodu, bezpečně odtlakovat a zkontrolovat zařízení','Odpojit hadice pod tlakem'],correct:1}
   ],
   'Velitel': [
     {question:'Jaký je jeden z prvních úkolů velitele po příjezdu?',options:['Vyhodnotit situaci a rizika a určit další postup','Rozdělit úkoly bez průzkumu','Odejít od jednotky bez předání velení'],correct:0},
@@ -39,7 +59,15 @@ const QUIZZES = {
     {question:'Proč se průběžně přehodnocuje situace?',options:['Podmínky a rizika se mohou měnit','Aby se zbytečně měnily úkoly','Protože původní průzkum nemá význam'],correct:0},
     {question:'Jak postupovat, pokud jednotka nemá potřebné vybavení?',options:['Vyhodnotit možnosti a vyžádat potřebné síly či prostředky cestou velení','Zahájit nebezpečný úkon bez vybavení','Zatajit nedostatek'],correct:0},
     {question:'Co je důležité při kontrole dokončení úkolu?',options:['Ověřit výsledek, bezpečnost a předání dalších pokynů','Předpokládat, že úkol dopadl dobře','Okamžitě opustit místo'],correct:0},
-    {question:'Jak se zachováš při nejasném nebo rozporném hlášení?',options:['Ověříš informace a upřesníš rozhodnutí','Vybereš náhodně jednu verzi','Předáš obě jako potvrzená fakta'],correct:0}
+    {question:'Jak se zachováš při nejasném nebo rozporném hlášení?',options:['Ověříš informace a upřesníš rozhodnutí','Vybereš náhodně jednu verzi','Předáš obě jako potvrzená fakta'],correct:0},
+    {question:'Co má obsahovat srozumitelný rozkaz?',options:['Úkol, důležité podmínky a potřebné bezpečnostní pokyny','Pouze obecné přání','Neověřené informace bez určení odpovědnosti'],correct:0},
+    {question:'Jak postupuješ při změně priorit zásahu?',options:['Změnu sdělíš dotčeným členům a ověříš porozumění','Změnu nikomu neoznámíš','Pokračuješ podle původního plánu za každou cenu'],correct:0},
+    {question:'Co uděláš, když se dostupné síly ukážou jako nedostatečné?',options:['Zatajíte situaci','Včas vyžádáš posily a upřesníš potřeby','Rozdělíš úkoly bez ohledu na bezpečnost'],correct:1},
+    {question:'Jak zajistíš bezpečnost při souběhu více činností?',options:['Necháš každou skupinu rozhodovat bez koordinace','Určíš odpovědnosti, pořadí a komunikaci mezi skupinami','Zrušíš veškeré hlášení'],correct:1},
+    {question:'Co je důležité při převzetí velení?',options:['Zjistit aktuální situaci, úkoly, rizika a dostupné prostředky','Okamžitě změnit všechny úkoly bez zjišťování','Spoléhat pouze na neověřené informace'],correct:0},
+    {question:'Jak máš reagovat na hlášení o zranění člena jednotky?',options:['Ověřit situaci, zajistit potřebnou pomoc a upravit činnost podle rizik','Počkat až do konce úkolu','Pokračovat bez oznámení'],correct:0},
+    {question:'Co má obsahovat předání zásahu jiné odpovědné osobě?',options:['Aktuální stav, rizika, provedená opatření a další potřebné informace','Pouze adresu místa','Jen vlastní názor bez faktů'],correct:0},
+    {question:'Jak postupuješ, když se podmínky od původního plánu výrazně liší?',options:['Bez kontroly pokračuješ podle plánu','Znovu vyhodnotíš rizika a upravíš postup, změnu sdělíš týmu','Přeneseš rozhodnutí na náhodného člena'],correct:1}
   ]
 };
 
@@ -253,7 +281,8 @@ function doPost(e) {
       });
       const safeFixed = state.fixedStartUnits.filter(unit => typeof unit === 'string' && unit.length <= 120).slice(0,100);
       const safeAutoCompletedStation1Units = Array.isArray(state.autoCompletedStation1Units) ? state.autoCompletedStation1Units.filter(unit => typeof unit === "string" && unit.length <= 120).slice(0,100) : [];
-      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,autoCompletedStation1Units:safeAutoCompletedStation1Units,updatedAt:new Date().toISOString()});
+      const safeCombinedSmsCommanderUnit = ['Lažánky','Horní Lhota'].includes(state.combinedSmsCommanderUnit) ? state.combinedSmsCommanderUnit : 'Horní Lhota';
+      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,autoCompletedStation1Units:safeAutoCompletedStation1Units,combinedSmsCommanderUnit:safeCombinedSmsCommanderUnit,updatedAt:new Date().toISOString()});
       if (serialized.length > 50000) return json({ok:false,error:'Rozlosování je příliš velké.'});
       PropertiesService.getScriptProperties().setProperty(PROP_APP_STATE,serialized);
       return json({ok:true,updatedAt:new Date().toISOString()});
@@ -271,6 +300,7 @@ function doPost(e) {
         startStations: {},
         fixedStartUnits: [],
         autoCompletedStation1Units: [],
+        combinedSmsCommanderUnit: 'Horní Lhota',
         updatedAt: new Date().toISOString()
       }));
       return json({ok:true,message:'Výsledky, QR zprávy, hodnocení stanovišť i sdílené rozlosování byly vymazány.'});
