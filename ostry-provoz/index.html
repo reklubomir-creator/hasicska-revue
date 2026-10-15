@@ -401,7 +401,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div class="side-note">Příprava ostrého provozu<br>verze 0.1.73</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Příprava ostrého provozu · v0.1.83</span></div></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Příprava ostrého provozu · v0.1.84</span></div></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
@@ -908,6 +908,9 @@ function loadDemoData(){
  localStorage.setItem("hasicskaRevueQuizResultsCache",JSON.stringify(quizResultsCache));
  localStorage.setItem("hasicskaRevueLocalProgressDemo","1");
  localStorage.setItem("hasicskaRevueDemoVersion",String(demoVersion+1));
+ const quizLive=el("quizLiveResults"),quizReport=el("quizReportResults");
+ if(quizLive)quizLive.innerHTML=quizResultsCache.length?'<div class="quiz-result-list">'+quizResultsCache.map((x,i)=>quizRenderResult(x,i)).join("")+'</div>':'<div class="empty">Ve fiktivním průběhu zatím není dokončený kvíz.</div>';
+ if(quizReport)quizReport.innerHTML=quizResultsCache.length?quizResultsCache.map(x=>{const e=quizBuildEvaluation(x);return '<article class="station" style="margin:10px 0"><h3>'+escaped(x.unit)+' · '+escaped(x.name||"Fiktivní účastník")+'</h3><p><strong>Výsledek:</strong> '+x.correct+' / '+x.total+' ('+x.percentage+' %)</p><p><strong>'+escaped(e.headline)+':</strong> '+escaped(e.body)+'</p><p>'+escaped(e.advice)+'</p></article>'}).join(""):'<div class="empty">Ve fiktivním průběhu zatím není dokončený kvíz.</div>';
  save();renderResults();renderUnitPdfExports();renderProgress();renderUnits();renderStandby();renderAssessmentStationTiles();renderEditStationTiles();renderRoutePlanner();
  alert("Načteno 56 fiktivních zápisů, z toho "+targetDefects+" se závadami. Při dalším načtení se počet závad změní. Data jsou pouze pro vyzkoušení aplikace.");
 }
