@@ -67,7 +67,9 @@ const QUIZZES = {
     {question:'Co je důležité při převzetí velení?',options:['Zjistit aktuální situaci, úkoly, rizika a dostupné prostředky','Okamžitě změnit všechny úkoly bez zjišťování','Spoléhat pouze na neověřené informace'],correct:0},
     {question:'Jak máš reagovat na hlášení o zranění člena jednotky?',options:['Ověřit situaci, zajistit potřebnou pomoc a upravit činnost podle rizik','Počkat až do konce úkolu','Pokračovat bez oznámení'],correct:0},
     {question:'Co má obsahovat předání zásahu jiné odpovědné osobě?',options:['Aktuální stav, rizika, provedená opatření a další potřebné informace','Pouze adresu místa','Jen vlastní názor bez faktů'],correct:0},
-    {question:'Jak postupuješ, když se podmínky od původního plánu výrazně liší?',options:['Bez kontroly pokračuješ podle plánu','Znovu vyhodnotíš rizika a upravíš postup, změnu sdělíš týmu','Přeneseš rozhodnutí na náhodného člena'],correct:1}
+    {question:'Jak postupuješ, když se podmínky od původního plánu výrazně liší?',options:['Bez kontroly pokračuješ podle plánu','Znovu vyhodnotíš rizika a upravíš postup, změnu sdělíš týmu','Přeneseš rozhodnutí na náhodného člena'],correct:1},
+    {question:'Jak ověříš, že členové jednotky porozuměli důležitému pokynu?',options:['Vyžádáš si stručné potvrzení nebo zpětné zopakování podle situace','Předpokládáš, že všichni slyšeli','Pokyn zopakuješ pouze po skončení činnosti'],correct:0},
+    {question:'Co patří do závěrečného vyhodnocení činnosti?',options:['Pouze informace o spotřebě paliva','Shrnutí výsledku, rizik, závad a potřebných následných opatření','Jen osobní dojmy bez ověření skutečností'],correct:1}
   ]
 };
 
