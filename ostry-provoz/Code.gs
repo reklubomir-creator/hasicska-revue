@@ -305,6 +305,7 @@ function doPost(e) {
         fixedStartUnits: [],
         autoCompletedStation1Units: [],
         combinedSmsCommanderUnit: 'Horní Lhota',
+        startStationsDrawnAt: 0,
         updatedAt: new Date().toISOString()
       }));
       return json({ok:true,message:'Výsledky, QR zprávy, hodnocení stanovišť i sdílené rozlosování byly vymazány.'});
