@@ -252,7 +252,8 @@ function doPost(e) {
         if (unit && Number.isInteger(station) && station >= 1 && station <= 8) safeStarts[String(unit)] = station;
       });
       const safeFixed = state.fixedStartUnits.filter(unit => typeof unit === 'string' && unit.length <= 120).slice(0,100);
-      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,updatedAt:new Date().toISOString()});
+      const safeAutoCompletedStation1Units = Array.isArray(state.autoCompletedStation1Units) ? state.autoCompletedStation1Units.filter(unit => typeof unit === "string" && unit.length <= 120).slice(0,100) : [];
+      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,autoCompletedStation1Units:safeAutoCompletedStation1Units,updatedAt:new Date().toISOString()});
       if (serialized.length > 50000) return json({ok:false,error:'Rozlosování je příliš velké.'});
       PropertiesService.getScriptProperties().setProperty(PROP_APP_STATE,serialized);
       return json({ok:true,updatedAt:new Date().toISOString()});
@@ -269,6 +270,7 @@ function doPost(e) {
       props.setProperty(PROP_APP_STATE, JSON.stringify({
         startStations: {},
         fixedStartUnits: [],
+        autoCompletedStation1Units: [],
         updatedAt: new Date().toISOString()
       }));
       return json({ok:true,message:'Výsledky, QR zprávy, hodnocení stanovišť i sdílené rozlosování byly vymazány.'});
