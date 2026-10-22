@@ -1,4 +1,37 @@
 const SHEET_RESULTS = 'Výsledky';
+const SHEET_CONTACTS = 'Kontakty';
+function contactUnits_() {
+  return ['Klepačov','Olešná','Těchov','Lažánky','Horní Lhota','Obůrka','Dolní Lhota','Spešov','Olomučany'];
+}
+function contactsSheet_() {
+  const ss=spreadsheet_();
+  let sh=ss.getSheetByName(SHEET_CONTACTS);
+  if (!sh) { sh=ss.insertSheet(SHEET_CONTACTS); sh.appendRow(['Jednotka','Velitel','Telefon','E-mail']); }
+  else if (sh.getLastRow()===0) sh.appendRow(['Jednotka','Velitel','Telefon','E-mail']);
+  return sh;
+}
+function contactsList_() {
+  const sh=contactsSheet_(), result={};
+  if (sh.getLastRow()<2) return result;
+  sh.getRange(2,1,sh.getLastRow()-1,4).getDisplayValues().forEach(r=>{
+    const unit=String(r[0]||'').trim();
+    if (contactUnits_().includes(unit)) result[unit]={commander:String(r[1]||''),phone:String(r[2]||''),email:String(r[3]||''),saved:true};
+  });
+  return result;
+}
+function contactSave_(contact) {
+  if (!contact || typeof contact!=='object') return {ok:false,error:'Chybí kontakt.'};
+  const unit=String(contact.unit||'').trim(),commander=String(contact.commander||'').trim(),phone=String(contact.phone||'').trim(),email=String(contact.email||'').trim();
+  if (!contactUnits_().includes(unit)) return {ok:false,error:'Neznámá jednotka.'};
+  if (!commander || !phone || !email || commander.length>180 || phone.length>50 || email.length>254) return {ok:false,error:'Neplatné údaje kontaktu.'};
+  const sh=contactsSheet_(), row=[unit,commander,phone,email];
+  if (sh.getLastRow()>=2) {
+    const names=sh.getRange(2,1,sh.getLastRow()-1,1).getDisplayValues();
+    for(let i=0;i<names.length;i++) if(String(names[i][0]).trim()===unit) { sh.getRange(i+2,1,1,4).setValues([row]); return {ok:true}; }
+  }
+  sh.appendRow(row); return {ok:true};
+}
+
 const SHEET_REPORTS = 'Hodnocení';
 const SHEET_ASSESSMENTS = 'Zápisy stanovišť';
 const PROP_ACTIVE = 'ACTIVE_QUIZ_SESSION';
@@ -226,6 +259,7 @@ function clearDataRows_(sheetName) {
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'getReport') return json(reportStorageGet_(p.id));
+  if (p.action === 'contacts') return json({ok:true,contacts:contactsList_()});
   if (p.action === 'assessments') return json({ok:true,records:assessmentList_()});
   if (p.action === 'appStateVersion') {
     const raw = PropertiesService.getScriptProperties().getProperty(PROP_APP_STATE);
@@ -269,6 +303,7 @@ function doPost(e) {
     const data=JSON.parse(e && e.postData && e.postData.contents ? e.postData.contents : '{}');
     lock.waitLock(10000); lockAcquired=true;
     if (data.action === 'saveReport') return json(reportStorageSave_(data));
+    if (data.action === 'saveContact') return json(contactSave_(data.contact));
     if (data.action === 'saveAssessment') return json(assessmentSave_(data.record));
     if (data.action === 'deleteAssessment') return json(assessmentDelete_(data.unit,data.station));
     if (data.action === 'saveAppState') {
@@ -282,11 +317,12 @@ function doPost(e) {
         if (unit && Number.isInteger(station) && station >= 1 && station <= 8) safeStarts[String(unit)] = station;
       });
       const safeFixed = state.fixedStartUnits.filter(unit => typeof unit === 'string' && unit.length <= 120).slice(0,100);
-      const safeAutoCompletedStation1Units = Array.isArray(state.autoCompletedStation1Units) ? state.autoCompletedStation1Units.filter(unit => typeof unit === "string" && unit.length <= 120).slice(0,100) : [];
+      const safeActiveAssessments = state.activeAssessments && typeof state.activeAssessments==='object' && !Array.isArray(state.activeAssessments) ? state.activeAssessments : {};
+       const safeAutoCompletedStation1Units = Array.isArray(state.autoCompletedStation1Units) ? state.autoCompletedStation1Units.filter(unit => typeof unit === "string" && unit.length <= 120).slice(0,100) : [];
       const rawDrawnAt = Number(state.startStationsDrawnAt);
       const safeStartStationsDrawnAt = Number.isFinite(rawDrawnAt) && rawDrawnAt > 0 ? rawDrawnAt : 0;
       const safeCombinedSmsCommanderUnit = ['Lažánky','Horní Lhota'].includes(state.combinedSmsCommanderUnit) ? state.combinedSmsCommanderUnit : 'Horní Lhota';
-      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,autoCompletedStation1Units:safeAutoCompletedStation1Units,startStationsDrawnAt:safeStartStationsDrawnAt,combinedSmsCommanderUnit:safeCombinedSmsCommanderUnit,updatedAt:new Date().toISOString()});
+      const serialized = JSON.stringify({startStations:safeStarts,fixedStartUnits:safeFixed,activeAssessments:safeActiveAssessments,autoCompletedStation1Units:safeAutoCompletedStation1Units,startStationsDrawnAt:safeStartStationsDrawnAt,combinedSmsCommanderUnit:safeCombinedSmsCommanderUnit,updatedAt:new Date().toISOString()});
       if (serialized.length > 50000) return json({ok:false,error:'Rozlosování je příliš velké.'});
       PropertiesService.getScriptProperties().setProperty(PROP_APP_STATE,serialized);
       return json({ok:true,updatedAt:new Date().toISOString()});
