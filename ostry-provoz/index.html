@@ -493,7 +493,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.9";
+const APP_VERSION="0.2.10";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -560,7 +560,32 @@ el("clearFixedStarts").onclick=()=>{fixedStartUnits=[...new Set([...Object.keys(
 function el(id){return document.getElementById(id)}
 function save(){localStorage.setItem("hasicskaRevueRecords",JSON.stringify(records))}
 async function loadProductionAssessments(){if(localStorage.getItem("hasicskaRevueLocalProgressDemo")==="1"){records=JSON.parse(localStorage.getItem("hasicskaRevueRecords")||"[]");renderUnits();renderHomeStations();renderProgress();renderStandby();renderResults();renderAssessmentStationTiles();renderEditStationTiles();renderReviewerQueue();renderUnitPdfExports();renderChiefReport();return}const data=await quizGet({action:"assessments"});if(!data||!data.ok||!Array.isArray(data.records))throw new Error(data&&data.error||"Server nevrátil seznam hodnocení.");records=data.records;save();renderUnits();renderHomeStations();renderProgress();renderStandby();renderResults();renderAssessmentStationTiles();renderEditStationTiles();renderReviewerQueue();renderUnitPdfExports();renderChiefReport();saveLastGoodServerSnapshot();}
-async function saveProductionAssessment(record){const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),15000);try{const response=await fetch(quizApiUrl(),{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({action:"saveAssessment",record}),redirect:"follow",signal:controller.signal});if(!response.ok)throw new Error("Server vrátil "+response.status);const data=await response.json();if(!data||!data.ok)throw new Error(data&&data.error||"Hodnocení se nepodařilo uložit na server.");return data.record||record}catch(err){if(err&&err.name==="AbortError")throw new Error("Server neodpověděl do 15 sekund. Zápis se mohl uložit! Neodesílej ho znovu bez kontroly výsledků na dashboardu.");throw err}finally{clearTimeout(timeout)}}
+async function verifySavedAssessment(record){
+ const response=await quizGet({action:"assessments"});
+ if(!response||!response.ok||!Array.isArray(response.records))throw new Error("Kontrola serveru není dostupná.");
+ const stored=response.records.find(x=>x.unit===record.unit&&x.station===record.station);
+ const matches=stored&&stored.notes===record.notes&&stored.status===record.status&&stored.reviewer===record.reviewer&&stored.date===record.date&&stored.time===record.time;
+ return matches?stored:null;
+}
+async function saveProductionAssessment(record){
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),15000);
+ try{
+  const response=await fetch(quizApiUrl(),{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({action:"saveAssessment",record}),redirect:"follow",signal:controller.signal});
+  if(!response.ok)throw new Error("Server vrátil "+response.status);
+  const data=await response.json();
+  if(!data||!data.ok)throw new Error(data&&data.error||"Hodnocení se nepodařilo uložit na server.");
+  return data.record||record;
+ }catch(err){
+  if(err&&err.name!=="AbortError"&&!(err instanceof TypeError))throw err;
+  el("saveMessage").textContent="Ověřuji na serveru, zda se zápis přesto uložil…";
+  for(let attempt=0;attempt<3;attempt++){
+   try{const found=await Promise.race([verifySavedAssessment(record),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Kontrola trvá příliš dlouho.")),6000))]);if(found){el("saveMessage").textContent="Zápis potvrzen na serveru. Přecházím na další jednotku…";return found}}catch(checkError){console.warn("Kontrola zápisu",checkError)}
+   if(attempt<2)await new Promise(resolve=>setTimeout(resolve,1500));
+  }
+  throw new Error("Uložení se nepodařilo potvrdit. Zápis mohl být uložen; před dalším pokusem zkontroluj hodnocení na serveru.");
+ }finally{clearTimeout(timeout)}
+}
 function escaped(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function fillSelect(id,values){el(id).innerHTML=values.map(v=>'<option>'+escaped(v)+'</option>').join("")}
 function unitDone(unit){return new Set([...records.filter(r=>r.unit===unit).map(r=>r.station),...(autoCompletedStation1Units.includes(unit)||automaticFirstStationImpliedByStationTwo(unit)?[stations[0]]:[])]).size}
