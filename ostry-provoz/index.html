@@ -401,7 +401,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div class="side-note">Příprava ostrého provozu<br>verze 0.1.104</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.109</span></div></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.110</span></div></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
@@ -922,12 +922,31 @@ async function quizActivate(){
 }
 function quizClosedSummaryText(item){
  const pct=item.percentage;
- if(pct===null||pct===undefined||!item.submitted)return "Za jednotku nebyl odevzdán žádný kvíz. Znalosti proto nelze vyhodnotit.";
- if(pct>=90)return "Výborná úroveň znalostí. Účastníci prokázali velmi dobrou orientaci v tématech kvízu.";
- if(pct>=75)return "Velmi dobré znalosti, pouze drobné mezery. Doporučujeme zopakovat chybné odpovědi.";
- if(pct>=60)return "Dobrý základ znalostí. Některé oblasti je vhodné dále procvičit.";
- if(pct>=40)return "Znalosti vyžadují doplnění. Doporučujeme projít chybné odpovědi a zopakovat související postupy.";
- return "Výsledek ukazuje na výrazné mezery ve znalostech. Doporučujeme důkladné zopakování témat.";
+ if(pct===null||pct===undefined||!item.submitted)return "Za jednotku nebyl odevzdán žádný kvíz, proto nelze její znalosti objektivně posoudit.";
+ const results=(quizResultsCache||[]).filter(x=>String(x.unit||"")===item.unit);
+ const roles=["Hasič","Strojník","Velitel"];
+ const roleScores=roles.map(role=>{
+  const group=results.filter(x=>String(x.role||"").toLowerCase()===role.toLowerCase());
+  const total=group.reduce((n,x)=>n+(Number(x.total)||0),0);
+  const correct=group.reduce((n,x)=>n+(Number(x.correct)||0),0);
+  return {role,count:group.length,pct:total?Math.round(100*correct/total):null};
+ }).filter(x=>x.count&&x.pct!==null);
+ const opening=pct>=90?"Jednotka si v prověrce vedla výborně a prokázala jistotu ve většině ověřovaných témat.":pct>=75?"Jednotka má solidní znalostní základ; jednotlivé chyby ukazují, kde lze připravenost ještě zlepšit.":pct>=60?"Výsledky ukazují použitelný základ znalostí, ale také prostor pro cílené doplnění odborné přípravy.":pct>=40?"V odpovědích se objevilo více nepřesností. Doporučujeme věnovat čas systematickému opakování.":"Výsledky ukazují výraznější nedostatky v teoretické přípravě. Doporučujeme opakování před další prověrkou.";
+ let details="";
+ if(roleScores.length){
+  const ranked=[...roleScores].sort((a,b)=>b.pct-a.pct);
+  if(ranked.length>1&&ranked[0].pct-ranked[ranked.length-1].pct>=15)details=" Nejlépe si vedla role "+ranked[0].role.toLowerCase()+" ("+ranked[0].pct+" %); větší pozornost zaslouží role "+ranked[ranked.length-1].role.toLowerCase()+" ("+ranked[ranked.length-1].pct+" %).";
+  else details=" Výsledky podle rolí: "+ranked.map(x=>x.role+" "+x.pct+" %").join(", ")+".";
+ }
+ const wrong=results.flatMap(x=>quizWrongAnswers(x)).filter(Boolean);
+ let focus="";
+ if(wrong.length){
+  const counts=new Map();
+  wrong.forEach(w=>{const key=String(w).split(" — ")[0].trim();if(key)counts.set(key,(counts.get(key)||0)+1)});
+  const frequent=[...counts.entries()].sort((a,b)=>b[1]-a[1])[0];
+  if(frequent)focus=" K opakování doporučujeme zejména otázku „"+frequent[0]+"“"+(frequent[1]>1?", ve které se objevily "+frequent[1]+" chyby":", u které se objevila chybná odpověď")+".";
+ }
+ return opening+details+focus+(wrong.length?" Při dalším školení je vhodné společně projít chybné odpovědi a vysvětlit správné postupy.":" Podrobnější doporučení podle témat nelze bez uložených chybných odpovědí spolehlivě určit.");
 }
 function quizShowClosedSummary(out){
  const box=el("quizClosedSummary");if(!box)return;
