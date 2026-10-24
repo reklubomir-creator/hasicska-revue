@@ -879,6 +879,7 @@ function doGet(e) {
           correct:Number(r[5]) || 0,
           percentage:Number(r[6]) || 0,
           durationSeconds:Number(r[7]) || 0,
+          sessionToken:String(r[9] || ''),
           wrongAnswers:wrongAnswers
         };
       })
