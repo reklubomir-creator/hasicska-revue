@@ -679,10 +679,13 @@ function closeQuizSession_(active) {
     ? sh.getRange(2,1,sh.getLastRow()-1,11).getValues()
     : [];
 
-  const submitted = rows.filter(r => String(r[9] || '') === String(active.token || ''));
-  const now = new Date();
+  // Hodnocení jednotky je kumulativní napříč všemi jejími relacemi.
+  // Při opětovném otevření zahrneme starší i nově odevzdané kvízy.
+  // U společné jednotky vyhodnotíme Lažánky a Horní Lhotu odděleně.
   const combined = active.unit === 'Lažánky + Horní Lhota';
   const targetUnits = combined ? ['Lažánky','Horní Lhota'] : [active.unit];
+  const submitted = rows.filter(r => targetUnits.indexOf(String(r[1] || '')) !== -1);
+  const now = new Date();
   const summaries = [];
 
   for (const unit of targetUnits) {
