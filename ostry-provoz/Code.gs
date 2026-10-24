@@ -818,6 +818,12 @@ function doGet(e) {
 
   const active = getActive();
 
+  if (p.action === 'lastClosedQuiz') {
+    let last=null;
+    try { last=JSON.parse(PropertiesService.getScriptProperties().getProperty('QUIZ_LAST_CLOSED')||'null'); } catch(err) {}
+    return json({ok:true,last:last});
+  }
+
   if (p.action === 'completedQuizUnits') {
     let completed=[];
     try { completed=JSON.parse(PropertiesService.getScriptProperties().getProperty('QUIZ_COMPLETED_UNITS')||'[]'); } catch(err) {}
@@ -1081,6 +1087,7 @@ function doPost(e) {
 
       props.deleteProperty(PROP_ACTIVE);
       props.deleteProperty('QUIZ_COMPLETED_UNITS');
+      props.deleteProperty('QUIZ_LAST_CLOSED');
 
       // Resetujeme i celý sdílený stav včetně volby velitele SMS.
       props.setProperty(PROP_APP_STATE,JSON.stringify({
@@ -1115,6 +1122,7 @@ function doPost(e) {
         const active=getActive();
         if(active&&active.unit&&!completed.includes(active.unit))completed.push(active.unit);
         props.setProperty('QUIZ_COMPLETED_UNITS',JSON.stringify(completed));
+        props.setProperty('QUIZ_LAST_CLOSED',JSON.stringify({summary:closed,token:active.token,unit:active.unit}));
         props.deleteProperty(PROP_ACTIVE);
         return json(closed);
       }
@@ -1130,6 +1138,7 @@ function doPost(e) {
       };
 
       props.setProperty(PROP_ACTIVE,JSON.stringify(session));
+      props.deleteProperty('QUIZ_LAST_CLOSED');
 
       return json({
         ok:true,
