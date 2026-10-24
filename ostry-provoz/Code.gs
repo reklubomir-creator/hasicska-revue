@@ -526,7 +526,9 @@ function assessmentList_() {
     .filter(r => r[0] && r[1])
     .map(r => {
       try {
-        return JSON.parse(String(r[3]));
+        const record = JSON.parse(String(r[3]));
+        record.revision = r[2] instanceof Date ? r[2].getTime() : new Date(r[2]).getTime();
+        return record;
       } catch (e) {
         return null;
       }
@@ -561,19 +563,25 @@ function assessmentSave_(record) {
 
   const payload = JSON.stringify(safe);
   const sh = assessmentSheet_();
+  const expectedRevision = Object.prototype.hasOwnProperty.call(record,"expectedRevision") ? record.expectedRevision : undefined;
   const values = sh.getLastRow() >= 2
-    ? sh.getRange(2,1,sh.getLastRow()-1,2).getDisplayValues()
+    ? sh.getRange(2,1,sh.getLastRow()-1,3).getValues()
     : [];
 
   for (let i=0;i<values.length;i++) {
     if (values[i][0] === unit && values[i][1] === station) {
-      sh.getRange(i+2,1,1,4).setValues([[unit,station,new Date(),payload]]);
-      return {ok:true,record:safe};
+      const currentRevision = values[i][2] instanceof Date ? values[i][2].getTime() : new Date(values[i][2]).getTime();
+      if (expectedRevision !== undefined && Number(expectedRevision) !== currentRevision) return {ok:false,error:"Konflikt: jiný hodnotitel mezitím uložil tento zápis. Obnov stránku a zkontroluj nové hodnocení."};
+      const updatedAt = new Date();
+      sh.getRange(i+2,1,1,4).setValues([[unit,station,updatedAt,payload]]);
+      return {ok:true,record:Object.assign({},safe,{revision:updatedAt.getTime()})};
     }
   }
 
-  sh.appendRow([unit,station,new Date(),payload]);
-  return {ok:true,record:safe};
+  if (expectedRevision !== undefined && expectedRevision !== null) return {ok:false,error:"Konflikt: původní zápis již neexistuje. Obnov stránku."};
+  const updatedAt = new Date();
+  sh.appendRow([unit,station,updatedAt,payload]);
+  return {ok:true,record:Object.assign({},safe,{revision:updatedAt.getTime()})};
 }
 
 function assessmentDelete_(unit, station) {
