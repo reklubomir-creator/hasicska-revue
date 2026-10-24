@@ -492,7 +492,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 </main></div>
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
-const APP_VERSION="0.2.2";
+const APP_VERSION="0.2.3";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -1435,6 +1435,8 @@ if(reviewerMode){
  document.querySelectorAll(".nav, .side, #readmePanel, #reviewerQrPanel, #productionTestPanel, #refreshInfo").forEach(n=>n.style.display="none");
  showPage("assessment");
  initStandaloneReviewer();
+ // Rozpracovaný formulář obnovit okamžitě, ještě před načtením dat ze serveru.
+ restoreNewAssessmentDraft();
 }
 if(observerMode){
  document.body.classList.remove("qr-fullscreen");
