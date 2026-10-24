@@ -1181,6 +1181,21 @@ function doPost(e) {
         return json({ok:false,error:'Vyber Lažánky nebo Horní Lhotu.'});
       }
 
+      // Server-side duplicate protection survives refresh, private browsing and new devices.
+      const resultSheet=getSheet();
+      const lastRow=resultSheet.getLastRow();
+      if(lastRow>1){
+        const existing=resultSheet.getRange(2,2,lastRow-1,9).getValues();
+        const normalizedName=name.toLocaleLowerCase('cs-CZ').replace(/\\s+/g,' ');
+        const duplicate=existing.some(row=>
+          String(row[0]||'')===unit &&
+          String(row[1]||'').trim().toLocaleLowerCase('cs-CZ').replace(/\\s+/g,' ')===normalizedName &&
+          String(row[2]||'')===role &&
+          String(row[8]||'')===active.token
+        );
+        if(duplicate)return json({ok:false,error:'Tento účastník již kvíz v aktuální relaci odevzdal.'});
+      }
+
       const quiz = QUIZZES[role];
       const answers = Array.isArray(data.answers) ? data.answers : [];
       const byQuestion = {};
