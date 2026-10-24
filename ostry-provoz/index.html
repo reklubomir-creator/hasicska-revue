@@ -401,7 +401,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div class="side-note">Příprava ostrého provozu<br>verze 0.1.104</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.104</span></div></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.105</span></div></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
@@ -463,6 +463,8 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
  <div class="field"><label for="quizApiUrl">Adresa Google Apps Script</label><input id="quizApiUrl" value="https://script.google.com/macros/s/AKfycbwuEk9g6WroMHecImGviCG8aMujLvdxbDsrnTNrPzB7HBEgGfLBP-Vz3kOXsDHU8ZVjrw/exec" readonly aria-readonly="true" title="Adresa je pevně nastavená a nelze ji upravit."></div>
  <div class="field"><label for="quizOrganizerPin">Organizační PIN</label><input id="quizOrganizerPin" type="text" inputmode="numeric" autocomplete="off" placeholder="Opiš toto číslo: 1192." aria-label="Organizační PIN (výchozí 1192)"></div>
  <div class="field"><label for="quizActiveUnit">Aktivovat jednotku</label><select id="quizActiveUnit"></select></div>
+ <div class="field"><label for="quizHistoryUnit">Prohlédnout výsledky jednotky (pouze čtení)</label><select id="quizHistoryUnit"></select></div>
+ <div class="actions"><button class="soft" id="quizLoadHistory">Načíst výsledky</button></div>
  <div class="actions"><button class="primary" id="quizActivate">Aktivovat jednotku a vytvořit QR</button><button class="soft" id="quizRefresh">Obnovit stav</button><button class="danger" id="quizClose">Ukončit příjem kvízů</button><button class="danger" id="resetProduction">Ultimátní vymazání</button></div><p class="muted" style="font-size:12px">Reset smaže centrální hodnocení, výsledky kvízů, QR zprávy, kontakty i sdílené rozlosování na všech zařízeních. Vyžaduje organizační PIN.</p>
  <div id="quizOrganizerStatus" class="notice">Připojení ještě nebylo ověřeno.</div>
  <div id="quizClosedSummary" class="panel hidden" style="margin-top:16px" aria-live="polite"></div>
@@ -741,6 +743,13 @@ function quizFillUnits(){
  });
  select.innerHTML=sorted.map(u=>'<option value="'+escaped(u)+'">'+escaped(u)+(quizCompletedUnits.has(u)?" ✓ hotovo":"")+'</option>').join("");
  if(sorted.includes(previous))select.value=previous;
+ const history=el("quizHistoryUnit");
+ if(history){
+  const old=history.value;
+  const closed=sorted.filter(u=>quizCompletedUnits.has(u));
+  history.innerHTML='<option value="">Vyber uzavřenou jednotku</option>'+closed.map(u=>'<option value="'+escaped(u)+'">'+escaped(u)+'</option>').join("");
+  if(closed.includes(old))history.value=old;
+ }
 }
 async function quizLoadCompletedUnits(){
  try{
@@ -862,6 +871,40 @@ setInterval(()=>{
  if(info)info.textContent=quizRefreshInProgress?"Načítám výsledky…":"Další kontrola za "+seconds+" s.";
  if(!quizRefreshInProgress&&Date.now()-quizLastRefreshAt>=10000)quizRefreshState({resultsOnly:true});
 },1000);
+async function quizLoadHistory(){
+ const unit=el("quizHistoryUnit").value;
+ if(!unit){quizStatus("Vyber uzavřenou jednotku pro zobrazení výsledků.",true);return}
+ try{
+  const state=await quizGet({action:"state"});
+  if(state.active){quizStatus("Během aktivního příjmu nelze přepínat náhled výsledků. Nejprve příjem uzavři.",true);return}
+  const data=await quizGet({action:"results"});
+  if(!data.ok)throw new Error(data.error||"Výsledky nelze načíst.");
+  const arr=(data.results||[]).filter(x=>quizUnitMatchesResult(unit,String(x.unit||"")));
+  quizVisibleUnit=unit;
+  quizAutoRefreshEnabled=false;
+  quizSession=null;
+  el("quizQrPanel").classList.add("hidden");
+  el("quizQr").innerHTML="";
+  el("quizQrUrl").textContent="";
+  quizResultsCache=arr;
+  el("quizLiveResults").innerHTML=arr.length?'<div class="quiz-result-list">'+arr.map((x,i)=>quizRenderResult(x,i)).join("")+'</div>':'<div class="empty">Tato jednotka nemá odevzdané kvízy.</div>';
+  const report=el("quizReportResults");
+  if(report)report.innerHTML=arr.length?arr.map(x=>{const e=quizBuildEvaluation(x);return '<article class="station" style="margin:10px 0"><h3>'+escaped(x.unit)+' · '+escaped(x.name||"Účastník")+'</h3><p><strong>Výsledek:</strong> '+x.correct+' / '+x.total+' ('+x.percentage+' %)</p><p><strong>'+escaped(e.headline)+':</strong> '+escaped(e.body)+'</p><p>'+escaped(e.advice)+'</p></article>'}).join(""):'<div class="empty">Tato jednotka nemá odevzdané kvízy.</div>';
+  const groups=unit==="Lažánky + Horní Lhota"?["Lažánky","Horní Lhota"]:[unit];
+  const summaries=groups.map(u=>{
+   const list=arr.filter(x=>String(x.unit||"")===u);
+   const total=list.reduce((n,x)=>n+(Number(x.total)||0),0);
+   const correct=list.reduce((n,x)=>n+(Number(x.correct)||0),0);
+   const pct=total?Math.round(correct/total*100):null;
+   return {unit:u,submitted:list.length,percentage:pct,status:!list.length||pct<75?(pct!==null&&pct<40?"Závažné nedostatky":"Drobné nedostatky"):"V pořádku"};
+  });
+  const total=arr.reduce((n,x)=>n+(Number(x.total)||0),0);
+  const correct=arr.reduce((n,x)=>n+(Number(x.correct)||0),0);
+  const status=summaries.every(x=>x.status==="V pořádku")?"V pořádku":summaries.some(x=>x.status==="Závažné nedostatky")?"Závažné nedostatky":"Drobné nedostatky";
+  quizShowClosedSummary({unit,submitted:arr.length,percentage:total?Math.round(correct/total*100):null,status,unitSummaries:summaries});
+  quizStatus("Zobrazeny uložené výsledky jednotky "+unit+". Pouze náhled – QR ani příjem odpovědí nebyly aktivovány.");
+ }catch(e){quizStatus("Načtení výsledků selhalo: "+e.message,true)}
+}
 async function quizActivate(){
  const pin=el("quizOrganizerPin").value.trim();if(!pin){quizStatus("Zadej organizační PIN.",true);return}
  try{const out=await quizPost({action:"activate",pin,unit:el("quizActiveUnit").value});if(!out.ok)throw new Error(out.error||"Aktivaci server odmítl.");quizAutoRefreshEnabled=true;quizVisibleUnit=el("quizActiveUnit").value;quizLastClosedToken="";quizVisibleSessionToken="";quizResultsCache=[];el("quizLiveResults").innerHTML='<div class="empty">Zatím nikdo z právě aktivované jednotky kvíz neodevzdal.</div>';quizStatus("Jednotka aktivována. Vytvářím QR…");const previous=el("quizClosedSummary");if(previous)previous.classList.add("hidden");await quizRefreshState();}
@@ -977,7 +1020,7 @@ async function quizSubmit(){
  }catch(e){el("quizParticipantState").textContent="Odeslání se nezdařilo nebo se nepodařilo načíst výsledek: "+e.message+". Kontaktuj hodnotitele a ověř, zda se odpovědi uložily.";el("quizSubmit").disabled=false}
 }
 if(el("quizActiveUnit")){quizFillUnits();el("quizActivate").onclick=quizActivate;el("quizClose").onclick=quizClose;
-el("resetProduction").onclick=async()=>{const pin=el("quizOrganizerPin").value.trim();if(!pin){quizStatus("Nejdřív zadej organizační PIN.",true);el("quizOrganizerPin").focus();return}if(!confirm("Opravdu chceš VYMAZAT ostrá hodnocení, výsledky kvízů, uložené QR zprávy A KONTAKTY? Tuto akci nelze vrátit."))return;if(!confirm("Poslední potvrzení: data ostrého provozu i sdílené rozlosování budou odstraněna pro všechny uživatele. Pokračovat?"))return;try{quizStatus("Mažu testovací data…");const out=await quizPost({action:"resetProduction",pin});if(!out||!out.ok)throw new Error(out&&out.error||"Reset se nepodařilo dokončit.");const drawReset=await quizPost({action:"saveAppState",state:{startStations:{},fixedStartUnits:[]}});if(!drawReset||!drawReset.ok)throw new Error(drawReset&&drawReset.error||"Nepodařilo se vymazat pevné starty.");startStations={};fixedStartUnits=[];["hasicskaRevueRecords","hasicskaRevueStartStations","hasicskaRevueStartStationsDrawnAt","hasicskaRevueAutoCompletedStation1Units","hasicskaRevueFixedStartUnits","hasicskaRevueStandbyCompleted","hasicskaRevueDemoVersion","hasicskaRevueProgressDemoVersion","hasicskaRevueCurrentPage","hasicskaRevueUnitContacts","hasicskaRevueCombinedSmsCommanderUnit","hasicskaRevueActiveAssessments",...stations.map((_,i)=>reviewerConfirmationKey(i))].forEach(k=>localStorage.removeItem(k));quizStatus("Ostrý provoz včetně pevných startů a kontaktů byl vymazán. Stránka se obnoví.");location.reload()}catch(err){quizStatus("Reset se nepodařilo provést: "+(err&&err.message||err),true)}};el("quizRefresh").onclick=quizRefreshState;el("quizPrintQr").onclick=()=>{document.body.classList.add("qr-print");window.print();setTimeout(()=>document.body.classList.remove("qr-print"),500)};el("quizBegin").onclick=quizBegin;el("quizSubmit").onclick=quizSubmit;
+el("resetProduction").onclick=async()=>{const pin=el("quizOrganizerPin").value.trim();if(!pin){quizStatus("Nejdřív zadej organizační PIN.",true);el("quizOrganizerPin").focus();return}if(!confirm("Opravdu chceš VYMAZAT ostrá hodnocení, výsledky kvízů, uložené QR zprávy A KONTAKTY? Tuto akci nelze vrátit."))return;if(!confirm("Poslední potvrzení: data ostrého provozu i sdílené rozlosování budou odstraněna pro všechny uživatele. Pokračovat?"))return;try{quizStatus("Mažu testovací data…");const out=await quizPost({action:"resetProduction",pin});if(!out||!out.ok)throw new Error(out&&out.error||"Reset se nepodařilo dokončit.");const drawReset=await quizPost({action:"saveAppState",state:{startStations:{},fixedStartUnits:[]}});if(!drawReset||!drawReset.ok)throw new Error(drawReset&&drawReset.error||"Nepodařilo se vymazat pevné starty.");startStations={};fixedStartUnits=[];["hasicskaRevueRecords","hasicskaRevueStartStations","hasicskaRevueStartStationsDrawnAt","hasicskaRevueAutoCompletedStation1Units","hasicskaRevueFixedStartUnits","hasicskaRevueStandbyCompleted","hasicskaRevueDemoVersion","hasicskaRevueProgressDemoVersion","hasicskaRevueCurrentPage","hasicskaRevueUnitContacts","hasicskaRevueCombinedSmsCommanderUnit","hasicskaRevueActiveAssessments",...stations.map((_,i)=>reviewerConfirmationKey(i))].forEach(k=>localStorage.removeItem(k));quizStatus("Ostrý provoz včetně pevných startů a kontaktů byl vymazán. Stránka se obnoví.");location.reload()}catch(err){quizStatus("Reset se nepodařilo provést: "+(err&&err.message||err),true)}};el("quizRefresh").onclick=quizRefreshState;el("quizLoadHistory").onclick=quizLoadHistory;el("quizPrintQr").onclick=()=>{document.body.classList.add("qr-print");window.print();setTimeout(()=>document.body.classList.remove("qr-print"),500)};el("quizBegin").onclick=quizBegin;el("quizSubmit").onclick=quizSubmit;
  if(quizTokenFromUrl)quizLoadParticipant();else{quizRefreshState();}}
 
 
