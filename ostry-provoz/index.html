@@ -401,7 +401,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div class="side-note">Příprava ostrého provozu<br>verze 0.1.104</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.111</span></div></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.112</span></div></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
@@ -806,6 +806,7 @@ function quizRenderResult(x,i){
 }
 let quizVisibleSessionToken="";
 let quizVisibleUnit="";
+let quizDisplayedClosedSummary=null;
 let quizLastClosedToken="";
 function quizUnitMatchesResult(unit,resultUnit){
  return unit==="Lažánky + Horní Lhota"?["Lažánky","Horní Lhota","Lažánky + Horní Lhota"].includes(resultUnit):unit===resultUnit;
@@ -820,8 +821,9 @@ async function quizRestoreClosed(){
   quizLastClosedToken=String(data.last.token||"");
   quizVisibleSessionToken=quizLastClosedToken;
   quizAutoRefreshEnabled=false;
-  quizShowClosedSummary(data.last.summary);
+  quizDisplayedClosedSummary=data.last.summary;
   await quizRefreshState({resultsOnly:true});
+  quizShowClosedSummary(quizDisplayedClosedSummary);
   const info=el("quizAutoRefreshInfo");if(info)info.textContent="Příjem uzavřen – automatické obnovování zastaveno.";
  }catch(e){console.warn("Obnovení posledního hodnocení selhalo",e)}
 }
@@ -852,6 +854,7 @@ async function quizRefreshStateInner(options={}){
   const allResults=results.results||[];
   const arr=quizVisibleUnit?allResults.filter(x=>quizUnitMatchesResult(quizVisibleUnit,String(x.unit||""))):[];
   quizResultsCache=arr;
+  if(quizDisplayedClosedSummary&&quizDisplayedClosedSummary.unit===quizVisibleUnit)quizShowClosedSummary(quizDisplayedClosedSummary);
   try{localStorage.setItem("hasicskaRevueQuizResultsCache",JSON.stringify(arr));}catch(storageError){}
   el("quizLiveResults").innerHTML=arr.length?'<div class="quiz-result-list">'+arr.map((x,i)=>quizRenderResult(x,i)).join("")+'</div>':'<div class="empty">Zatím nikdo kvíz neodevzdal.</div>';
    const reportResults=el("quizReportResults");if(reportResults)reportResults.innerHTML=arr.length?arr.map(x=>{const e=quizBuildEvaluation(x);return '<article class="station" style="margin:10px 0"><h3>'+escaped(x.unit||"Jednotka neuvedena")+' · '+escaped(x.name||"Bez jména")+' (' +escaped(x.role||"role neuvedena")+' )</h3><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' (' +Number(x.percentage||0)+' %)</p><p><strong>'+escaped(e.headline)+':</strong> '+escaped(e.body)+'</p><p>'+escaped(e.advice)+'</p></article>'}).join(""):'<div class="empty">Zatím nikdo kvíz neodevzdal.</div>';
@@ -896,6 +899,7 @@ async function quizLoadHistory(){
   el("quizQr").innerHTML="";
   el("quizQrUrl").textContent="";
   quizResultsCache=arr;
+  quizDisplayedClosedSummary=null;
   el("quizLiveResults").innerHTML=arr.length?'<div class="quiz-result-list">'+arr.map((x,i)=>quizRenderResult(x,i)).join("")+'</div>':'<div class="empty">Tato jednotka nemá odevzdané kvízy.</div>';
   quizBindResultDetails();
   const report=el("quizReportResults");
@@ -911,13 +915,14 @@ async function quizLoadHistory(){
   const total=arr.reduce((n,x)=>n+(Number(x.total)||0),0);
   const correct=arr.reduce((n,x)=>n+(Number(x.correct)||0),0);
   const status=summaries.every(x=>x.status==="V pořádku")?"V pořádku":summaries.some(x=>x.status==="Závažné nedostatky")?"Závažné nedostatky":"Drobné nedostatky";
-  quizShowClosedSummary({unit,submitted:arr.length,percentage:total?Math.round(correct/total*100):null,status,unitSummaries:summaries});
+  quizDisplayedClosedSummary={unit,submitted:arr.length,percentage:total?Math.round(correct/total*100):null,status,unitSummaries:summaries};
+  quizShowClosedSummary(quizDisplayedClosedSummary);
   quizStatus("Zobrazeny uložené výsledky jednotky "+unit+". Pouze náhled – QR ani příjem odpovědí nebyly aktivovány.");
  }catch(e){quizStatus("Načtení výsledků selhalo: "+e.message,true)}
 }
 async function quizActivate(){
  const pin=el("quizOrganizerPin").value.trim();if(!pin){quizStatus("Zadej organizační PIN.",true);return}
- try{const out=await quizPost({action:"activate",pin,unit:el("quizActiveUnit").value});if(!out.ok)throw new Error(out.error||"Aktivaci server odmítl.");quizAutoRefreshEnabled=true;quizVisibleUnit=el("quizActiveUnit").value;quizLastClosedToken="";quizVisibleSessionToken="";quizResultsCache=[];el("quizLiveResults").innerHTML='<div class="empty">Zatím nikdo z právě aktivované jednotky kvíz neodevzdal.</div>';quizStatus("Jednotka aktivována. Vytvářím QR…");const previous=el("quizClosedSummary");if(previous)previous.classList.add("hidden");await quizRefreshState();}
+ try{const out=await quizPost({action:"activate",pin,unit:el("quizActiveUnit").value});if(!out.ok)throw new Error(out.error||"Aktivaci server odmítl.");quizAutoRefreshEnabled=true;quizVisibleUnit=el("quizActiveUnit").value;quizDisplayedClosedSummary=null;quizLastClosedToken="";quizVisibleSessionToken="";quizResultsCache=[];el("quizLiveResults").innerHTML='<div class="empty">Zatím nikdo z právě aktivované jednotky kvíz neodevzdal.</div>';quizStatus("Jednotka aktivována. Vytvářím QR…");const previous=el("quizClosedSummary");if(previous)previous.classList.add("hidden");await quizRefreshState();}
  catch(e){quizStatus("Aktivaci se nepodařilo dokončit: "+e.message,true)}
 }
 function quizClosedSummaryText(item){
@@ -974,9 +979,11 @@ async function quizClose(){
   el("quizQr").innerHTML="";
   el("quizQrUrl").textContent="";
   // Ponechat výsledky právě uzavřené relace do aktivace další jednotky.
+  quizDisplayedClosedSummary=out;
   quizShowClosedSummary(out);
   await loadProductionAssessments();
   await quizRefreshState();
+  quizShowClosedSummary(out);
   // Pro případ, že souběžná automatická aktualizace doběhla se starým stavem.
   const closedState=await quizGet({action:"state"});
   if(!closedState.active){
