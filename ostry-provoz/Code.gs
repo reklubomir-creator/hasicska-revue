@@ -536,7 +536,7 @@ function assessmentList_() {
     .filter(Boolean);
 }
 
-function assessmentSave_(record) {
+function assessmentSave_(record, internalWrite) {
   if (!record || typeof record !== 'object' || Array.isArray(record)) {
     return {ok:false,error:'Chybí hodnocení.'};
   }
@@ -564,6 +564,7 @@ function assessmentSave_(record) {
   const payload = JSON.stringify(safe);
   const sh = assessmentSheet_();
   const expectedRevision = Object.prototype.hasOwnProperty.call(record,"expectedRevision") ? record.expectedRevision : undefined;
+  if (!internalWrite && expectedRevision === undefined) return {ok:false,error:"Zastaralá verze aplikace. Obnov stránku před uložením."};
   const values = sh.getLastRow() >= 2
     ? sh.getRange(2,1,sh.getLastRow()-1,3).getValues()
     : [];
@@ -571,14 +572,14 @@ function assessmentSave_(record) {
   for (let i=0;i<values.length;i++) {
     if (values[i][0] === unit && values[i][1] === station) {
       const currentRevision = values[i][2] instanceof Date ? values[i][2].getTime() : new Date(values[i][2]).getTime();
-      if (expectedRevision !== undefined && Number(expectedRevision) !== currentRevision) return {ok:false,error:"Konflikt: jiný hodnotitel mezitím uložil tento zápis. Obnov stránku a zkontroluj nové hodnocení."};
+      if (!internalWrite && (expectedRevision === null || Number(expectedRevision) !== currentRevision)) return {ok:false,error:"Konflikt: jiný hodnotitel mezitím uložil tento zápis. Obnov stránku a zkontroluj nové hodnocení."};
       const updatedAt = new Date();
       sh.getRange(i+2,1,1,4).setValues([[unit,station,updatedAt,payload]]);
       return {ok:true,record:Object.assign({},safe,{revision:updatedAt.getTime()})};
     }
   }
 
-  if (expectedRevision !== undefined && expectedRevision !== null) return {ok:false,error:"Konflikt: původní zápis již neexistuje. Obnov stránku."};
+  if (!internalWrite && expectedRevision !== null) return {ok:false,error:"Konflikt: původní zápis již neexistuje. Obnov stránku."};
   const updatedAt = new Date();
   sh.appendRow([unit,station,updatedAt,payload]);
   return {ok:true,record:Object.assign({},safe,{revision:updatedAt.getTime()})};
@@ -737,7 +738,7 @@ function closeQuizSession_(active) {
       notes:notes,
       date:Utilities.formatDate(now,Session.getScriptTimeZone(),'d. M. yyyy'),
       time:Utilities.formatDate(now,Session.getScriptTimeZone(),'HH:mm')
-    });
+    }, true);
 
     if (!saved.ok) return saved;
 
