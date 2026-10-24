@@ -492,7 +492,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 </main></div>
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
-const APP_VERSION="0.2.4";
+const APP_VERSION="0.2.5";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -739,9 +739,9 @@ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition
 el("micButton").onclick=()=>{
  if(!SpeechRecognition){el("voiceStatus").textContent="Tento prohlížeč nepodporuje webové diktování. Použij diktování klávesnice/telefonu nebo otevři aplikaci v podporovaném prohlížeči.";return}
  if(recognition){recognition.stop();return}
- recognition=new SpeechRecognition();recognition.lang="cs-CZ";recognition.continuous=true;recognition.interimResults=true;
+ const isAndroid=/Android/i.test(navigator.userAgent);recognition=new SpeechRecognition();recognition.lang="cs-CZ";recognition.continuous=true;recognition.interimResults=!isAndroid;
  const baseText=el("notes").value.trim();
- recognition.onstart=()=>{el("micButton").textContent="■ Zastavit diktování";el("voiceStatus").textContent="Poslouchám… průběžný přepis se zobrazuje při mluvení."};
+ recognition.onstart=()=>{el("micButton").textContent="■ Zastavit diktování";el("voiceStatus").textContent=isAndroid?"Poslouchám… na Androidu se zobrazuje potvrzený přepis.":"Poslouchám… průběžný přepis se zobrazuje při mluvení."};
  recognition.onresult=e=>{
   const finalSegments=[],interimSegments=[];
   for(let i=0;i<e.results.length;i++){
@@ -749,7 +749,8 @@ el("micButton").onclick=()=>{
    if(!transcript)continue;
    (item.isFinal?finalSegments:interimSegments).push(transcript);
   }
-  const spoken=[...finalSegments,...interimSegments].join(" ").trim();
+  const mergeSpeech=parts=>{let words=[];for(const part of parts){const incoming=part.split(/\s+/).filter(Boolean);const norm=w=>w.toLocaleLowerCase("cs-CZ").replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,"");const prev=words.map(norm),next=incoming.map(norm);let overlap=0;for(let k=Math.min(prev.length,next.length);k>0;k--){if(prev.slice(-k).every((w,i)=>w===next[i])){overlap=k;break}}words.push(...incoming.slice(overlap))}return words.join(" ")};
+  const spoken=mergeSpeech([...finalSegments,...interimSegments]);
   el("notes").value=[baseText,spoken].filter(Boolean).join(" ");
   persistNewAssessmentDraft();persistEditingDraft();
  };
