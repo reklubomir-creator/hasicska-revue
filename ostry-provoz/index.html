@@ -492,7 +492,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 </main></div>
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
-const APP_VERSION="0.2.5";
+const APP_VERSION="0.2.6";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -736,26 +736,40 @@ async function showDrowningHandoff(nextUnit){await loadUnitContactsFromGoogle(tr
 el("saveAssessment").onclick=async()=>{const saveButton=el("saveAssessment");saveButton.disabled=true;saveButton.textContent=editingRecord?"Ukládám změny…":"Ukládám zápis…";el("saveMessage").textContent=editingRecord?"Ukládám opravený záznam na server…":"Ukládám zápis na server…";el("saveMessage").classList.remove("hidden");try{const r={unit:el("assessmentUnit").value,station:el("stationSelect").value,reviewer:el("reviewer").value.trim(),status:el("status").value,notes:el("notes").value.trim(),date:new Date().toLocaleDateString("cs-CZ"),time:new Date().toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})};if(!r.unit||!r.station){el("saveMessage").textContent="Chybí jednotka nebo stanoviště.";el("saveMessage").classList.remove("hidden");return}await saveProductionAssessment(r);await clearActiveAssessment(r.unit);saveButton.disabled=false;saveButton.textContent="Uložit zápis";el("saveMessage").classList.add("hidden");const idx=records.findIndex(x=>x.unit===r.unit&&x.station===r.station);if(idx>=0){if(editingRecord){if(records[idx].date)r.date=records[idx].date;if(records[idx].time)r.time=records[idx].time}records[idx]=r}else records.push(r);save();sessionStorage.removeItem(NEW_ASSESSMENT_DRAFT_KEY);renderResults();renderAssessmentStationTiles();renderReviewerQueue();if(editingRecord){editingRecord=false;sessionStorage.removeItem(EDIT_DRAFT_KEY);el("saveAssessment").textContent="Uložit zápis";el("clearAssessment").textContent="Vymazat formulář";if(reviewerMode){localStorage.removeItem(reviewerConfirmationKey(getLockedReviewer().station));el("assessmentFormPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");el("pageTitle").textContent="Stanoviště dokončeno";el("pageSubtitle").textContent="Zkontroluj všechna hodnocení před potvrzením.";renderReviewerQueue();return}showPage("edits");renderEditStationTiles();renderEditRecords(stations.indexOf(r.station));return}const next=nextUnitForStation(r.station);if(!editingRecord&&r.station===stations[5]&&next)await showDrowningHandoff(next);showPage("assessment");if(reviewerMode){el("arrivalPanel").classList.add("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden");el("stationChooserPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");el("pageTitle").textContent=next?"Moje stanoviště":"Stanoviště dokončeno";el("pageSubtitle").textContent=next?"Další jednotka: "+next:"Všechny jednotky už máš ohodnocené.";renderReviewerQueue();el("reviewerQueuePanel").scrollIntoView({behavior:"smooth",block:"start"})}else if(next){showArrivalStep(next,r.station)}else{el("arrivalPanel").classList.add("hidden");el("stationChooserPanel").classList.remove("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden");el("pageTitle").textContent="Stanoviště dokončeno";el("pageSubtitle").textContent="Všechny jednotky mají na tomto stanovišti zápis.";renderAssessmentStationTiles()}}catch(err){saveButton.disabled=false;saveButton.textContent=editingRecord?"Uložit změny":"Uložit zápis";el("assessmentFormPanel").classList.remove("hidden");el("saveMessage").textContent="Zápis se nepodařilo dokončit: "+(err&&err.message?err.message:"neznámá chyba");el("saveMessage").classList.remove("hidden");console.error(err)}};
  el("clearAssessment").onclick=()=>{if(!editingRecord&&reviewerMode)clearActiveAssessment(el("assessmentUnit").value);if(editingRecord){editingRecord=false;sessionStorage.removeItem(EDIT_DRAFT_KEY);el("saveAssessment").textContent="Uložit zápis";el("clearAssessment").textContent="Vymazat formulář";if(reviewerMode){const choice=getLockedReviewer();el("assessmentFormPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");el("pageTitle").textContent="Stanoviště dokončeno";el("pageSubtitle").textContent="Zkontroluj všechna hodnocení před potvrzením.";renderReviewerQueue();return}showPage("edits");renderEditStationTiles();if(editStationSelection)renderEditRecords(stations.indexOf(editStationSelection));return}el("notes").value="";el("status").value="V pořádku";updateStatusTiles();syncReviewer();el("saveMessage").classList.add("hidden");};
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;let recognition=null;
+const voicePreview=document.createElement("div");voicePreview.id="voiceLivePreview";voicePreview.style.cssText="margin-top:8px;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere";voicePreview.setAttribute("aria-live","off");el("micButton").closest(".voice").appendChild(voicePreview);
+function mergeSpeechParts(parts){
+ let words=[];for(const part of parts){const incoming=part.split(/\s+/).filter(Boolean);const norm=w=>w.toLocaleLowerCase("cs-CZ").replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,"");const prev=words.map(norm),next=incoming.map(norm);let overlap=0;for(let k=Math.min(prev.length,next.length);k>0;k--){if(prev.slice(-k).every((w,i)=>w===next[i])){overlap=k;break}}words.push(...incoming.slice(overlap))}return words.join(" ");
+}
 el("micButton").onclick=()=>{
  if(!SpeechRecognition){el("voiceStatus").textContent="Tento prohlížeč nepodporuje webové diktování. Použij diktování klávesnice/telefonu nebo otevři aplikaci v podporovaném prohlížeči.";return}
  if(recognition){recognition.stop();return}
- const isAndroid=/Android/i.test(navigator.userAgent);recognition=new SpeechRecognition();recognition.lang="cs-CZ";recognition.continuous=true;recognition.interimResults=!isAndroid;
- const baseText=el("notes").value.trim();
- recognition.onstart=()=>{el("micButton").textContent="■ Zastavit diktování";el("voiceStatus").textContent=isAndroid?"Poslouchám… na Androidu se zobrazuje potvrzený přepis.":"Poslouchám… průběžný přepis se zobrazuje při mluvení."};
+ const isAndroid=/Android/i.test(navigator.userAgent);
+ recognition=new SpeechRecognition();recognition.lang="cs-CZ";recognition.continuous=true;recognition.interimResults=true;
+ const baseText=el("notes").value.trim();let lastFinal="",lastInterim="";
+ voicePreview.textContent="";
+ recognition.onstart=()=>{el("micButton").textContent="■ Zastavit diktování";el("voiceStatus").textContent=isAndroid?"Poslouchám… živý náhled je oddělený od uložené poznámky.":"Poslouchám… průběžný přepis se zobrazuje při mluvení."};
  recognition.onresult=e=>{
-  const finalSegments=[],interimSegments=[];
-  for(let i=0;i<e.results.length;i++){
-   const item=e.results[i],transcript=(item[0]?.transcript||"").trim();
-   if(!transcript)continue;
-   (item.isFinal?finalSegments:interimSegments).push(transcript);
+  const finals=[],interims=[];
+  for(let i=0;i<e.results.length;i++){const item=e.results[i],transcript=(item[0]?.transcript||"").trim();if(!transcript)continue;(item.isFinal?finals:interims).push(transcript)}
+  lastFinal=mergeSpeechParts(finals);lastInterim=mergeSpeechParts(interims);
+  if(isAndroid){
+   el("notes").value=[baseText,lastFinal].filter(Boolean).join(" ");
+   voicePreview.textContent=lastInterim?"🎙 Právě rozpoznávám: "+lastInterim:"";
+  }else{
+   el("notes").value=[baseText,mergeSpeechParts([...finals,...interims])].filter(Boolean).join(" ");
   }
-  const mergeSpeech=parts=>{let words=[];for(const part of parts){const incoming=part.split(/\s+/).filter(Boolean);const norm=w=>w.toLocaleLowerCase("cs-CZ").replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,"");const prev=words.map(norm),next=incoming.map(norm);let overlap=0;for(let k=Math.min(prev.length,next.length);k>0;k--){if(prev.slice(-k).every((w,i)=>w===next[i])){overlap=k;break}}words.push(...incoming.slice(overlap))}return words.join(" ")};
-  const spoken=mergeSpeech([...finalSegments,...interimSegments]);
-  el("notes").value=[baseText,spoken].filter(Boolean).join(" ");
   persistNewAssessmentDraft();persistEditingDraft();
  };
  recognition.onerror=e=>{el("voiceStatus").textContent="Diktování se nepodařilo ("+e.error+"). Zkontroluj oprávnění mikrofonu."};
- recognition.onend=()=>{recognition=null;el("micButton").textContent="🎙 Diktovat";el("voiceStatus").textContent="Diktování ukončeno. Zkontroluj přepis před uložením."};
+ recognition.onend=()=>{
+  if(isAndroid&&lastInterim){
+   const completed=mergeSpeechParts([lastFinal,lastInterim]);
+   el("notes").value=[baseText,completed].filter(Boolean).join(" ");
+   persistNewAssessmentDraft();persistEditingDraft();
+  }
+  voicePreview.textContent="";recognition=null;el("micButton").textContent="🎙 Diktovat";
+  if(!el("voiceStatus").textContent.startsWith("Diktování se nepodařilo"))el("voiceStatus").textContent="Diktování ukončeno. Zkontroluj přepis před uložením.";
+ };
  recognition.start();
 };
 
