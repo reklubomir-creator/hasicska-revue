@@ -5,71 +5,416 @@ const PROP_ACTIVE = 'ACTIVE_QUIZ_SESSION';
 const PROP_APP_STATE = 'APP_SHARED_STATE';
 
 const QUIZZES = {
-  'Hasič': [
-    {question:'Co uděláš, když při zásahu zjistíš bezprostřední ohrožení člena jednotky?',options:['Pokračuješ bez přerušení','Upozorníš velitele a postupuješ podle bezpečnostních pokynů','Počkáš až na konec zásahu'],correct:1},
-    {question:'Kdo koordinuje činnost jednotky při zásahu?',options:['Určený velitel zásahu','Kterýkoliv člen podle vlastního uvážení','Vždy řidič prvního vozidla'],correct:0},
-    {question:'Co patří k předání informace o zjištěném nebezpečí?',options:['Stručné a srozumitelné hlášení','Pouze zápis po skončení zásahu','Informace jen nejbližšímu kolegovi'],correct:0},
-    {question:'Jak se zachováš, když si nejsi jistý bezpečností úkolu?',options:['Úkol provedeš co nejrychleji','Zastavíš se a ověříš další postup s velitelem','Požádáš civilistu o rozhodnutí'],correct:1},
-    {question:'Kdy se používají osobní ochranné prostředky?',options:['Jen při příjezdu na místo','Podle rizik a určeného pracovního postupu','Pouze na výslovný pokyn občana'],correct:1},
-    {question:'Co uděláš po zjištění poškození výstroje?',options:['Závadu oznámíš a postupuješ podle pokynů','Poškození zatajíš','Výstroj použiješ bez ohledu na stav'],correct:0},
-    {question:'Jak správně předáváš důležitou informaci?',options:['Dlouhým neověřeným popisem','Stručně, věcně a s potvrzením porozumění, je-li potřeba','Pouze gestem z dálky'],correct:1},
-    {question:'Co je důležité před vstupem do nebezpečného prostoru?',options:['Ověřit rizika a dodržet stanovené zajištění','Vstoupit jako první bez domluvy','Nechat rozhodnutí náhodě'],correct:0},
-    {question:'Co uděláš, když se podmínky na místě náhle změní?',options:['Pokračuješ podle původního plánu za každou cenu','Upozorníš velitele a znovu vyhodnotíš situaci podle pokynů','Odejdeš bez oznámení'],correct:1},
-    {question:'Jak naložíš s použitým vybavením po činnosti?',options:['Vrátíš ho bez kontroly','Zkontroluješ stav, oznámíš závady a uložíš ho podle pravidel','Necháš ho na místě'],correct:1},
-    {question:'Jak se zachováš při práci v blízkosti pohybující se techniky?',options:['Vstoupíš do prostoru bez upozornění','Dodržíš vymezený bezpečný prostor a domluvené signály','Spolehneš se pouze na oční kontakt'],correct:1},
-    {question:'Co uděláš, když nerozumíš pokynu velitele?',options:['Ověříš si pokyn dříve, než začneš jednat','Provedeš vlastní odhad','Počkáš bez oznámení'],correct:0},
-    {question:'Jak postupuješ při předávání použitého vybavení?',options:['Předáš ho bez kontroly','Zkontroluješ stav a upozorníš na závady','Uložíš ho kamkoliv'],correct:1},
-    {question:'Co je důležité při pohybu v zakouřeném prostoru?',options:['Postupovat bez zajištění','Dodržet určený postup, ochranu a jištění','Oddělit se od ostatních'],correct:1},
-    {question:'Jak reaguješ na zjištěnou překážku v únikové cestě?',options:['Ignoruješ ji','Oznámíš ji a podle situace zajistíš bezpečný průchod','Pokračuješ bez upozornění'],correct:1},
-    {question:'Co uděláš, když se člen týmu ztratí z dohledu?',options:['Pokračuješ bez ověření','Upozorníš velitele a postupuješ podle pravidel spojení a jištění','Předpokládáš, že je v pořádku'],correct:1},
-    {question:'Jak správně zacházíš s hadicovým vedením?',options:['Vedeš ho tak, aby zbytečně neohrožovalo pohyb a provoz','Ponecháš ho přes všechny průchody bez zajištění','Použiješ poškozenou hadici'],correct:0},
-    {question:'Kdy oznámíš závadu ochranného prostředku?',options:['Až při další akci','Bez odkladu a před dalším použitím','Jen pokud si jí někdo všimne'],correct:1},
-    {question:'Co je správné při střídání člena na úkolu?',options:['Předat stručně stav, rizika a rozpracované činnosti','Odejít bez předání','Předat pouze název úkolu'],correct:0},
-    {question:'Jak se zachováš, když dostaneš pokyn, který může být nebezpečný?',options:['Provedeš ho bez ověření','Upozorníš na riziko a vyžádáš si upřesnění postupu','Ignoruješ všechny další pokyny'],correct:1}
+  "Hasič": [
+    {
+      "question": "Při vnitřním požáru se náhle výrazně zvýší teplota v horní vrstvě kouře a objeví se v ní plamenné jazyky. Co tento jev signalizuje?",
+      "options": [
+        "Rozvoj požáru především v prostoru pod stropní konstrukcí.",
+        "Riziko rychlého rozvoje požáru a celkového vzplanutí prostoru.",
+        "Přesun hlavního ohniska požáru do sousední místnosti."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při vyprošťování osoby z havarovaného vozidla se vozidlo začne při práci s hydraulickým nářadím pohybovat. Co má hasič udělat?",
+      "options": [
+        "Změnit místo opření nástroje a pokračovat v práci.",
+        "Požádat dalšího hasiče o přidržení pohybující se části.",
+        "Přerušit práci a obnovit stabilizaci vozidla."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Hasič při průzkumu zakouřeného objektu ztratí orientaci a nedokáže určit směr návratu. Jak má postupovat?",
+      "options": [
+        "Ohlásit situaci a pokusit se obnovit orientaci pomocí zajištěné návratové cesty.",
+        "Vyhledat obvodovou stěnu a samostatně postupovat podél ní k východu.",
+        "Pokusit se najít okno a vytvořit si náhradní únikovou cestu."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Při požáru garáže je uvnitř tlaková láhev vystavená sálavému teplu. Jaké nebezpečí představuje?",
+      "options": [
+        "Především únik plynu přes pojistné zařízení při zvýšení tlaku.",
+        "Možnost porušení tlakové nádoby s prudkým uvolněním jejího obsahu.",
+        "Riziko vznícení obsahu pouze při přímém kontaktu láhve s plamenem."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při hašení lesního požáru se náhle změní směr větru. Co musí hasič především sledovat?",
+      "options": [
+        "Změnu intenzity hoření a potřebu zvýšit průtok vody.",
+        "Změnu směru šíření požáru a bezpečnost únikové cesty.",
+        "Změnu účinnosti hašení v závislosti na směru vedení proudu."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při dopravní nehodě elektromobilu je viditelně poškozený kryt trakční baterie a z jejího prostoru uniká kouř. Co tato situace signalizuje?",
+      "options": [
+        "Aktivaci bezpečnostního odpojení vysokonapěťového systému.",
+        "Možný tepelný rozklad článků a riziko rozvoje požáru baterie.",
+        "Přehřátí palubní elektroniky způsobené zkratem nízkonapěťové soustavy."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při zásahu u dopravní nehody za snížené viditelnosti musí hasič vystoupit ze zásahového vozidla na frekventované komunikaci. Jaký postup je nejbezpečnější?",
+      "options": [
+        "Vystoupit pokud možno na chráněné straně a pohybovat se v zajištěném prostoru zásahu.",
+        "Vystoupit směrem k havarovanému vozidlu a přesunout se nejkratší cestou.",
+        "Vystoupit za vozidlem a pokračovat podél jeho boku směrem k místu nehody."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Při požáru v uzavřené místnosti je patrné pulzování kouře kolem dveří a kouř se střídavě vytlačuje ven a nasává dovnitř. Co tento jev signalizuje?",
+      "options": [
+        "Postupné dohořívání požáru při nedostatku hořlavých látek.",
+        "Rychlý přenos požáru vedením tepla do sousedních prostor.",
+        "Riziko explozivního hoření při přístupu vzduchu do prostoru."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Při požáru objektu hasič zaznamená výrazné prohnutí ocelového nosníku a deformaci jeho spojů. Co tento stav signalizuje?",
+      "options": [
+        "Především tepelnou roztažnost konstrukce bez významného vlivu na její stabilitu.",
+        "Možnou ztrátu únosnosti konstrukce a riziko jejího zřícení.",
+        "Přenos tepla do sousedních konstrukcí jako hlavní bezprostřední nebezpečí."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při zásahu na únik nebezpečné chemické látky je hasič v protichemickém ochranném oděvu a dokončil práci v nebezpečné zóně. Jaký je správný postup při jejím opouštění?",
+      "options": [
+        "Přesunout se do bezpečné zóny a tam zahájit svlékání ochranného oděvu.",
+        "Projít stanoveným dekontaminačním postupem a následně bezpečně odložit ochranné prostředky.",
+        "Provést prvotní oplach a ochranné prostředky odložit na hranici nebezpečné zóny."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při hašení požáru místnosti začne voda z proudnice dopadat na silně zahřátou konstrukci a prudce se odpařovat. Jaké nebezpečí to představuje pro zasahující hasiče?",
+      "options": [
+        "Především snížení účinnosti hašení vlivem rychlého odpařování vody.",
+        "Riziko opaření horkou vodní párou, zejména v uzavřeném prostoru.",
+        "Zvýšení koncentrace hořlavých zplodin v důsledku ochlazování konstrukcí."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při průzkumu zakouřeného objektu v dýchacím přístroji dosáhne hasič tlaku vzduchu stanoveného pro návrat. Jak postupuje?",
+      "options": [
+        "Pokračuje do spuštění akustické výstrahy dýchacího přístroje.",
+        "Samostatně se vrátí k nástupnímu místu a ohlásí ukončení průzkumu.",
+        "Upozorní ostatní členy skupiny a postupuje při návratu podle stanoveného režimu."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Při vyprošťování zraněného z vozidla se hydraulickým rozpínákem vytváří prostor mezi deformovanými částmi karoserie. Co musí hasič průběžně sledovat?",
+      "options": [
+        "Stabilitu opěrných bodů nástroje a směr pohybu deformovaných částí.",
+        "Především rychlost rozevírání nástroje, aby nedošlo k jeho přetížení.",
+        "Zda je nástroj umístěn co nejblíže původnímu konstrukčnímu spoji."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Při vnitřním požáru se hasiči chystají otevřít dveře do silně zakouřené místnosti. Dveře jsou v horní části výrazně zahřáté. Jak mají postupovat?",
+      "options": [
+        "Nejprve otevřít okno na chodbě, aby se vyrovnaly tlakové poměry.",
+        "Vyhodnotit projevy požáru, zajistit připravený proud a dveře otevírat kontrolovaně.",
+        "Dveře rychle otevřít a ihned aplikovat vodu do horní části místnosti."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při zásahu v průmyslovém objektu začnou z výšky odpadávat části podhledu. Co má hasič udělat?",
+      "options": [
+        "Pokračovat podél nosné stěny, kde je pravděpodobnost pádu dalších částí nižší.",
+        "Upozornit ostatní, opustit ohrožený prostor a oznámit nebezpečí veliteli.",
+        "Vyhledat místo mimo dopadovou oblast a pokračovat v zásahu při sledování stropu."
+      ],
+      "correct": 1
+    }
   ],
-  'Strojník': [
-    {question:'Co je důležité před vyjetím vozidla?',options:['Provést předepsanou kontrolu a ověřit připravenost','Zkontrolovat jen množství paliva','Vyjet a závady řešit až potom'],correct:0},
-    {question:'Co uděláš při zjištění technické závady vozidla?',options:['Závadu nahlásíš a postupuješ podle pravidel jednotky','Závadu zatajíš, pokud vozidlo jede','Necháš rozhodnout náhodného kolemjdoucího'],correct:0},
-    {question:'Kdo rozhoduje o bezpečném umístění vozidla v místě zásahu?',options:['Posádka bez vzájemné domluvy','Podle situace velitel zásahu ve spolupráci s řidičem','Vždy první osoba, která vystoupí'],correct:1},
-    {question:'Co je zásadní při couvání vozidla v omezeném prostoru?',options:['Použít bezpečné navádění a sledovat okolí','Spoléhat pouze na rychlost','Couvat bez kontroly prostoru'],correct:0},
-    {question:'Jak postupovat s čerpadlem, pokud jeho provoz neodpovídá očekávání?',options:['Pokračovat bez kontroly','Bezpečně ověřit stav a postupovat podle návodu a pokynů velitele','Zvyšovat výkon bez omezení'],correct:1},
-    {question:'Co uděláš s poškozenou hadicí nebo spojkou?',options:['Označíš a nahlásíš závadu, vybavení nepoužiješ nevhodným způsobem','Použiješ ji při každé situaci','Opravíš ji improvizovaně bez schválení'],correct:0},
-    {question:'Proč je důležitá komunikace strojníka s velitelem?',options:['Aby byly změny provozu a stav techniky koordinované','Aby se nemusel kontrolovat stav vozidla','Jen kvůli evidenci docházky'],correct:0},
-    {question:'Co patří po návratu k běžné péči o vozidlo?',options:['Kontrola, doplnění prostředků a hlášení závad podle pravidel','Pouze umytí karoserie','Nic, pokud vozidlo dojelo'],correct:0},
-    {question:'Jak zacházet s technikou, jejíž obsluhu neznáš?',options:['Vyzkoušet ji bez přípravy','Postupovat podle návodu a pokynů oprávněné osoby','Požádat nezkušeného člena o odhad'],correct:1},
-    {question:'Co je prioritou při pohybu zásahového vozidla?',options:['Co nejvyšší rychlost za všech okolností','Bezpečná jízda v souladu s pravidly a podmínkami','Předjet každé pomalejší vozidlo'],correct:1},
-    {question:'Co zkontroluješ před použitím čerpadla?',options:['Pouze barvu krytu','Stav zařízení, připojení a bezpečné provozní podmínky','Jen množství paliva'],correct:1},
-    {question:'Jak postupuješ při neobvyklém hluku motoru?',options:['Pokračuješ bez kontroly','Bezpečně přerušíš činnost a závadu prověříš podle pokynů','Zvýšíš otáčky'],correct:1},
-    {question:'Co je důležité při ustavení vozidla na místě zásahu?',options:['Zvolit bezpečné místo s ohledem na provoz a okolní rizika','Zastavit co nejblíže bez ohledu na okolí','Blokovat příjezd dalším jednotkám'],correct:0},
-    {question:'Jak se zachováš při úniku provozních kapalin?',options:['Únik ignoruješ','Zajistíš bezpečnost, oznámíš událost a postupuješ podle pokynů','Spláchneš kapalinu do kanalizace'],correct:1},
-    {question:'Kdy smíš obsluhovat konkrétní zařízení?',options:['Kdykoliv je zařízení dostupné','Když jsi k obsluze určený a znáš bezpečný postup','Po krátkém odhadu bez zaučení'],correct:1},
-    {question:'Co uděláš při ztrátě tlaku v hadicovém vedení?',options:['Ověříš situaci a bezpečně informuješ velitele','Bez upozornění zvýšíš výkon na maximum','Odpojíš vedení bez domluvy'],correct:0},
-    {question:'Jak má být zajištěno vozidlo při stání ve svahu?',options:['Pouze vypnutím rádia','Podle pravidel proti samovolnému pohybu a místních podmínek','Stačí ponechat motor běžet'],correct:1},
-    {question:'Co uděláš po doplnění paliva nebo provozních kapalin?',options:['Zkontroluješ uzavření a bezpečný stav před dalším provozem','Necháš uzávěry volné','Okamžitě odjedeš bez kontroly'],correct:0},
-    {question:'Jak reaguješ na pokyn k přemístění vozidla v nepřehledném prostoru?',options:['Rozjedeš se bez kontroly okolí','Ověříš bezpečný prostor a případně využiješ navádění','Spolehneš se na odhad vzdálenosti'],correct:1},
-    {question:'Co patří k bezpečnému ukončení provozu čerpadla?',options:['Vypnout vše bez ohledu na postup','Postupovat podle návodu, bezpečně odtlakovat a zkontrolovat zařízení','Odpojit hadice pod tlakem'],correct:1}
+  "Strojník": [
+    {
+      "question": "Při dálkové dopravě vody začne na vstupu do navazujícího čerpadla výrazně klesat tlak. Jak má jeho strojník postupovat?",
+      "options": [
+        "Zvýšit otáčky svého čerpadla, aby vyrovnal pokles vstupního tlaku.",
+        "Omezit odběr vody a koordinovat dodávku s předchozím strojníkem.",
+        "Přivřít výtlačné ventily a následně zvýšit otáčky svého čerpadla."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při čerpání z otevřeného vodního zdroje začne čerpadlo přisávat vzduch, přestože sací koš zůstává pod hladinou. Co má strojník především prověřit?",
+      "options": [
+        "Těsnost sacího vedení a případné vytváření víru nad sacím košem.",
+        "Průchodnost výtlačného vedení a nastavení tlaku na rozdělovači.",
+        "Otáčky motoru a případné tlakové ztráty na útočných proudech."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Při čerpání z otevřeného vodního zdroje začne čerpadlo kavitačně hlučet a kolísá dodávka vody. Který zásah může pomoci při nedostatečných sacích podmínkách?",
+      "options": [
+        "Zvýšit otáčky čerpadla a současně více otevřít výtlak.",
+        "Přivřít sání čerpadla a ponechat požadovaný průtok.",
+        "Snížit odběr vody a prověřit sací výšku i průchodnost sání."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Při dopravě vody do místa zásahu o 30 metrů výše než čerpadlo je třeba překonat hydrostatický výškový rozdíl. Jaká je přibližná tlaková ztráta způsobená samotným převýšením?",
+      "options": [
+        "Přibližně 1,5 baru.",
+        "Přibližně 2 bary.",
+        "Přibližně 3 bary."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Strojník dopravuje vodu hadicovým vedením a na konci potřebuje zajistit tlak 5 barů. Třecí ztráty činí 2 bary a převýšení odpovídá dalším 1,5 baru. Jaký výstupní tlak musí čerpadlo přibližně zajistit?",
+      "options": [
+        "8,5 baru.",
+        "7,5 baru.",
+        "6,5 baru."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Při jízdě k zásahu se požární vozidlo blíží k železničnímu přejezdu, na kterém blikají dvě střídavá červená světla. Jak musí řidič postupovat?",
+      "options": [
+        "Může přejezd projet při použití modrého výstražného světla a sirény.",
+        "Nesmí na přejezd vjíždět ani při použití zvláštního výstražného zařízení.",
+        "Může přejezd projet po zastavení a ověření, že se neblíží vlak."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při ustavení cisternové automobilové stříkačky na svahu je nutné zajistit vozidlo proti samovolnému pohybu. Který postup je správný?",
+      "options": [
+        "Použít parkovací brzdu a podle podmínek zajistit kola zakládacími klíny.",
+        "Použít provozní brzdu a ponechat motor v chodu po celou dobu zásahu.",
+        "Zařadit neutrál a zajistit vozidlo pouze pomocí parkovací brzdy."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Při pravidelné kontrole vozidla strojník zjistí, že hladina brzdové kapaliny klesla pod předepsané minimum. Jak má postupovat?",
+      "options": [
+        "Doplnit kapalinu a vozidlo používat bez další kontroly brzdové soustavy.",
+        "Provést zkušební jízdu a závadu řešit pouze při zhoršení brzdného účinku.",
+        "Prověřit příčinu úbytku a zajistit odstranění závady před dalším provozem."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Při jízdě zásahovým vozidlem z dlouhého prudkého klesání hrozí přehřátí provozních brzd. Jaký způsob jízdy je vhodný?",
+      "options": [
+        "Zařadit neutrál a rychlost regulovat krátkým intenzivním brzděním.",
+        "Včas zvolit nižší převodový stupeň a využívat brzdný účinek motoru.",
+        "Zařadit vyšší převodový stupeň a průběžně přibrzďovat provozní brzdou."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při kontrole požárního automobilu se vzduchovou brzdovou soustavou strojník zjistí, že po vypnutí motoru a ustálení tlaku dochází k jeho rychlému poklesu. Co tento stav signalizuje?",
+      "options": [
+        "Nesprávnou činnost regulátoru tlaku, který při vypnutém motoru nedoplňuje vzduch.",
+        "Možnou netěsnost vzduchové soustavy, kterou je nutné před provozem prověřit.",
+        "Běžné odlehčení kompresoru, při kterém tlak po vypnutí motoru rychle klesá."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při zásahu za silného mrazu musí strojník na delší dobu přerušit dodávku vody. Jaké opatření je vhodné k ochraně požárního čerpadla před zamrznutím?",
+      "options": [
+        "Ponechat čerpadlo zavodněné a udržovat motor vozidla ve zvýšených otáčkách.",
+        "Zajistit podle situace cirkulaci vody nebo odvodnění ohrožených částí čerpadla.",
+        "Uzavřít výtlačné ventily a ponechat vodu v čerpadle bez dalšího opatření."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při zásahu je nutné přečerpat vodu z jedné cisternové automobilové stříkačky do druhé. Co musí strojník přijímajícího vozidla především sledovat?",
+      "options": [
+        "Stav naplnění nádrže, průtok přiváděné vody a možnost jejího přetečení.",
+        "Výstupní tlak předávajícího čerpadla a teplotu motoru předávajícího vozidla.",
+        "Délku plnicího vedení a množství vody zbývající v předávajícím vozidle."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Při jízdě k zásahu na mokré vozovce dojde u požárního automobilu k aktivaci systému ABS během intenzivního brzdění. Jak má řidič správně postupovat?",
+      "options": [
+        "Opakovaně uvolňovat a sešlapovat brzdový pedál, aby zabránil zablokování kol.",
+        "Udržovat potřebný tlak na brzdový pedál a současně řídit směr jízdy vozidla.",
+        "Uvolnit brzdový pedál a zpomalovat výhradně pomocí brzdného účinku motoru."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při práci s požárním čerpadlem strojník uzavře všechny výtlačné ventily, ale čerpadlo zůstává v provozu. Jaké riziko vzniká při delším provozu bez průtoku?",
+      "options": [
+        "Dochází k postupnému ochlazování vody a poklesu jejího tlaku.",
+        "Dochází k zahřívání vody v čerpadle a možnému poškození jeho částí.",
+        "Dochází k automatickému zavzdušnění výtlaku a zastavení motoru vozidla."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při pravidelné kontrole požárního automobilu strojník zjistí nerovnoměrné opotřebení běhounu pneumatiky. Co může být jeho příčinou?",
+      "options": [
+        "Pouze dlouhodobé stání vozidla na vodorovné zpevněné ploše.",
+        "Nesprávný tlak huštění, geometrie náprav nebo závada podvozku.",
+        "Pouze opakované používání motorové brzdy při jízdě z kopce."
+      ],
+      "correct": 1
+    }
   ],
-  'Velitel': [
-    {question:'Jaký je jeden z prvních úkolů velitele po příjezdu?',options:['Vyhodnotit situaci a rizika a určit další postup','Rozdělit úkoly bez průzkumu','Odejít od jednotky bez předání velení'],correct:0},
-    {question:'Co má obsahovat srozumitelné rozdělení úkolů?',options:['Kdo co provede a jak bude komunikovat','Pouze jména členů','Jen přibližný čas ukončení'],correct:0},
-    {question:'Jak postupovat při novém riziku na místě?',options:['Zohlednit ho v rozhodnutí, informovat jednotku a upravit postup','Ignorovat ho, pokud už práce začala','Nechat každého rozhodovat samostatně'],correct:0},
-    {question:'Co je důležité při předání velení?',options:['Jasně předat situaci, rizika, provedené úkony a další úkoly','Předat pouze vysílačku','Odejít bez vysvětlení'],correct:0},
-    {question:'Jak reagovat, když člen jednotky oznámí nebezpečí?',options:['Informaci prověřit a podle situace upravit činnost','Oznámení automaticky odmítnout','Počkat do konce zásahu'],correct:0},
-    {question:'Co má obsahovat hlášení o situaci?',options:['Podstatné ověřené informace a požadovanou pomoc','Nepotvrzené domněnky jako fakta','Pouze název obce'],correct:0},
-    {question:'Proč se průběžně přehodnocuje situace?',options:['Podmínky a rizika se mohou měnit','Aby se zbytečně měnily úkoly','Protože původní průzkum nemá význam'],correct:0},
-    {question:'Jak postupovat, pokud jednotka nemá potřebné vybavení?',options:['Vyhodnotit možnosti a vyžádat potřebné síly či prostředky cestou velení','Zahájit nebezpečný úkon bez vybavení','Zatajit nedostatek'],correct:0},
-    {question:'Co je důležité při kontrole dokončení úkolu?',options:['Ověřit výsledek, bezpečnost a předání dalších pokynů','Předpokládat, že úkol dopadl dobře','Okamžitě opustit místo'],correct:0},
-    {question:'Jak se zachováš při nejasném nebo rozporném hlášení?',options:['Ověříš informace a upřesníš rozhodnutí','Vybereš náhodně jednu verzi','Předáš obě jako potvrzená fakta'],correct:0},
-    {question:'Co má obsahovat srozumitelný rozkaz?',options:['Úkol, důležité podmínky a potřebné bezpečnostní pokyny','Pouze obecné přání','Neověřené informace bez určení odpovědnosti'],correct:0},
-    {question:'Jak postupuješ při změně priorit zásahu?',options:['Změnu sdělíš dotčeným členům a ověříš porozumění','Změnu nikomu neoznámíš','Pokračuješ podle původního plánu za každou cenu'],correct:0},
-    {question:'Co uděláš, když se dostupné síly ukážou jako nedostatečné?',options:['Zatajíte situaci','Včas vyžádáš posily a upřesníš potřeby','Rozdělíš úkoly bez ohledu na bezpečnost'],correct:1},
-    {question:'Jak zajistíš bezpečnost při souběhu více činností?',options:['Necháš každou skupinu rozhodovat bez koordinace','Určíš odpovědnosti, pořadí a komunikaci mezi skupinami','Zrušíš veškeré hlášení'],correct:1},
-    {question:'Co je důležité při převzetí velení?',options:['Zjistit aktuální situaci, úkoly, rizika a dostupné prostředky','Okamžitě změnit všechny úkoly bez zjišťování','Spoléhat pouze na neověřené informace'],correct:0},
-    {question:'Jak máš reagovat na hlášení o zranění člena jednotky?',options:['Ověřit situaci, zajistit potřebnou pomoc a upravit činnost podle rizik','Počkat až do konce úkolu','Pokračovat bez oznámení'],correct:0},
-    {question:'Co má obsahovat předání zásahu jiné odpovědné osobě?',options:['Aktuální stav, rizika, provedená opatření a další potřebné informace','Pouze adresu místa','Jen vlastní názor bez faktů'],correct:0},
-    {question:'Jak postupuješ, když se podmínky od původního plánu výrazně liší?',options:['Bez kontroly pokračuješ podle plánu','Znovu vyhodnotíš rizika a upravíš postup, změnu sdělíš týmu','Přeneseš rozhodnutí na náhodného člena'],correct:1},
-    {question:'Jak ověříš, že členové jednotky porozuměli důležitému pokynu?',options:['Vyžádáš si stručné potvrzení nebo zpětné zopakování podle situace','Předpokládáš, že všichni slyšeli','Pokyn zopakuješ pouze po skončení činnosti'],correct:0},
-    {question:'Co patří do závěrečného vyhodnocení činnosti?',options:['Pouze informace o spotřebě paliva','Shrnutí výsledku, rizik, závad a potřebných následných opatření','Jen osobní dojmy bez ověření skutečností'],correct:1}
+  "Velitel": [
+    {
+      "question": "Při požáru rodinného domu má velitel první jednotky informaci o možné osobě uvnitř. Z objektu vychází hustý kouř a rozsah požáru není znám. Jaký postup zvolí?",
+      "options": [
+        "Zahájí vnitřní průzkum a další rizika vyhodnotí až po nalezení ohniska.",
+        "Provede průzkum, ověří podmínky vstupu a rozhodne o způsobu záchrany.",
+        "Zahájí hasební útok zvenčí a vnitřní průzkum odloží do příjezdu posil."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při zásahu na dopravní nehodě se nachází havarované vozidlo pod poškozeným elektrickým vedením. Není zřejmé, zda je vedení pod napětím. Jak velitel rozhodne?",
+      "options": [
+        "Povolí přístup po zajištění vozidla, pokud se hasiči nedotknou vodičů.",
+        "Umožní vyprošťování s použitím běžných ochranných prostředků jednotky.",
+        "Vymezí nebezpečný prostor a vyčká na potvrzení bezpečného stavu vedení."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Dvě družstva zasahují uvnitř objektu. Jedno družstvo přestane odpovídat na radiové výzvy. Jaký je odpovídající postup velitele?",
+      "options": [
+        "Zahájí ověřování situace, aktivuje záchranný postup a přehodnotí nasazení.",
+        "Vyšle druhé družstvo k prověření situace a ostatní činnost ponechá beze změny.",
+        "Vyčká na další hlášení družstva a mezitím připraví náhradní spojovací prostředek."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Jednotka JPO V zasahuje u požáru a na místo přijíždí jednotka HZS. Velitel HZS přebírá velení zásahu. Jaký je správný postup dosavadního velitele?",
+      "options": [
+        "Předá informace o zásahu a následně samostatně pokračuje podle původního plánu.",
+        "Předá informace o zásahu a vyčká s další činností na úplné vystřídání jednotky.",
+        "Předá informace o zásahu a další činnost jednotky koordinuje s novým velitelem zásahu."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Během zásahu se mění směr větru a kouř začíná ohrožovat původně bezpečný nástupní prostor. Jak velitel postupuje?",
+      "options": [
+        "Přesune nástupní prostor a ponechá nasazení jednotek podle původního rozhodnutí.",
+        "Upraví rozmístění techniky a změnu oznámí až po dokončení probíhajících úkolů.",
+        "Přehodnotí nebezpečný prostor, upraví nasazení a informuje dotčené jednotky."
+      ],
+      "correct": 2
+    },
+    {
+      "question": "Jednotka JPO V přijíždí k dopravní nehodě osobního vozidla. Řidič je při vědomí, ale vozidlo stojí nestabilně ve svahu. Co je prioritou před zahájením vyprošťování?",
+      "options": [
+        "Zajistit vozidlo proti pohybu a vyhodnotit rizika pro zasahující i řidiče.",
+        "Zahájit přístup k řidiči a stabilizaci vozidla provést během vyprošťování.",
+        "Připravit transport řidiče a zajistit vozidlo až před jeho vytažením."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Při čerpání vody ze zatopeného sklepa velitel zjistí, že voda zasahuje elektrická zařízení. Stav elektrické instalace není znám. Jaký postup zvolí?",
+      "options": [
+        "Zahájí čerpání z bezpečného místa a stav elektroinstalace ověří v průběhu.",
+        "Nechá ověřit bezpečný stav elektroinstalace a do té doby omezí vstup do prostoru.",
+        "Povolí vstup pouze hasičům v zásahovém oděvu a s použitím gumových holínek."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Jednotka zasahuje u požáru travního porostu. Vítr mění směr a požár se začíná šířit směrem k blízkému lesu. Jednotka má omezené množství vody. Jaký postup velitele je nejvhodnější?",
+      "options": [
+        "Přesune jednotku na čelo požáru, aby zabránila jeho dalšímu šíření směrem k lesu.",
+        "Vyhodnotí směr šíření a únikové cesty, zvolí bezpečné postavení a požádá o posily.",
+        "Soustředí jednotku na ochranu hranice lesa a veškerou dostupnou vodu využije v tomto prostoru."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při zásahu v obci je nutné zajistit přísun vody z hydrantové sítě. Hydrant poskytuje výrazně menší průtok, než jednotka očekávala. Jak velitel postupuje?",
+      "options": [
+        "Přizpůsobí nasazení dostupnému průtoku a zajistí alternativní zásobování vodou.",
+        "Ponechá původní nasazení proudů a vyčká, zda se tlak v síti postupně zvýší.",
+        "Zvýší odběr vody dalšími proudy, aby se odstranilo případné omezení průtoku."
+      ],
+      "correct": 0
+    },
+    {
+      "question": "Během zásahu jeden člen družstva oznámí veliteli příznaky výrazného vyčerpání. Jednotka přitom plní důležitý úkol. Jak velitel rozhodne?",
+      "options": [
+        "Ponechá hasiče u lehčí činnosti a jeho vystřídání zajistí po dokončení úkolu.",
+        "Zajistí jeho bezpečné stažení a posouzení stavu, současně upraví rozdělení úkolů.",
+        "Přeruší činnost celé jednotky a obnoví ji až po odpočinku všech zasahujících."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Jednotka je vyslána k odstranění spadlého stromu přes komunikaci. Po příjezdu velitel zjistí, že strom zasahuje do vedení veřejného osvětlení a vodiče jsou poškozené. Jak rozhodne?",
+      "options": [
+        "Nechá zajistit komunikaci a zahájí odstraňování částí stromu mimo bezprostřední dosah vodičů.",
+        "Vymezí nebezpečný prostor a odstranění stromu zahájí až po ověření bezpečného stavu vedení.",
+        "Nechá strom zajistit proti pohybu a odstranění vodičů ponechá pracovníkům provozovatele sítě."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při zásahu u dopravní nehody se na místo dostaví posádka zdravotnické záchranné služby. Zraněný je stále zaklíněný ve vozidle. Jak má velitel koordinovat další postup?",
+      "options": [
+        "Ponechá rozhodování o pořadí úkonů výhradně zdravotníkům a zajistí technické provedení jejich pokynů.",
+        "Dohodne se zdravotníky priority a způsob vyproštění s ohledem na zdravotní stav a bezpečnost zásahu.",
+        "Dokončí nejprve technické zajištění vyproštění a teprve následně umožní zdravotníkům přístup k pacientovi."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při nočním zásahu u požáru stodoly velitel zjistí, že příjezdová komunikace je úzká a další cisterny by mohly zablokovat odjezd již nasazené techniky. Jaký postup zvolí?",
+      "options": [
+        "Nechá další techniku dojet co nejblíže k požáru a její rozmístění upraví po příjezdu.",
+        "Určí místo pro příjezd a řazení další techniky s ohledem na průjezdnost a potřeby zásahu.",
+        "Ponechá rozmístění další techniky na jednotlivých řidičích podle aktuálních možností."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Jednotka přijíždí k nahlášenému požáru, ale na uvedené adrese žádný požár nenachází. Oznamovatele se nedaří kontaktovat. Jak má velitel postupovat?",
+      "options": [
+        "Provede průzkum nejbližšího okolí a po negativním výsledku se vrátí na základnu.",
+        "Informuje KOPIS, ověří údaje o události a koordinuje další postup při pátrání.",
+        "Pokračuje v pátrání v širším okolí a KOPIS informuje po nalezení místa události."
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Při likvidaci následků silného větru jednotka odstraňuje strom opřený o střechu domu. Kmen je pod napětím a jeho pohyb po odříznutí nelze spolehlivě předvídat. Jak velitel rozhodne?",
+      "options": [
+        "Zvolí postupné odřezávání od koruny a průběžně sleduje změny zatížení kmene.",
+        "Přeruší rizikové práce, zajistí prostor a vyžádá vhodné prostředky či odbornou pomoc.",
+        "Zajistí kmen dostupnými lany a pokračuje v řezání s větším odstupem hasičů."
+      ],
+      "correct": 1
+    }
   ]
 };
 
@@ -247,7 +592,7 @@ function doGet(e) {
     if (!active || !p.token || p.token !== active.token) return json({ok:false,active:false,error:'QR kód není platný.'});
     if (p.action === 'validate') return json({ok:true,active:true,session:{unit:active.unit}});
     if (!QUIZZES[p.role]) return json({ok:false,error:'Neplatná role.'});
-    return json({ok:true,questions:QUIZZES[p.role].map(q => ({question:q.question,options:q.options}))});
+    return json({ok:true,questions:QUIZZES[p.role].map((q,index) => ({index,question:q.question,options:q.options}))});
   }
   if (p.action === 'results') {
     const sh = getSheet(), values = sh.getDataRange().getValues();
