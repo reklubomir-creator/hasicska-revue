@@ -492,7 +492,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 </main></div>
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
-const APP_VERSION="0.1.115";
+const APP_VERSION="0.1.116";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -1372,10 +1372,19 @@ async function decodeUnitReportPayload(){
   const quizBody=quizEntries.length?quizEntries.map(x=>{
    const wrong=Array.isArray(x.wrong)?x.wrong:(typeof x.wrong==="string"&&x.wrong?[x.wrong]:[]);
    const critical=Array.isArray(x.critical)?x.critical:[];
+   // V QR webové zprávě zobrazit kritickou chybu jen v její vlastní sekci.
+   const criticalCounts=new Map();
+   critical.forEach(w=>criticalCounts.set(w,(criticalCounts.get(w)||0)+1));
+   const otherWrong=wrong.filter(w=>{
+    const count=criticalCounts.get(w)||0;
+    if(!count)return true;
+    criticalCounts.set(w,count-1);
+    return false;
+   });
    const evaluation=x.evaluation||quizBuildEvaluation(x);
    const duration=Number(x.durationSeconds||0);
    const quizClass=critical.length||Number(x.percentage||0)<75?"status-major":Number(x.percentage||0)<90?"status-minor":"status-ok";
-   return '<details class="unit-report-record unit-report-quiz '+quizClass+'"><summary class="unit-report-quiz-summary"><div class="unit-report-quiz-person"><strong>'+esc(x.name||"Bez jména")+'</strong><span>'+esc(x.role||"Role neuvedena")+'</span></div><div class="unit-report-quiz-quality"><strong>'+Number(x.percentage||0)+' %</strong><span>'+esc(evaluation.headline||"Vyhodnocení")+'</span></div><span class="unit-report-expand" aria-hidden="true">＋</span></summary><div class="unit-report-quiz-details"><div class="unit-report-progress '+quizClass+'"><span style="width:'+Math.max(0,Math.min(100,Number(x.percentage||0)))+'%"></span></div><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně'+(duration?' · <strong>Délka:</strong> '+Math.floor(duration/60)+':'+String(duration%60).padStart(2,"0"):'')+'</p><h3>Vyhodnocení</h3><p>'+esc(evaluation.body||"")+'</p><p>'+esc(evaluation.advice||"")+'</p>'+(critical.length?'<div class="unit-report-critical"><strong>Kritická chyba – minimálně závažné nedostatky</strong><ul>'+critical.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul></div>':'')+(wrong.length?'<h3>Chybné odpovědi a správná řešení</h3><ul class="unit-report-wrong">'+wrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'<p class="unit-report-muted">Bez zaznamenaných chybných odpovědí.</p>')+'</div></details>';
+   return '<details class="unit-report-record unit-report-quiz '+quizClass+'"><summary class="unit-report-quiz-summary"><div class="unit-report-quiz-person"><strong>'+esc(x.name||"Bez jména")+'</strong><span>'+esc(x.role||"Role neuvedena")+'</span></div><div class="unit-report-quiz-quality"><strong>'+Number(x.percentage||0)+' %</strong><span>'+esc(evaluation.headline||"Vyhodnocení")+'</span></div><span class="unit-report-expand" aria-hidden="true">＋</span></summary><div class="unit-report-quiz-details"><div class="unit-report-progress '+quizClass+'"><span style="width:'+Math.max(0,Math.min(100,Number(x.percentage||0)))+'%"></span></div><p><strong>Výsledek:</strong> '+Number(x.correct||0)+' / '+Number(x.total||0)+' správně'+(duration?' · <strong>Délka:</strong> '+Math.floor(duration/60)+':'+String(duration%60).padStart(2,"0"):'')+'</p><h3>Vyhodnocení</h3><p>'+esc(evaluation.body||"")+'</p><p>'+esc(evaluation.advice||"")+'</p>'+(critical.length?'<div class="unit-report-critical"><strong>Kritická chyba – minimálně závažné nedostatky</strong><ul>'+critical.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul></div>':'')+(otherWrong.length?'<h3>Ostatní chybné odpovědi a správná řešení</h3><ul class="unit-report-wrong">'+otherWrong.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':(!critical.length?'<p class="unit-report-muted">Bez zaznamenaných chybných odpovědí.</p>':''))+'</div></details>';
   }).join(""):'<p>Pro tuto jednotku zatím nejsou v systému uložené výsledky kvízu.</p>';
   const criticalCount=quizEntries.filter(x=>Array.isArray(x.critical)&&x.critical.length).length;
   const quizWeighted=quizEntries.map(x=>({score:Number(x.percentage||0),weight:/^(strojník|velitel)$/i.test(String(x.role||"").trim())?2:1})).sort((a,b)=>a.score-b.score);
