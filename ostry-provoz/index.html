@@ -493,7 +493,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.15";
+const APP_VERSION="0.2.16";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -789,8 +789,9 @@ el("micButton").onclick=()=>{
  recognition.onerror=e=>{el("voiceStatus").textContent="Diktování se nepodařilo ("+e.error+"). Zkontroluj oprávnění mikrofonu."};
  recognition.onend=()=>{
   if(isAndroid&&lastInterim){
-   const completed=mergeSpeechParts([lastFinal,lastInterim]);
-   el("notes").value=[baseText,completed].filter(Boolean).join(" ");
+   // Android may repeat a finalized phrase as an interim result when stopping.
+   // Keep only finalized text when available; an interim is a fallback only.
+   if(!lastFinal)el("notes").value=[baseText,lastInterim].filter(Boolean).join(" ");
    persistNewAssessmentDraft();persistEditingDraft();
   }
   voicePreview.textContent="";recognition=null;el("micButton").textContent="🎙 Diktovat";
