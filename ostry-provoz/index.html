@@ -401,7 +401,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div class="side-note">Příprava ostrého provozu<br>verze 0.1.104</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.108</span></div></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.109</span></div></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
@@ -870,6 +870,15 @@ setInterval(()=>{
  if(info)info.textContent=quizRefreshInProgress?"Načítám výsledky…":"Další kontrola za "+seconds+" s.";
  if(!quizRefreshInProgress&&Date.now()-quizLastRefreshAt>=10000)quizRefreshState({resultsOnly:true});
 },1000);
+function quizBindResultDetails(){
+ el("quizLiveResults").querySelectorAll("[data-quiz-detail]").forEach(b=>b.onclick=()=>{
+  const d=el("quiz-detail-"+b.dataset.quizDetail);
+  if(!d)return;
+  const opening=d.classList.contains("hidden");
+  d.classList.toggle("hidden");
+  b.textContent=opening?"Skrýt detail":"Detail výsledku";
+ });
+}
 async function quizLoadHistory(){
  const unit=el("quizHistoryUnit").value;
  if(!unit){quizStatus("Vyber uzavřenou jednotku pro zobrazení výsledků.",true);return}
@@ -888,6 +897,7 @@ async function quizLoadHistory(){
   el("quizQrUrl").textContent="";
   quizResultsCache=arr;
   el("quizLiveResults").innerHTML=arr.length?'<div class="quiz-result-list">'+arr.map((x,i)=>quizRenderResult(x,i)).join("")+'</div>':'<div class="empty">Tato jednotka nemá odevzdané kvízy.</div>';
+  quizBindResultDetails();
   const report=el("quizReportResults");
   if(report)report.innerHTML=arr.length?arr.map(x=>{const e=quizBuildEvaluation(x);return '<article class="station" style="margin:10px 0"><h3>'+escaped(x.unit)+' · '+escaped(x.name||"Účastník")+'</h3><p><strong>Výsledek:</strong> '+x.correct+' / '+x.total+' ('+x.percentage+' %)</p><p><strong>'+escaped(e.headline)+':</strong> '+escaped(e.body)+'</p><p>'+escaped(e.advice)+'</p></article>'}).join(""):'<div class="empty">Tato jednotka nemá odevzdané kvízy.</div>';
   const groups=unit==="Lažánky + Horní Lhota"?["Lažánky","Horní Lhota"]:[unit];
