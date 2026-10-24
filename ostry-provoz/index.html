@@ -401,7 +401,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div class="side-note">Příprava ostrého provozu<br>verze 0.1.104</div>
 </aside>
 <main class="main">
-<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.112</span></div></header>
+<header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v0.1.113</span></div></header>
 <section id="home" class="page">
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
@@ -1213,13 +1213,25 @@ async function exportUnitPdf(unit){
  const entries=unitReportStationEntries(unit).filter(r=>r.station!=="Kvíz – hasička Klepačov").sort((a,b)=>stations.indexOf(a.station)-stations.indexOf(b.station));
  let quizEntries=[],quizError="";
  try{
-  // PDF používá stejná data, která aplikace načetla do přehledu kvízu.
-  // Nedělá druhý nezávislý požadavek na Apps Script, který může selhat kvůli přesměrování/CORS.
-  if(!quizResultsCache.length){
-   try{quizResultsCache=JSON.parse(localStorage.getItem("hasicskaRevueQuizResultsCache")||"[]")}catch(storageError){quizResultsCache=[]}
+  // Výsledky načíst přímo pro exportovanou jednotku; globální cache obsahuje
+  // pouze naposledy zobrazenou jednotku a pro jiné PDF bývá prázdná.
+  let allQuizResults=[];
+  if(localStorage.getItem("hasicskaRevueLocalProgressDemo")==="1"){
+   allQuizResults=quizResultsCache.length?quizResultsCache:JSON.parse(localStorage.getItem("hasicskaRevueQuizResultsCache")||"[]");
+  }else{
+   const response=await quizGet({action:"results"});
+   if(response.error)throw new Error(response.error);
+   if(!Array.isArray(response.results))throw new Error("Server nevrátil seznam výsledků.");
+   allQuizResults=response.results;
   }
-  quizEntries=quizResultsCache.filter(x=>String(x.unit||"").trim()===unit);
- }catch(err){quizError="Uložené výsledky kvízu se nepodařilo načíst: "+String(err.message||err)}
+  quizEntries=allQuizResults.filter(x=>String(x.unit||"").trim()===unit);
+ }catch(err){
+  quizError="Aktuální výsledky kvízu se nepodařilo načíst: "+String(err.message||err);
+  // Záložní lokální data použít jen tehdy, pokud skutečně patří dané jednotce.
+  let cached=quizResultsCache;
+  if(!cached.length){try{cached=JSON.parse(localStorage.getItem("hasicskaRevueQuizResultsCache")||"[]")}catch(e){cached=[]}}
+  quizEntries=cached.filter(x=>String(x.unit||"").trim()===unit);
+ }
  // Automaticky uložené hodnocení kvízu je osmým hodnoceným stanovištěm.
  // Pro společnou jednotku použij konkrétní záznam Lažánek či Horní Lhoty.
  const quizAssessment=records.find(r=>r.unit===unit&&r.station==="Kvíz – hasička Klepačov");
