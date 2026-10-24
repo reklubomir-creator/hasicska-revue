@@ -493,7 +493,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.16";
+const APP_VERSION="0.2.17";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -1100,6 +1100,12 @@ async function quizLoadParticipant(){
  try{
   const s=await quizGet({action:"validate",token:quizTokenFromUrl});
   if(!s.ok||!s.active){el("quizParticipantState").textContent="Tento QR kód už není platný. Vrať se za hodnotitelem a naskenuj aktuální kód.";return}
+  const completedKey="hasicskaQuizSubmitted:"+quizTokenFromUrl;
+  if(localStorage.getItem(completedKey)==="1"){
+   el("quizParticipantForm").classList.add("hidden");
+   el("quizParticipantState").textContent="Tento kvíz už byl na tomto zařízení odevzdán. Další pokus není povolen.";
+   return;
+  }
   quizSession=s.session;const sharedPair=s.session.unit===combinedQuizUnit;el("quizParticipantUnitWrap").classList.toggle("hidden",!sharedPair);document.querySelectorAll('input[name="quizParticipantUnit"]').forEach(x=>{x.checked=false;x.disabled=!sharedPair});el("quizParticipantState").textContent=sharedPair?"Společný QR kód pro Lažánky a Horní Lhotu. Nejdřív vyber svou jednotku, potom vyplň jméno a roli. Čas začne až po stisknutí Zahájit.":"Jednotka: "+s.session.unit+". Vyplň jméno a roli; čas začne až po stisknutí Zahájit.";
   el("quizParticipantForm").classList.remove("hidden");
   el("quizRole").onchange=()=>{el("quizQuestionArea").innerHTML='<p class="muted">Otázky se zobrazí až po stisknutí tlačítka „Zahájit kvíz“.</p>';};
@@ -1128,6 +1134,7 @@ async function quizSubmit(){
   const name=el("quizPerson").value.trim(),role=el("quizRole").value;
   const out=await quizPost({action:"submit",token:quizTokenFromUrl,unit:selectedUnit,name,role,answers,durationSeconds:Math.min(1200,Math.round((Date.now()-quizStartedAt)/1000))});
   if(!out.ok)throw new Error(out.error||"Server odmítl odpovědi.");
+  localStorage.setItem("hasicskaQuizSubmitted:"+quizTokenFromUrl,"1");
   el("quizParticipantForm").classList.add("hidden");
   el("quizParticipantState").textContent="Kvíz byl odevzdán. Načítám tvůj výsledek…";
   let result=out.result||out.submission||out.entry||null;
