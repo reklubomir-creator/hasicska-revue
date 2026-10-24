@@ -812,7 +812,11 @@ async function quizLoadQuestions(){
  const role=el("quizRole").value;if(!role||!quizTokenFromUrl)return false;
  el("quizQuestionArea").innerHTML='<p class="muted">Načítám otázky…</p>';
  try{const data=await quizGet({action:"questions",token:quizTokenFromUrl,role});if(!data.ok)throw new Error(data.error||"Otázky nejsou dostupné.");
- const questions=(data.questions||[]).slice(0,20);if(questions.length!==20)throw new Error("Kvíz musí obsahovat 20 otázek; nyní je dostupných "+questions.length+".");el("quizQuestionArea").innerHTML=questions.map((q,i)=>{const options=q.options.map((o,j)=>({text:o,index:j,sort:Math.random()})).sort((a,b)=>a.sort-b.sort);return '<div class="panel" style="margin:12px 0;padding:14px"><p><strong>'+(i+1)+'. '+escaped(q.question)+'</strong></p>'+options.map(o=>'<label class="quiz-option"><input type="radio" name="quizq'+i+'" value="'+o.index+'"> '+escaped(o.text)+'</label>').join("")+'</div>'}).join("");return true;
+ const questions=(data.questions||[]).slice(0,15);if(questions.length!==15)throw new Error("Kvíz musí obsahovat 15 otázek; nyní je dostupných "+questions.length+".");
+ // Jen u Hasiče se při každém novém spuštění mění pořadí otázek.
+ // Původní index otázky se zachovává pro správné vyhodnocení na serveru.
+ if(role==="Hasič"){for(let i=questions.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[questions[i],questions[j]]=[questions[j],questions[i]];}}
+ el("quizQuestionArea").innerHTML=questions.map((q,i)=>'<div class="panel" style="margin:12px 0;padding:14px"><p><strong>'+(i+1)+'. '+escaped(q.question)+'</strong></p>'+q.options.map((o,j)=>'<label class="quiz-option"><input type="radio" name="quizq'+q.index+'" value="'+j+'"> '+escaped(o)+'</label>').join("")+'</div>').join("");return true;
  }catch(e){el("quizQuestionArea").textContent="Otázky se nepodařilo načíst: "+(e&&e.message||String(e))+". Zkontroluj připojení a zkus kvíz zahájit znovu.";return false}
 }
 async function quizLoadParticipant(){
