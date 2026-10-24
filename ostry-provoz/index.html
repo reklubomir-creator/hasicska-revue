@@ -493,7 +493,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.18";
+const APP_VERSION="0.2.19";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -1094,6 +1094,27 @@ async function quizLoadQuestions(){
  el("quizQuestionArea").innerHTML=questions.map((q,i)=>'<div class="panel" style="margin:12px 0;padding:14px"><p><strong>'+(i+1)+'. '+escaped(q.question)+'</strong></p>'+q.options.map((o,j)=>'<label class="quiz-option"><input type="radio" name="quizq'+q.index+'" value="'+j+'"> '+escaped(o)+'</label>').join("")+'</div>').join("");return true;
  }catch(e){el("quizQuestionArea").textContent="Otázky se nepodařilo načíst: "+(e&&e.message||String(e))+". Zkontroluj připojení a zkus kvíz zahájit znovu.";return false}
 }
+const quizDraftKey="hasicskaQuizDraft:"+quizTokenFromUrl;
+function quizSaveDraft(){
+ if(!quizStartedAt)return;
+ const answers=[...el("quizQuestionArea").querySelectorAll('input:checked')].map(x=>[x.name,x.value]);
+ try{localStorage.setItem(quizDraftKey,JSON.stringify({startedAt:quizStartedAt,name:el("quizPerson").value,role:el("quizRole").value,unit:document.querySelector('input[name="quizParticipantUnit"]:checked')?.value||"",html:el("quizQuestionArea").innerHTML,answers}));}catch(e){}
+}
+function quizStartTimer(){
+ if(quizTicker)clearInterval(quizTicker);
+ const tick=()=>{const left=Math.max(0,1200-Math.floor((Date.now()-quizStartedAt)/1000));el("quizTimer").textContent="Zbývá "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0");if(left<=0){clearInterval(quizTicker);quizSubmit()}};
+ tick();if(quizStartedAt&&Date.now()-quizStartedAt<1200000)quizTicker=setInterval(tick,1000);
+}
+function quizRestoreDraft(){
+ let d;try{d=JSON.parse(localStorage.getItem(quizDraftKey)||"null")}catch(e){return false}
+ if(!d?.startedAt||!d.name||!d.role||!d.html?.includes("quizq"))return false;
+ el("quizPerson").value=d.name;el("quizRole").value=d.role;
+ document.querySelectorAll('input[name="quizParticipantUnit"]').forEach(x=>x.checked=x.value===d.unit);
+ el("quizPerson").readOnly=true;el("quizRole").disabled=true;el("quizBegin").classList.add("hidden");el("quizSubmit").classList.remove("hidden");el("quizSubmit").disabled=false;
+ el("quizQuestionArea").innerHTML=d.html;
+ (d.answers||[]).forEach(a=>{const x=[...el("quizQuestionArea").querySelectorAll('input[type="radio"]')].find(x=>x.name===a[0]&&x.value===a[1]);if(x)x.checked=true});
+ quizStartedAt=d.startedAt;el("quizParticipantState").textContent="Rozpracovaný kvíz byl obnoven. Časový limit pokračuje.";quizStartTimer();return true;
+}
 async function quizLoadParticipant(){
  el("quizOrganizer").classList.add("hidden");el("quizParticipant").classList.remove("hidden");
  if(!quizTokenFromUrl){el("quizParticipantState").textContent="Tento odkaz neobsahuje platný QR token. Na stanovišti naskenuj aktuální QR kód.";return}
@@ -1110,14 +1131,14 @@ async function quizLoadParticipant(){
   el("quizParticipantForm").classList.remove("hidden");
   el("quizRole").onchange=()=>{el("quizQuestionArea").innerHTML='<p class="muted">Otázky se zobrazí až po stisknutí tlačítka „Zahájit kvíz“.</p>';};
   el("quizQuestionArea").innerHTML='<p class="muted">Nejdřív vyplň jméno a vyber roli. Otázky se zobrazí až po zahájení kvízu.</p>';
+  quizRestoreDraft();
  }catch(e){el("quizParticipantState").textContent="Kvíz se nepodařilo ověřit. Zkus načíst stránku znovu nebo požádej hodnotitele o nový QR kód."}
 }
 async function quizBegin(){
  const selectedUnit=document.querySelector('input[name="quizParticipantUnit"]:checked')?.value||"";if(!el("quizPerson").value.trim()||!el("quizRole").value||(quizSession?.unit===combinedQuizUnit&&!selectedUnit)){el("quizParticipantState").textContent=quizSession?.unit===combinedQuizUnit&&!selectedUnit?"Zaklikni, za kterou jednotku kvíz vyplňuješ, a potom vyplň jméno a roli.":"Vyplň jméno a vyber roli.";return}
  quizStartedAt=Date.now();el("quizBegin").classList.add("hidden");el("quizSubmit").classList.remove("hidden");el("quizSubmit").disabled=true;el("quizPerson").readOnly=true;el("quizRole").disabled=true;el("quizQuestionArea").innerHTML='<p class="muted">Načítám otázky…</p>';el("quizParticipantState").textContent="Kvíz byl zahájen. Časový limit je 20 minut.";
  const questionsLoaded=await quizLoadQuestions();if(!questionsLoaded){quizStartedAt=0;el("quizPerson").readOnly=false;el("quizRole").disabled=false;el("quizBegin").classList.remove("hidden");el("quizBegin").textContent="Zkusit znovu";el("quizSubmit").classList.add("hidden");el("quizSubmit").disabled=true;el("quizParticipantState").textContent="Kvíz nebyl spuštěn, protože se nepodařilo načíst otázky. Odpovědi zatím nelze odevzdat.";return}el("quizSubmit").disabled=false;
- if(quizTicker)clearInterval(quizTicker);
- quizTicker=setInterval(()=>{const left=Math.max(0,1200-Math.floor((Date.now()-quizStartedAt)/1000));el("quizTimer").textContent="Zbývá "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0");if(left<=0){clearInterval(quizTicker);quizSubmit()}},1000);
+ quizSaveDraft();quizStartTimer();
 }
 function quizRenderParticipantResult(x){
  const evaluation=quizBuildEvaluation(x),wrong=quizWrongAnswers(x),pct=Math.max(0,Math.min(100,Number(x.percentage||0)));
@@ -1128,13 +1149,13 @@ async function quizSubmit(){
  if(quizTicker)clearInterval(quizTicker);
  const q=el("quizQuestionArea").querySelectorAll('input[type="radio"]:checked');
  const answers=[...q].map(x=>({question:Number(x.name.replace("quizq","")),answer:Number(x.value)}));
- el("quizSubmit").disabled=true;el("quizSubmitStatus").classList.remove("hidden");el("quizSubmitStatus").textContent="Odesílám odpovědi…";
+ quizSaveDraft();el("quizSubmit").disabled=true;el("quizSubmitStatus").classList.remove("hidden");el("quizSubmitStatus").textContent="Odesílám odpovědi…";
  try{
   const selectedUnit=document.querySelector('input[name="quizParticipantUnit"]:checked')?.value||"";
   const name=el("quizPerson").value.trim(),role=el("quizRole").value;
   const out=await quizPost({action:"submit",token:quizTokenFromUrl,unit:selectedUnit,name,role,answers,durationSeconds:Math.min(1200,Math.round((Date.now()-quizStartedAt)/1000))});
   if(!out.ok)throw new Error(out.error||"Server odmítl odpovědi.");
-  localStorage.setItem("hasicskaQuizSubmitted:"+quizTokenFromUrl,"1");el("quizSubmitStatus").classList.add("hidden");
+  localStorage.removeItem(quizDraftKey);localStorage.setItem("hasicskaQuizSubmitted:"+quizTokenFromUrl,"1");el("quizSubmitStatus").classList.add("hidden");
   el("quizParticipantForm").classList.add("hidden");
   el("quizParticipantState").textContent="Kvíz byl odevzdán. Načítám tvůj výsledek…";
   let result=out.result||out.submission||out.entry||null;
@@ -1150,6 +1171,7 @@ async function quizSubmit(){
   }
  }catch(e){el("quizSubmitStatus").classList.remove("hidden");el("quizSubmitStatus").textContent=e.message||"Odeslání se nezdařilo. Kontaktuj hodnotitele a ověř uložení.";el("quizSubmit").disabled=false}
 }
+el("quizQuestionArea").addEventListener("change",quizSaveDraft);
 if(el("quizActiveUnit")){quizFillUnits();el("quizActivate").onclick=quizActivate;el("quizClose").onclick=quizClose;
 el("resetProduction").onclick=async()=>{const pin=el("quizOrganizerPin").value.trim();if(!pin){quizStatus("Nejdřív zadej organizační PIN.",true);el("quizOrganizerPin").focus();return}if(!confirm("Opravdu chceš VYMAZAT ostrá hodnocení, výsledky kvízů, uložené QR zprávy A KONTAKTY? Tuto akci nelze vrátit."))return;if(!confirm("Poslední potvrzení: data ostrého provozu i sdílené rozlosování budou odstraněna pro všechny uživatele. Pokračovat?"))return;try{quizStatus("Mažu testovací data…");const out=await quizPost({action:"resetProduction",pin});if(!out||!out.ok)throw new Error(out&&out.error||"Reset se nepodařilo dokončit.");const drawReset=await quizPost({action:"saveAppState",state:{startStations:{},fixedStartUnits:[]}});if(!drawReset||!drawReset.ok)throw new Error(drawReset&&drawReset.error||"Nepodařilo se vymazat pevné starty.");startStations={};fixedStartUnits=[];["hasicskaRevueRecords","hasicskaRevueStartStations","hasicskaRevueStartStationsDrawnAt","hasicskaRevueAutoCompletedStation1Units","hasicskaRevueFixedStartUnits","hasicskaRevueStandbyCompleted","hasicskaRevueDemoVersion","hasicskaRevueProgressDemoVersion","hasicskaRevueCurrentPage","hasicskaRevueUnitContacts","hasicskaRevueCombinedSmsCommanderUnit","hasicskaRevueActiveAssessments",...stations.map((_,i)=>reviewerConfirmationKey(i))].forEach(k=>localStorage.removeItem(k));quizStatus("Ostrý provoz včetně pevných startů a kontaktů byl vymazán. Stránka se obnoví.");location.reload()}catch(err){quizStatus("Reset se nepodařilo provést: "+(err&&err.message||err),true)}};el("quizRefresh").onclick=quizRefreshState;el("quizLoadHistory").onclick=quizLoadHistory;el("quizPrintQr").onclick=()=>{document.body.classList.add("qr-print");window.print();setTimeout(()=>document.body.classList.remove("qr-print"),500)};el("quizBegin").onclick=quizBegin;el("quizSubmit").onclick=quizSubmit;
  if(quizTokenFromUrl)quizLoadParticipant();else{quizRefreshState();}}
