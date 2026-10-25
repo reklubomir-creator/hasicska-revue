@@ -411,31 +411,31 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
 <div id="readmeContent">
-<div class="eyebrow" style="color:var(--menu-red)">Aktualizováno pro soutěž 25. 10. 2026</div>
-<h2 style="font-size:25px;margin:4px 0 12px">📖 Hasičská revue – rychlý návod</h2>
-<p><strong>Jedna aplikace pro rozlosování, sledování stanovišť, hodnocení, kvíz a závěrečné zprávy.</strong> Hodnocení a průběh se sdílejí mezi zařízeními. Před ostrým startem lze systém vyzkoušet a testovací záznamy následně vynulovat.</p>
-<h3 style="margin:16px 0 8px">1. Příprava a spuštění soutěže</h3>
-<ol style="line-height:1.7">
-<li>Ověř kontakty velitelů v části <strong>Kontaktní údaje jednotek</strong> a připravenost hodnotitelů.</li>
-<li>V části <strong>Jednotky</strong> zkontroluj pevné starty a klikni na <strong>🎲 Vylosovat zbytek</strong>. Rozlosování můžeš nejdřív testovat.</li>
-<li>Až bude vše připravené na skutečnou soutěž, klikni vedle losování na <strong>🚒 Ostré rozlosování – spustit soutěž</strong> a potvrď volbu. Teprve tím se zapne ostrý režim, upozornění a označení <strong>verze 1.0.0</strong>.</li>
-<li><strong>Před ostrým startem vymaž testovací zápisy</strong> a znovu zkontroluj rozlosování. Vynulování smaže provozní data – nepoužívej ho po zahájení skutečné soutěže.</li>
-</ol>
-<div class="notice"><strong>Pozor:</strong> samotné rozlosování ještě nezapíná ostrý režim. Označení 1.0.0 se zobrazí až po výslovném spuštění soutěže. QR odkazy hodnotitele a pozorovatele zůstávají stejné i po aktualizaci aplikace.</div>
-<h3 style="margin:16px 0 8px">2. Hodnotitelé a pozorovatelé</h3>
-<p><strong>Hodnotitel</strong> otevře samostatné rozhraní přes QR kód, zvolí jméno a stanoviště, zaznamená průběh a uloží hodnocení. Může použít i diktování poznámky. Po odeslání vždy ověří potvrzení uložení. Případné chyby lze opravit v zápisech.</p>
-<p><strong>Pozorovatel</strong> má vlastní QR kód a přehled pouze pro čtení. Na dashboardu lze QR hodnotitele a pozorovatele zvětšit kliknutím. Zápisy z více zařízení se synchronizují; při potížích ověř internetové připojení.</p>
-<p><strong>Stanoviště Studna:</strong> průběh se označuje automaticky podle postupu jednotek, hodnocení se doplní až na konci. <strong>Stanoviště Pohotovost:</strong> jde o přestávku bez klasického hodnocení.</p>
-<p><strong>Záchrana tonoucího:</strong> po uložení hodnocení se nabídne kontakt velitele následující jednotky a připravená SMS k zásahu. Před odesláním zkontroluj adresáta a text.</p>
-<h3 style="margin:16px 0 8px">3. Kvíz</h3>
-<p>Organizátor otevře <strong>Kvíz</strong>, zadá organizační PIN a spustí příslušnou relaci. Účastník načte aktuální QR kód, vybere jednotku, vyplní jméno a roli a spustí otázky. Odpovědi lze před odesláním zkontrolovat; při obnovení stránky se rozpracovaný kvíz obnovuje.</p>
-<p>V administraci kvízu je tlačítko <strong>⛶ Zvětšit QR na celou obrazovku</strong>. Zvětšený kód zůstane zobrazený, dokud na obrazovku znovu neklikneš. QR kvízu platí pro aktuální relaci, na rozdíl od trvalých QR hodnotitele a pozorovatele.</p>
-<h3 style="margin:16px 0 8px">4. Přehled, výsledky a zprávy</h3>
-<p>Na <strong>Dashboardu</strong> sleduj jednotky, stanoviště, pohotovost a průběh celé revue. V části <strong>Zápisy a výsledky</strong> kontroluj hodnocení a nedostatky, připrav závěrečné zprávy jednotek a souhrn pro pořadatele; dostupné jsou také tisk/PDF a export CSV. Zprávy sdílené QR odkazem lze otevřít na jiném zařízení.</p>
-<p><strong>Lažánky + Horní Lhota:</strong> společné hodnocení stanovišť se promítne do samostatných závěrečných zpráv obou jednotek; v kvízu se účastníci identifikují samostatně.</p>
-<h3 style="margin:16px 0 8px">5. Co zkontrolovat při problému</h3>
-<p>Pokud se zápis nebo výsledek neobjeví, nejprve ověř úspěšné uložení a připojení k internetu. Pokud nefunguje sdílení mezi zařízeními, zkontroluj nasazení stávajícího Google Apps Scriptu. <strong>Nezakládej nové nasazení bez důvodu</strong> – stávající odkazy a QR kódy musí zůstat funkční.</p>
-<div class="notice"><strong>Organizační informace:</strong> neděle 25. 10. 2026 · sraz ve 13:00 na točně Nádraží na Starém Blansku · začátek ve 13:30. Přesuny bez VRZ. Na stanoviště je nejvýše 20 minut a dalších 10 minut na hodnocení.</div>
+<div class="eyebrow" style="color:var(--menu-red)">Provozní informace</div>
+<h2 style="font-size:25px;margin:4px 0 12px">📖 Hasičská revue – návod k použití</h2>
+<p><strong>Toto je ostrá verze aplikace Hasičská revue.</strong> Slouží k ověření skutečného průběhu akce: zápisů hodnotitelů, rozlosování, kvízu, přehledů a výstupních zpráv. Neobsahuje nástroje pro náhodné doplňování fiktivních výsledků.</p><p><strong>Stanoviště 6 – Záchrana tonoucího:</strong> po uložení hodnocení se před pokračováním zobrazí telefon velitele následující jednotky a připravená SMS „ZOZ-Voda, Blansko, Mlýnská 22, záchrana tonoucího“. Zkontroluj kontakty velitelů v tomto prohlížeči; kontakty se mezi zařízeními nesynchronizují.</p>
+<h3 style="margin:16px 0 8px">Ověření ostrého provozu</h3>
+<p>V této verzi pracuj se skutečnými zápisy. Každý hodnotitel otevře samostatné rozhraní, vybere své jméno a stanoviště, potvrdí příjezd jednotky, vyplní stav a poznámku a zápis uloží. Po uložení zkontroluj, že se zápis objevil v přehledu a že se záznamy ostatních hodnotitelů nepřepisují.</p>
+<p>Rozlosování nastav nebo zkontroluj před začátkem. Kvíz ověř přes organizační rozhraní a následně zkontroluj jeho výsledky v přehledu. Pro zkoušku se šesti hodnotiteli používej šest oddělených relací/profilů prohlížeče; šest oken stejného profilu nemusí být vzájemně oddělených.</p>
+<div class="notice" style="margin-top:12px"><strong>Důležité:</strong> v ostré verzi nejsou dostupná tlačítka pro náhodné doplnění ani hromadné vymazání testovacích dat. Vše, co zde uložíš, ber jako skutečný provozní záznam a před testem si ověř, že používáš správnou akci, jednotku a stanoviště.</div>
+<h3 style="margin:16px 0 8px">Výsledné zprávy a QR kódy</h3>
+<p>V části <strong>Zápisy a výsledky</strong> zkontroluj souhrn pro šéfa revue a připrav zprávy jednotlivých jednotek. Ověř, že se v nich zobrazují skutečně uložené zápisy a výsledky kvízu. QR kód nebo odkaz otevři také na jiném zařízení a zkontroluj, že vede ke správné zprávě.</p>
+<p>Pokud se zápisy po uložení neobjeví v přehledu nebo zpráva není dostupná na jiném zařízení, ověř připojení a nasazení serverové části Google Apps Scriptu podle souboru <code>REPORT_STORAGE_SETUP.md</code>.</p>
+<h3 style="margin:16px 0 8px">Co si můžeš vyzkoušet</h3>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px">
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>1. 📊 Přehled</strong><p class="muted" style="margin:5px 0 0">Prohlédni si stav jednotek, stanovišť, pohotovosti a celkového průběhu. Přehled se v otevřené aplikaci obnovuje automaticky každých 30 sekund.</p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>2. 🚒 Rozlosování</strong><p class="muted" style="margin:5px 0 0">Nastav pevné starty vybraných jednotek, vylosuj zbytek a prohlédni si jejich pořadí stanovišť.</p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>3. 🎙 Rozhraní hodnotitele</strong><p class="muted" style="margin:5px 0 0">Hodnotitelé používají toto samostatné rozhraní, které se otevře v nové kartě. Vyber své jméno a stanoviště, potvrď příjezd jednotky, zvol stav, doplň poznámku a zápis ulož. K dispozici je také diktování a závěrečná kontrola všech hodnocení stanoviště.</p><p style="margin:7px 0 0"><button type="button" class="primary" id="openReviewerStandaloneHelp">Otevřít Rozhraní hodnotitele</button></p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>4. ☑ Kvíz</strong><p class="muted" style="margin:5px 0 0">Vyzkoušej organizační část kvízu, aktivaci jednotky a kontrolu výsledků. <strong>Organizační PIN:</strong> zadej PIN předaný organizátorem.</p><p class="muted" style="margin:7px 0 0">Administraci otevřeš přímo v této aplikaci tlačítkem níže. Samotná adresa Google Apps Script je technické rozhraní pro účastnický kvíz, ne administrační stránka.</p><button type="button" class="primary" data-goto="quiz" style="margin-top:8px">Otevřít administraci kvízu</button></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>5. 📑 Výsledky a zprávy</strong><p class="muted" style="margin:5px 0 0">Prohlédni si uložené zápisy a nedostatky, vyzkoušej export CSV a přípravu zpráv pro tisk nebo PDF.</p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>6. ✏ Upravit zápis</strong><p class="muted" style="margin:5px 0 0">Najdi již uložený zápis a vyzkoušej jeho opravu. Po změně se vrať do přehledu a zkontroluj, zda se údaje projevily i tam.</p></div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px"><strong>7. 📇 Kontakty na jednotky</strong><p class="muted" style="margin:5px 0 0">U každé jednotky vyplň jméno velitele, telefon a e-mail a kontakt ulož. Lažánky a Horní Lhota mají samostatné záznamy. Kontakty se ukládají do Google Sheets a sdílí se mezi zařízeními.</p></div>
+</div>
+<h3 style="margin:16px 0 8px">👁 Náhled pozorovatele</h3>
+<p>Tlačítko <strong>„Náhled pozorovatele“ v levém menu</strong> otevře v nové kartě zjednodušený pohled pouze pro čtení. Je určený k ověření toho, co uvidí někdo, kdo aplikaci jen sleduje: přehled jednotek, stanovišť a průběhu bez organizačních ovládacích prvků. Na jednotku lze kliknout a přejít k informaci o jejím následujícím stanovišti.</p>
+<h3 style="margin:16px 0 8px">Jak funguje ukládání</h3>
+<div class="notice"><strong>Každý testuje samostatně.</strong> Zápisy hodnocení, rozlosování a kontakty na jednotky se synchronizují přes Google Apps Script a Google Sheets. Některé pomocné volby zůstávají uložené jen v prohlížeči. Kvíz používá externí Google Apps Script. Uložení kompletní zprávy pro QR odkaz vyžaduje také serverové funkce popsané v souboru <code>REPORT_STORAGE_SETUP.md</code> a jejich nasazení.</div>
+<p style="margin:12px 0 0"><strong>Prosba při testování:</strong> zkoušej různé postupy a všímej si, co je nejasné nebo co by se mělo ovládat jednodušeji. Testovací scénáře přepisují dosavadní zápisy v tomto prohlížeči. Kvíz a ukládání zpráv přes QR závisí na správném nastavení a nasazení Google Apps Scriptu. Skutečné zápisy z akce do této testovací verze nezadávej.</p>
 <div style="display:flex;justify-content:flex-end;margin-top:14px"><button type="button" class="soft" id="readmeToggleBottom">Sbalit</button></div>
 </div>
 </div>
