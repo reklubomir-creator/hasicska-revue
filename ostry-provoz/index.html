@@ -498,7 +498,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.28";
+const APP_VERSION="0.2.29";
 let competitionOfficial=false;
 function competitionLive(){return competitionOfficial&&typeof startsAreDrawn==="function"&&startsAreDrawn()}
 async function activateOfficialCompetition(){
@@ -1334,23 +1334,39 @@ async function refreshQuizOverview(){
   const response=await quizGet({action:"results"});
   if(!response||!Array.isArray(response.results))throw new Error("Chybí výsledky kvízu");
   allQuizResultsForOverview=response.results;
+  renderQuizReportOverview(allQuizResultsForOverview);
   renderChiefReport();renderProgress();renderUnits();
  }catch(err){console.warn("Načtení kvízu do přehledů selhalo",err)}
+}
+function renderQuizReportOverview(results){
+ const target=el("quizReportResults");if(!target)return;
+ const rows=Array.isArray(results)?results:[];
+ if(!rows.length){target.innerHTML='<div class="empty">Zatím nejsou odevzdané výsledky kvízu.</div>';return}
+ const groups=reportUnits.map(unit=>({unit,items:rows.filter(x=>String(x.unit||"").trim()===unit)}));
+ target.innerHTML='<p><strong>Celkem odevzdáno: '+rows.length+'</strong> · výsledky všech jednotek</p>'+groups.map(g=>{
+  if(!g.items.length)return '<article class="station"><h3>'+escaped(g.unit)+'</h3><p class="muted">Zatím bez výsledku.</p></article>';
+  return '<article class="station" style="margin:10px 0"><h3>'+escaped(g.unit)+' · '+g.items.length+' účastníků</h3>'+g.items.map(x=>{const e=quizBuildEvaluation(x);return '<p><strong>'+escaped(x.name||"Účastník")+'</strong> ('+escaped(x.role||"role neuvedena")+'): '+Number(x.correct||0)+' / '+Number(x.total||0)+' ('+Number(x.percentage||0)+' %) — '+escaped(e.headline)+'. '+escaped(e.advice)+'</p>'}).join("")+'</article>'
+ }).join("");
 }
 function quizOverviewEntries(unit){return allQuizResultsForOverview.filter(x=>String(x.unit||"").trim()===unit)}
 function quizOverviewCompleted(unit){return (unit==="Lažánky + Horní Lhota"?["Lažánky","Horní Lhota"].every(u=>quizOverviewEntries(u).length>0):quizOverviewEntries(unit).length>0)}
 function buildChiefReportHtml(){
  const visibleStations=stations.filter((st,i)=>i!==4&&st!=="Kvíz – hasička Klepačov");
- const quiz=allQuizResultsForOverview;
  const rows=reportUnits.map(unit=>{
-   const entries=unitReportStationEntries(unit).filter(r=>r.station!=="Kvíz – hasička Klepačov");
-  const good=entries.filter(r=>r.status==="V pořádku").length,minor=entries.filter(r=>r.status==="Drobné nedostatky").length,major=entries.filter(r=>r.status==="Závažné nedostatky").length;
+  const entries=unitReportStationEntries(unit).filter(r=>r.station!=="Kvíz – hasička Klepačov");
+  const good=entries.filter(r=>r.status==="V pořádku").length;
+  const minor=entries.filter(r=>r.status==="Drobné nedostatky").length;
+  const major=entries.filter(r=>r.status==="Závažné nedostatky").length;
   const missing=visibleStations.filter(st=>!entries.some(r=>r.station===st));
   const problems=entries.filter(r=>r.status!=="V pořádku");
-  const q=quiz.filter(x=>String(x.unit||"").trim()===unit);
+  const q=quizOverviewEntries(unit);
   return {unit,good,minor,major,missing,problems,q};
  });
- return '<div class="table-wrap"><table><thead><tr><th>Jednotka</th><th>V pořádku</th><th>Drobné</th><th>Závažné</th><th>Chybějící</th><th>Co řešit</th><th>Kvíz</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><strong>'+escaped(r.unit)+'</strong></td><td>'+r.good+'</td><td>'+r.minor+'</td><td>'+r.major+'</td><td>'+r.missing.length+'</td><td>'+escaped(r.problems.map(x=>x.station+': '+x.status+(x.notes?' — '+x.notes:'')).concat(r.missing.map(x=>x+': bez zápisu')).join(' | ')||'Bez zaznamenaných nedostatků')+'</td><td>'+ (r.q.length?escaped(Math.round(r.q.reduce((a,x)=>a+Number(x.percentage||0),0)/r.q.length)+' % průměr · '+r.q.length+' účastníků'):'Bez výsledku')+'</td></tr>').join('')+'</tbody></table></div>';
+ const total=rows.length,complete=rows.filter(r=>!r.missing.length&&r.q.length).length;
+ const summary='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 18px"><div class="panel"><strong>'+total+'</strong><div>Hodnocených jednotek</div></div><div class="panel"><strong>'+complete+'</strong><div>Kompletních zpráv</div></div><div class="panel"><strong>'+rows.reduce((n,r)=>n+r.major,0)+'</strong><div>Závažných nedostatků</div></div><div class="panel"><strong>'+allQuizResultsForOverview.length+'</strong><div>Odevzdaných kvízů</div></div></div>';
+ const table='<div class="table-wrap"><table><thead><tr><th>Jednotka</th><th>Stanoviště</th><th>V pořádku</th><th>Drobné</th><th>Závažné</th><th>Kvíz</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><strong>'+escaped(r.unit)+'</strong></td><td>'+ (visibleStations.length-r.missing.length)+' / '+visibleStations.length+'</td><td>'+r.good+'</td><td>'+r.minor+'</td><td>'+r.major+'</td><td>'+(r.q.length?escaped(Math.round(r.q.reduce((a,x)=>a+Number(x.percentage||0),0)/r.q.length)+' % průměr ('+r.q.length+' osob)'):'Bez výsledku')+'</td></tr>').join("")+'</tbody></table></div>';
+ const detail='<h3 style="margin:20px 0 10px">Nedostatky a chybějící zápisy</h3>'+rows.map(r=>'<section style="border-top:1px solid #cbd5e1;padding:9px 0;break-inside:avoid"><strong>'+escaped(r.unit)+'</strong>'+(r.problems.length?'<ul>'+r.problems.map(x=>'<li>'+escaped(x.station+': '+x.status+(x.notes?' — '+x.notes:''))+'</li>').join("")+'</ul>':'<p>Bez zaznamenaných nedostatků.</p>')+(r.missing.length?'<p><strong>Chybí zápis:</strong> '+escaped(r.missing.join(", "))+'</p>':'')+(!r.q.length?'<p><strong>Kvíz:</strong> bez výsledku</p>':'')+'</section>').join("");
+ return summary+table+detail;
 }
 function renderChiefReport(){const t=el("chiefReportPreview");if(t)t.innerHTML=buildChiefReportHtml()}
 function exportChiefReport(){
