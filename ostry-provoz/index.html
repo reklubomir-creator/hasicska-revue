@@ -493,13 +493,13 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 </section>
 <section id="issues" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>Zaznamenané nedostatky</h2><div class="muted">Přehled zápisů označených jako drobné nebo závažné nedostatky.</div></div><button class="soft" data-goto="home">Zpět na přehled</button></div><div id="issuesList"></div><div id="issuesEmpty" class="empty hidden">Zatím nejsou zaznamenány žádné nedostatky.</div></div></section>
 <section id="edits" class="page hidden"><div class="panel"><h2>Upravit hotový zápis</h2><p class="muted">Vyber stanoviště a potom konkrétní uložený zápis jednotky. Zápis můžeš otevřít a upravit.</p><div id="editStationTiles" class="station-choice-grid"></div><div id="editRecordsPanel" class="hidden"><h3 id="editStationHeading"></h3><div id="editRecordTiles" class="unit-list"></div><div id="editRecordsEmpty" class="empty hidden">Na tomto stanovišti zatím nejsou žádné uložené zápisy.</div></div></div></section><section id="results" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>Zápisy a výsledky</h2><div class="muted">Záznamy uložené v tomto prohlížeči.</div></div><div class="actions" style="margin-top:0"><button class="soft" id="exportCsv">Stáhnout CSV</button></div></div><div class="notice"><strong>Ostrý provoz:</strong> tato část zobrazuje uložené zápisy a výsledky. Před akcí ověř správné nasazení serverové části; po testovacím zápisu zkontroluj, že se data zobrazují v přehledu a zprávách.</div><div class="panel" id="chiefReportPanel" style="margin-top:18px"><h2>Souhrn pro šéfa revue</h2><p class="muted">Rychlý přehled, co má která jednotka v pořádku a kde jsou nedostatky nebo chybějící zápisy.</p><div id="chiefReportPreview"></div><div class="actions"><button type="button" class="primary" id="exportChiefReport">Vygenerovat přehled pro šéfa revue (tisk / PDF)</button></div></div><div class="panel" style="margin-top:18px"><h2>Export zprávy jednotky do PDF</h2><p class="muted">Každá jednotka bude mít vlastní přehled zápisů. Po kliknutí vyber v tiskovém dialogu možnost „Uložit jako PDF“.</p><div id="unitPdfExports" class="unit-grid"></div></div><div class="table-wrap"><table><thead><tr><th>Jednotka</th><th>Stanoviště</th><th>Stav</th><th>Hodnotitel</th><th>Datum</th><th>Poznámka</th></tr></thead><tbody id="resultsBody"></tbody></table></div><div id="noResults" class="empty hidden">Zatím nebyl uložen žádný zápis.</div><div class="panel" style="margin-top:18px"><h2>Automatické hodnocení kvízu</h2><p class="muted">Výsledky a slovní vyhodnocení generované automaticky z odevzdaných odpovědí; nejde o ruční zápis hodnotitele.</p><div id="quizReportResults" class="muted">Výsledky se načtou po obnovení stavu kvízu.</div></div></div></section>
-<section class="page hidden" id="assessmentOverview"><div class="panel"><div class="panel-head"><div><h2>Náhled hodnocení jednotek</h2><p class="muted">Samostatný přehled pouze pro čtení</p></div><button type="button" class="soft" id="refreshAssessmentOverview">Obnovit výsledky</button></div><div id="assessmentOverviewContent"></div></div></section>
+<section class="page hidden" id="assessmentOverview"><div class="panel"><div class="panel-head"><div><h2>Náhled hodnocení jednotek</h2><p class="muted">Samostatný přehled pouze pro čtení</p></div><button type="button" class="soft" id="refreshAssessmentOverview">Obnovit výsledky</button></div><div class="actions" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:14px 0"><label>Filtrovat podle jednotky<select id="assessmentOverviewUnit"><option value="">Všechny jednotky</option></select></label><label>Filtrovat podle stanoviště<select id="assessmentOverviewStation"><option value="">Všechna stanoviště</option></select></label><button type="button" class="soft" id="assessmentOverviewClear">Zrušit filtry</button><button type="button" class="soft" id="assessmentOverviewPrint">Tisk / PDF</button></div><div id="assessmentOverviewContent"></div></div></section>
 <footer>Hasičská revue · ostrý provoz</footer>
 </main></div><div id="quizQrZoom" class="hidden" role="button" tabindex="0" aria-label="Zavřít zvětšený QR kód"><strong id="quizQrZoomTitle">QR kód kvízu</strong><div id="quizQrZoomImage"></div><span>Kliknutím kamkoliv zavřeš zvětšení</span></div>
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="1.0.2";
+const APP_VERSION="1.0.3";
 let competitionOfficial=false;
 function competitionLive(){return competitionOfficial&&typeof startsAreDrawn==="function"&&startsAreDrawn()}
 async function activateOfficialCompetition(){
@@ -1373,20 +1373,32 @@ function buildChiefReportHtml(){
  return summary+table+detail;
 }
 function renderAssessmentOverview(){
- const target=el("assessmentOverviewContent");if(!target)return;
+ const target=el("assessmentOverviewContent"),unitSelect=el("assessmentOverviewUnit"),stationSelect=el("assessmentOverviewStation");if(!target||!unitSelect||!stationSelect)return;
  const stationNames=stations.filter((st,i)=>i!==4);
- target.innerHTML=reportUnits.map(unit=>{
+ if(unitSelect.options.length===1)unitSelect.innerHTML='<option value="">Všechny jednotky</option>'+reportUnits.map(u=>'<option value="'+escaped(u)+'">'+escaped(u)+'</option>').join("");
+ if(stationSelect.options.length===1)stationSelect.innerHTML='<option value="">Všechna stanoviště</option>'+stationNames.map(st=>'<option value="'+escaped(st)+'">'+escaped(st)+'</option>').join("");
+ const chosenUnit=unitSelect.value,chosenStation=stationSelect.value;
+ const selectedUnits=chosenUnit?[chosenUnit]:reportUnits;
+ const selectedStations=chosenStation?[chosenStation]:stationNames;
+ target.innerHTML=selectedUnits.map(unit=>{
   const entries=unitReportStationEntries(unit),quiz=quizOverviewEntries(unit);
-  const stationRows=stationNames.map(st=>{
-   if(st==="Kvíz – hasička Klepačov"){
-    const assessment=entries.find(x=>x.station===st&&x.unit===unit);
-    return '<tr><td>'+escaped(st)+'</td><td>'+escaped(assessment?.status||(quiz.length?'Odevzdáno':'Bez výsledku'))+'</td><td>'+escaped(quiz.length?quiz.map(x=>(x.name||"Účastník")+': '+Number(x.percentage||0)+' %').join(" · "):"—")+'</td></tr>';
+  const stationRows=selectedStations.map(st=>{
+   if(st===stations[7]){
+    const assessment=entries.find(x=>x.station===st&&(x.unit===unit||x.unit==="Lažánky + Horní Lhota"));
+    const detail=quiz.length?quiz.map(x=>(x.name||"Účastník")+': '+Number(x.percentage||0)+' %').join(" · "):"—";
+    return '<tr><td>'+escaped(st)+'</td><td>'+escaped(assessment?.status||(quiz.length?'Odevzdáno':'Bez výsledku'))+'</td><td>'+escaped(detail)+'</td></tr>';
    }
    const rec=entries.find(x=>x.station===st);
    return '<tr><td>'+escaped(st)+'</td><td>'+escaped(rec?.status||"Bez zápisu")+'</td><td style="white-space:pre-wrap">'+escaped(rec?.notes||"—")+'</td></tr>';
   }).join("");
   return '<section class="panel" style="margin:14px 0;break-inside:avoid"><h3>'+escaped(unit)+'</h3><div class="table-wrap"><table><thead><tr><th>Stanoviště</th><th>Hodnocení</th><th>Poznámka / kvíz</th></tr></thead><tbody>'+stationRows+'</tbody></table></div></section>';
  }).join("");
+ unitSelect.onchange=renderAssessmentOverview;stationSelect.onchange=renderAssessmentOverview;
+ const clear=el("assessmentOverviewClear");if(clear)clear.onclick=()=>{unitSelect.value="";stationSelect.value="";renderAssessmentOverview()};
+ const print=el("assessmentOverviewPrint");if(print)print.onclick=()=>{
+  const win=window.open("","_blank");if(!win){alert("Povol vyskakovací okna.");return}
+  win.document.write('<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Závěrečné hodnocení – Hasičská revue</title><style>body{font:12px Arial;padding:20px;color:#172b40}table{border-collapse:collapse;width:100%;margin:10px 0}th,td{border:1px solid #aaa;padding:6px;text-align:left;vertical-align:top}section{break-inside:avoid;margin-bottom:16px}h3{font-size:16px}@page{size:A4 landscape;margin:12mm}</style></head><body><h1>Závěrečné hodnocení – Hasičská revue</h1><p>Jednotka: '+escaped(chosenUnit||"všechny")+' · Stanoviště: '+escaped(chosenStation||"všechna")+'</p>'+target.innerHTML+'</body></html>');win.document.close();win.focus();win.print();
+ };
 }
 function renderChiefReport(){const t=el("chiefReportPreview");if(t)t.innerHTML=buildChiefReportHtml()}
 function exportChiefReport(){
