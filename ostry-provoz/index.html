@@ -498,7 +498,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.29";
+const APP_VERSION="1.0.1";
 let competitionOfficial=false;
 function competitionLive(){return competitionOfficial&&typeof startsAreDrawn==="function"&&startsAreDrawn()}
 async function activateOfficialCompetition(){
@@ -508,7 +508,7 @@ async function activateOfficialCompetition(){
 }
 function refreshCompetitionMode(){
  const live=competitionLive();
- for(const id of ["sidebarAppVersion","dashboardAppVersion"]){const target=document.getElementById(id);if(target)target.textContent=live?"1.0.0":APP_VERSION}
+ for(const id of ["sidebarAppVersion","dashboardAppVersion"]){const target=document.getElementById(id);if(target)target.textContent=APP_VERSION}
  for(const id of ["competitionLiveDashboard","competitionLiveReviewer"]){const target=document.getElementById(id);if(target)target.classList.toggle("hidden",!live)}
 }
 setInterval(refreshCompetitionMode,5000);
