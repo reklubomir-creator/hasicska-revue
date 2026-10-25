@@ -493,7 +493,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.20";
+const APP_VERSION="0.2.21";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -1177,7 +1177,7 @@ async function quizSubmit(timeout=false){
   }else{
    el("quizParticipantState").textContent="Kvíz byl úspěšně odevzdán, ale výsledek se nepodařilo načíst. Požádej hodnotitele, aby ověřil uložení.";
   }
- }catch(e){el("quizSubmitStatus").classList.remove("hidden");el("quizSubmitStatus").textContent=e.message||"Odeslání se nezdařilo. Kontaktuj hodnotitele a ověř uložení.";el("quizSubmit").disabled=false}
+ }catch(e){el("quizSubmitStatus").classList.remove("hidden");el("quizSubmitStatus").textContent=e.message||"Odeslání se nezdařilo. Kontaktuj hodnotitele a ověř uložení.";el("quizSubmit").disabled=false;if(/již kvíz|již.*odevzdal|už.*odevzdal/i.test(String(e.message||""))){el("quizPerson").readOnly=false;el("quizSubmitStatus").textContent+=" Oprav jméno nahoře ve formuláři a potom odpovědi znovu odešli.";el("quizPerson").scrollIntoView({behavior:"smooth",block:"center"});el("quizPerson").focus();el("quizPerson").select();el("quizPerson").addEventListener("input",quizSaveDraft,{once:true});}}
 }
 el("quizQuestionArea").addEventListener("change",quizSaveDraft);
 if(el("quizActiveUnit")){quizFillUnits();el("quizActivate").onclick=quizActivate;el("quizClose").onclick=quizClose;
