@@ -498,7 +498,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.25";
+const APP_VERSION="0.2.26";
 let competitionOfficial=false;
 function competitionLive(){return competitionOfficial&&typeof startsAreDrawn==="function"&&startsAreDrawn()}
 async function activateOfficialCompetition(){
@@ -539,7 +539,7 @@ const stations=["Čerpání studny – Klepačov","Technický slalom – Staré 
 const units=["Klepačov","Olešná","Těchov","Lažánky + Horní Lhota","Obůrka","Dolní Lhota","Spešov","Olomučany"];
 const stationDetails=[
  {where:"Klepačov, Na Milíři 107",task:"Vyčerpat studnu hlubokou 20 metrů vlastními prostředky. Pokud vybavení chybí, vyžádat si ho například přes KOPIS.",needs:"Stojatý ejektor, hasičská káď, plachta, vozík; bečka 1 m³ a ejektor budou pod plachtou.",reviewer:"Petr Trojan",guarantor:"Viči",sms:"TP-Čerpání; Blansko - Klepačov, Na milíři 107; zatopené podzemní prostory, přístup pouze přes kontrolní šachtu"},
- {where:"Točna, ulice Nádraží, Staré Blansko",task:"Slalom s vozidlem (zohlednit DA/CAS), vázání savic, proudnice a koštěte, vytažení vyvázané věci na most a výměna řetězu motorové pily.",needs:"Kužely, lana, dvě savice s košem, koště, motorová pila z hasičky. Klíče: Ing. Radek Gajdošík, 516 775 150.",reviewer:"Libor Čermák",guarantor:"Standa",sms:"DN-úklid, Blansko, Brněnská 37"},
+ {where:"Točna, ulice Nádraží, Staré Blansko",task:"Slalom s vozidlem (zohlednit DA/CAS), vázání savic, proudnice a koštěte, vytažení vyvázané věci na most a výměna řetězu motorové pily.",needs:"Kužely, lana, dvě savice s košem, koště, motorová pila z hasičky. Klíče: Ing. Radek Gajdošík, 516 775 150.",reviewer:"Libor Čermák a Martin Baštář",guarantor:"Standa",sms:"DN-úklid, Blansko, Brněnská 37"},
  {where:"Blansko, Brněnská 37",task:"Tři zranění: řidič připoutaný, zakloněná hlava, při příjezdu nedýchá a dveře nejdou otevřít. Spolujezdec má odřeniny, po vyproštění upadá do bezvědomí a potřebuje KPR. Třetí osoba je mimo vozidlo, v šoku, komunikuje a má zlomenou nohu.",needs:"Vozidlo, stan s plachtami, osvětlení/topidlo a figuranti.",reviewer:"Andula",guarantor:"Doďa",sms:"DN-VYPR, Blansko, Brněnská 37, DN OA"},
  {where:"Kostel sv. Martina, Komenského 406/10, Blansko",task:"Transport zraněné osoby z věže kostela. Figurant pod horními schody po pádu, vyhozené koleno a rameno. Zafixovat zranění a transportovat osobu na místo předání ZZS.",needs:"Figurant a vybavení pro ošetření a transport. Kontakt na kostel: Vendy Zachovalová, 774 276 256.",reviewer:"Tomáš Khýr a Martina Sládková",guarantor:"Doďa",sms:"MU-evakuace, Blansko, Komenského 10, oznamovatel u silnice"},
  {where:"Přestávka po stanovišti 4 – kostel sv. Martina",task:"Po dokončení transportu osoby (stanoviště 4) má jednotka přibližně 30 minut volno. Pohotovost se ukončí automaticky, jakmile jednotka zahájí stanoviště 6 – záchranu tonoucího. Není potřeba vyplňovat hodnocení.",needs:"Bez hodnocení – přestávka"},
