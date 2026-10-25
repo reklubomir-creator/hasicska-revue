@@ -1053,6 +1053,7 @@ function doPost(e) {
         activeAssessments:safeAssessments,
         combinedSmsCommanderUnit:safeCommander,
         autoCompletedStation1Units:safeAutoCompleted,
+        competitionOfficial:state.competitionOfficial===true,
         updatedAt:updatedAt
       };
 
