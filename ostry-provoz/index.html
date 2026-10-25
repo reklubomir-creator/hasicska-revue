@@ -493,7 +493,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="0.2.19";
+const APP_VERSION="0.2.20";
 for(const id of ["sidebarAppVersion","dashboardAppVersion"]){
  const target=document.getElementById(id);
  if(target)target.textContent=APP_VERSION;
@@ -1102,7 +1102,7 @@ function quizSaveDraft(){
 }
 function quizStartTimer(){
  if(quizTicker)clearInterval(quizTicker);
- const tick=()=>{const left=Math.max(0,1200-Math.floor((Date.now()-quizStartedAt)/1000));el("quizTimer").textContent="Zbývá "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0");if(left<=0){clearInterval(quizTicker);quizSubmit()}};
+ const tick=()=>{const left=Math.max(0,1200-Math.floor((Date.now()-quizStartedAt)/1000));el("quizTimer").textContent="Zbývá "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0");if(left<=0){clearInterval(quizTicker);quizSubmit(true)}};
  tick();if(quizStartedAt&&Date.now()-quizStartedAt<1200000)quizTicker=setInterval(tick,1000);
 }
 function quizRestoreDraft(){
@@ -1144,8 +1144,16 @@ function quizRenderParticipantResult(x){
  const evaluation=quizBuildEvaluation(x),wrong=quizWrongAnswers(x),pct=Math.max(0,Math.min(100,Number(x.percentage||0)));
  return '<div class="panel" style="margin-top:16px;padding:18px"><h2 style="margin-top:0">Výsledek tvého kvízu</h2><p style="font-size:30px;font-weight:850;margin:8px 0;color:var(--navy)">'+Number(x.correct||0)+' / '+Number(x.total||0)+' správně · '+pct+' %</p><div class="progress"><span style="width:'+pct+'%"></span></div><h3>'+escaped(evaluation.headline)+'</h3><p>'+escaped(evaluation.body)+'</p><p>'+escaped(evaluation.advice)+'</p>'+(wrong.length?'<h3>Chybné odpovědi</h3><ul>'+wrong.map(w=>'<li>'+escaped(w)+'</li>').join("")+'</ul>':'<p class="muted">Nemáš evidované žádné chybné odpovědi.</p>')+'<p class="muted">Výsledek byl uložen. Děkujeme za vyplnění kvízu.</p></div>';
 }
-async function quizSubmit(){
+async function quizSubmit(timeout=false){
  if(!quizStartedAt)return;
+ const all=[...el("quizQuestionArea").querySelectorAll('input[type="radio"]')];
+ const questionNames=[...new Set(all.map(x=>x.name))];
+ const unanswered=questionNames.map((name,i)=>({name,number:i+1})).filter(x=>!all.some(r=>r.name===x.name&&r.checked));
+ if(timeout!==true&&unanswered.length){
+  const count=unanswered.length;
+  const message="Pozor! Nemáš zodpovězené "+count+" "+(count===1?"otázku":count<5?"otázky":"otázek")+" (č. "+unanswered.map(x=>x.number).join(", ")+").\n\nChceš kvíz přesto odevzdat? Nezodpovězené otázky budou vyhodnoceny jako chybné.";
+  if(!window.confirm(message))return;
+ }
  if(quizTicker)clearInterval(quizTicker);
  const q=el("quizQuestionArea").querySelectorAll('input[type="radio"]:checked');
  const answers=[...q].map(x=>({question:Number(x.name.replace("quizq","")),answer:Number(x.value)}));
