@@ -499,7 +499,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="1.0.3";
+const APP_VERSION="1.0.4";
 let competitionOfficial=false;
 function competitionLive(){return competitionOfficial&&typeof startsAreDrawn==="function"&&startsAreDrawn()}
 async function activateOfficialCompetition(){
@@ -1380,18 +1380,22 @@ function renderAssessmentOverview(){
  const chosenUnit=unitSelect.value,chosenStation=stationSelect.value;
  const selectedUnits=chosenUnit?[chosenUnit]:reportUnits;
  const selectedStations=chosenStation?[chosenStation]:stationNames;
- target.innerHTML=selectedUnits.map(unit=>{
+ const getResult=(unit,st)=>{
   const entries=unitReportStationEntries(unit),quiz=quizOverviewEntries(unit);
-  const stationRows=selectedStations.map(st=>{
-   if(st===stations[7]){
-    const assessment=entries.find(x=>x.station===st&&(x.unit===unit||x.unit==="Lažánky + Horní Lhota"));
-    const detail=quiz.length?quiz.map(x=>(x.name||"Účastník")+': '+Number(x.percentage||0)+' %').join(" · "):"—";
-    return '<tr><td>'+escaped(st)+'</td><td>'+escaped(assessment?.status||(quiz.length?'Odevzdáno':'Bez výsledku'))+'</td><td>'+escaped(detail)+'</td></tr>';
-   }
-   const rec=entries.find(x=>x.station===st);
-   return '<tr><td>'+escaped(st)+'</td><td>'+escaped(rec?.status||"Bez zápisu")+'</td><td style="white-space:pre-wrap">'+escaped(rec?.notes||"—")+'</td></tr>';
-  }).join("");
-  return '<section class="panel" style="margin:14px 0;break-inside:avoid"><h3>'+escaped(unit)+'</h3><div class="table-wrap"><table><thead><tr><th>Stanoviště</th><th>Hodnocení</th><th>Poznámka / kvíz</th></tr></thead><tbody>'+stationRows+'</tbody></table></div></section>';
+  if(st===stations[7]){
+   const assessment=entries.find(x=>x.station===st&&(x.unit===unit||x.unit==="Lažánky + Horní Lhota"));
+   return {status:assessment?.status||(quiz.length?"Odevzdáno":"Bez výsledku"),detail:quiz.length?quiz.map(x=>(x.name||"Účastník")+": "+Number(x.percentage||0)+" %").join(" · "):"—"};
+  }
+  const rec=entries.find(x=>x.station===st);
+  return {status:rec?.status||"Bez zápisu",detail:rec?.notes||"—"};
+ };
+ const groupByStation=!!chosenStation&&!chosenUnit;
+ target.innerHTML=groupByStation?selectedStations.map(st=>{
+  const rows=selectedUnits.map(unit=>{const result=getResult(unit,st);return '<tr><td><strong>'+escaped(unit)+'</strong></td><td>'+escaped(result.status)+'</td><td style="white-space:pre-wrap">'+escaped(result.detail)+'</td></tr>'}).join("");
+  return '<section class="panel" style="margin:14px 0;break-inside:avoid"><h3>'+escaped(st)+'</h3><div class="table-wrap"><table><thead><tr><th>Jednotka</th><th>Hodnocení</th><th>Poznámka / kvíz</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+ }).join(""):selectedUnits.map(unit=>{
+  const rows=selectedStations.map(st=>{const result=getResult(unit,st);return '<tr><td>'+escaped(st)+'</td><td>'+escaped(result.status)+'</td><td style="white-space:pre-wrap">'+escaped(result.detail)+'</td></tr>'}).join("");
+  return '<section class="panel" style="margin:14px 0;break-inside:avoid"><h3>'+escaped(unit)+'</h3><div class="table-wrap"><table><thead><tr><th>Stanoviště</th><th>Hodnocení</th><th>Poznámka / kvíz</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
  }).join("");
  unitSelect.onchange=renderAssessmentOverview;stationSelect.onchange=renderAssessmentOverview;
  const clear=el("assessmentOverviewClear");if(clear)clear.onclick=()=>{unitSelect.value="";stationSelect.value="";renderAssessmentOverview()};
