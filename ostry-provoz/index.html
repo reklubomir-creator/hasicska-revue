@@ -961,6 +961,7 @@ async function quizRefreshStateInner(options={}){
   const allResults=results.results||[];
   const arr=quizVisibleUnit?allResults.filter(x=>quizUnitMatchesResult(quizVisibleUnit,String(x.unit||""))):[];
   quizResultsCache=arr;
+  allQuizResultsForOverview=allResults;
   if(quizDisplayedClosedSummary&&quizDisplayedClosedSummary.unit===quizVisibleUnit)quizShowClosedSummary(quizDisplayedClosedSummary);
   try{localStorage.setItem("hasicskaRevueQuizResultsCache",JSON.stringify(arr));}catch(storageError){}
   el("quizLiveResults").innerHTML=arr.length?'<div class="quiz-result-list">'+arr.map((x,i)=>quizRenderResult(x,i)).join("")+'</div>':'<div class="empty">Zatím nikdo kvíz neodevzdal.</div>';
@@ -1011,6 +1012,7 @@ async function quizLoadHistory(){
   quizBindResultDetails();
   const report=el("quizReportResults");
   if(report)report.innerHTML=arr.length?arr.map(x=>{const e=quizBuildEvaluation(x);return '<article class="station" style="margin:10px 0"><h3>'+escaped(x.unit)+' · '+escaped(x.name||"Účastník")+'</h3><p><strong>Výsledek:</strong> '+x.correct+' / '+x.total+' ('+x.percentage+' %)</p><p><strong>'+escaped(e.headline)+':</strong> '+escaped(e.body)+'</p><p>'+escaped(e.advice)+'</p></article>'}).join(""):'<div class="empty">Tato jednotka nemá odevzdané kvízy.</div>';
+  renderQuizReportOverview(allResults);
   const groups=unit==="Lažánky + Horní Lhota"?["Lažánky","Horní Lhota"]:[unit];
   const summaries=groups.map(u=>{
    const list=arr.filter(x=>String(x.unit||"")===u);
