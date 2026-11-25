@@ -14,13 +14,15 @@ test("unit links expose only the assigned unit and cannot change competition sta
     commanders: [{ unitId: "b", phone: "123" }]
   };
   const rows = [];
+  const pushRows = [];
+  const relaySecret = "test-relay-secret-for-push-testing-only";
   const context = vm.createContext({
     Utilities: {
       DigestAlgorithm: { SHA_256: "sha256" }, Charset: { UTF_8: "utf8" },
       computeDigest: (algorithm, value, encoding) => [...createHash(algorithm).update(value, encoding).digest()]
     },
     PropertiesService: { getScriptProperties: () => ({
-      getProperty: key => key === "ORGANIZER_PIN" ? "organizer-for-test" : null
+      getProperty: key => ({ORGANIZER_PIN:"organizer-for-test",UNIT_PUSH_RELAY_SECRET:relaySecret})[key]
     }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) }
   });
@@ -36,6 +38,20 @@ test("unit links expose only the assigned unit and cannot change competition sta
       setValues: ([value]) => { rows[row - 2] = value; }
     })
   });
+  context.unitPushSheet_ = () => ({
+    getLastRow: () => pushRows.length + 1,
+    appendRow: row => pushRows.push(row),
+    deleteRow: index => pushRows.splice(index - 2, 1),
+    getRange: (row, column, count) => ({
+      getValues: () => pushRows.slice(row - 2, row - 2 + count),
+      setValues: ([value]) => { pushRows[row - 2] = value; }
+    })
+  });
+  context.editionProgressSheet_ = () => null;
+  context.editionProgressRows_ = () => [
+    { id:"notice-a", unitId:"a", at:Date.now(), notice:"Pro A" },
+    { id:"notice-b", unitId:"b", at:Date.now(), notice:"Pro B" }
+  ];
   const post = data => context.doPost({ postData: { contents: JSON.stringify(data) } });
   const token = randomBytes(32).toString("hex");
   const nextToken = randomBytes(32).toString("hex");
@@ -56,6 +72,22 @@ test("unit links expose only the assigned unit and cannot change competition sta
   assert.equal(post({ action: "saveCompetitionEdition", credential: token }).ok, false);
   assert.equal(post({ ...issue, token: nextToken }).ok, true);
   assert.equal(read(token).code, "INVALID_UNIT_ACCESS");
+  const endpoint = "https://fcm.googleapis.com/fcm/send/test";
+  const subscription = {endpoint,keys:{p256dh:"a".repeat(87),auth:"b".repeat(22)}};
+  assert.equal(post({action:"subscribeUnitPush",token,subscription}).ok,false);
+  assert.equal(post({action:"subscribeUnitPush",token:nextToken,
+    subscription:{...subscription,endpoint:"https://not-a-push-service.example/test"}}).ok,false);
+  assert.equal(post({action:"subscribeUnitPush",token:nextToken,subscription}).ok,true);
+  assert.equal(post({action:"subscribeUnitPush",token:nextToken,subscription}).ok,true);
+  assert.equal(pushRows.length,1);
+  edition.status = "active";
+  assert.equal(post({action:"readUnitPushDeliveries",secret:nextToken}).ok,false);
+  const data = post({action:"readUnitPushDeliveries",secret:relaySecret});
+  assert.equal(data.ok,true);
+  assert.equal(data.deliveries[0].notices.join(","),"notice-a");
+  assert.equal(post({action:"unsubscribeUnitPush",token,endpoint}).ok,false);
+  assert.equal(post({action:"unsubscribeUnitPush",token:nextToken,endpoint}).ok,true);
+  assert.equal(pushRows.length,0);
   edition.status = "archived";
   assert.equal(read(nextToken).code, "INVALID_UNIT_ACCESS");
   assert.equal(post({ ...issue, action: "revokeUnitAccess" }).ok, true);

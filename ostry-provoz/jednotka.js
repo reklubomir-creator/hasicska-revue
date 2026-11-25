@@ -1,11 +1,26 @@
 (() => {
   const el = id => document.getElementById(id);
   const storageKey = "hasicskaRevueUnitAccess";
-  const fragment = new URLSearchParams(location.hash.slice(1)).get("pristup");
-  if (fragment !== null) history.replaceState(null, "", location.pathname + location.search);
+  const params = new URLSearchParams(location.hash.slice(1));
+  const fragment = params.get("pristup");
+  let focusedNotice = params.get("zprava");
+  if (fragment !== null || focusedNotice) history.replaceState(null,"",location.pathname + location.search);
   let token = fragment || "";
+  let replaceDeviceAccess = false;
   let lastUpdate = null;
   let request;
+  let pushRegistration;
+  let pushSubscription;
+  let pushBusy = false;
+  const login = el("unitLogin");
+  const pushPanel = el("unitPushPanel");
+  const pushStatus = el("unitPushStatus");
+  const enablePush = el("unitEnablePush");
+  const disablePush = el("unitDisablePush");
+  const copyLink = el("unitCopyLink");
+  const isAppleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
   const stateLabels = {
     preparation: "Ročník se připravuje",
     waiting: "Čeká se na uvolnění dalšího stanoviště",
@@ -17,8 +32,13 @@
   };
 
   try {
-    if (fragment === null) token = sessionStorage.getItem(storageKey) || "";
-    if (fragment !== null) sessionStorage.removeItem(storageKey);
+    if (fragment === null) token = sessionStorage.getItem(storageKey) || localStorage.getItem(storageKey) || "";
+    if (fragment !== null) {
+      const remembered = localStorage.getItem(storageKey);
+      replaceDeviceAccess = Boolean(remembered && remembered !== fragment);
+      if (remembered !== fragment) localStorage.removeItem(storageKey);
+      sessionStorage.removeItem(storageKey);
+    }
     if (/^[a-f0-9]{64}$/.test(token)) sessionStorage.setItem(storageKey, token);
   } catch (error) {
     // The link remains usable when session storage is unavailable.
@@ -53,13 +73,19 @@
       ? ["Pauza do " + end + ". S přesunem vyčkej.",data.pause.text].filter(Boolean).join(" ")
       : (data.state === "preparation" ? "" : "Pauza není naplánována.");
     const notices = data.notices || [];
-    el("unitNotices").replaceChildren(...notices.map(notice => {
+    const noticeList = el("unitNotices");
+    noticeList.replaceChildren(...notices.map(notice => {
       const item = document.createElement("li");
       const time = new Date(notice.at).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
       item.textContent = time + " · " + notice.text;
+      if (notice.id === focusedNotice) item.setAttribute("aria-current","true");
       return item;
     }));
     el("unitNoticePanel").hidden = !notices.length;
+    if (focusedNotice && notices.some(notice => notice.id === focusedNotice)) {
+      noticeList.querySelector('[aria-current="true"]')?.scrollIntoView({block:"nearest"});
+      focusedNotice = null;
+    }
     el("unitCompletedCount").textContent = data.completedCount;
     const list = el("unitCompleted");
     list.replaceChildren(...data.completed.map(name => {
@@ -77,7 +103,12 @@
   function clearAccess(reason) {
     token = "";
     request?.abort();
-    try { sessionStorage.removeItem(storageKey); } catch (error) {}
+    try {
+      sessionStorage.removeItem(storageKey);
+      localStorage.removeItem(storageKey);
+    } catch (error) {}
+    login.hidden = false;
+    pushPanel.hidden = true;
     dashboard.hidden = true;
     el("unitEdition").hidden = true;
     el("unitName").textContent = "Soutěžní jednotka";
@@ -130,16 +161,167 @@
     }
   }
 
-  showConnection();
-  if (token) {
+  async function managePush(action, details) {
+    const response = await fetch(revueApiUrl(),{
+      method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},
+      body:JSON.stringify({action,token,...details}),
+      signal:AbortSignal.timeout(12000),referrerPolicy:"no-referrer"
+    });
+    if (!response.ok) throw new Error("Soutěžní server je nedostupný.");
+    const result = await response.json();
+    if (!result.ok) throw new Error(result.error);
+  }
+
+  function showPushControls(enabled) {
+    enablePush.hidden = enabled;
+    disablePush.hidden = !enabled;
+    enablePush.disabled = disablePush.disabled = pushBusy;
+  }
+
+  async function preparePush() {
+    if (!token || !PUSH_VAPID_PUBLIC_KEY) return;
+    pushPanel.hidden = false;
+    if (isAppleMobile && !standalone) {
+      pushStatus.textContent = "Na iPhonu přidej stránku na plochu. V aplikaci z plochy vlož zkopírovaný přístup a povol oznámení.";
+      copyLink.hidden = false;
+      return;
+    }
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      pushStatus.textContent = "Tento prohlížeč Web Push nepodporuje.";
+      return;
+    }
+    const sessionToken = token;
+    try {
+      await navigator.serviceWorker.register("jednotka-sw.js");
+      pushRegistration = await navigator.serviceWorker.ready;
+      const subscription = await pushRegistration.pushManager.getSubscription();
+      if (token !== sessionToken) return;
+      if (replaceDeviceAccess && subscription) {
+        await subscription.unsubscribe();
+        replaceDeviceAccess = false;
+        pushSubscription = null;
+      } else pushSubscription = subscription;
+      let remembered = false;
+      try { remembered = localStorage.getItem(storageKey) === token; } catch (error) {}
+      const enabled = Boolean(remembered && pushSubscription && Notification.permission === "granted");
+      showPushControls(enabled);
+      pushStatus.textContent = enabled ? "Oznámení jsou povolena." : "Povolením si toto zařízení zapamatuje přístup jednotky.";
+    } catch (error) {
+      pushStatus.textContent = "Oznámení se nepodařilo připravit.";
+    }
+  }
+
+  enablePush.onclick = async () => {
+    if (!token || pushBusy || !pushRegistration) return;
+    pushBusy = true;
+    showPushControls(false);
+    try {
+      pushSubscription ||= await pushRegistration.pushManager.subscribe({
+        userVisibleOnly:true, applicationServerKey:PUSH_VAPID_PUBLIC_KEY
+      });
+      localStorage.setItem(storageKey,token);
+      try { await managePush("subscribeUnitPush",{subscription:pushSubscription.toJSON()}); }
+      catch (error) { localStorage.removeItem(storageKey); throw error; }
+      pushStatus.textContent = "Oznámení jsou povolena.";
+      pushBusy = false;
+      showPushControls(true);
+    } catch (error) {
+      pushStatus.textContent = Notification.permission === "denied"
+        ? "Oznámení jsou zakázaná v nastavení zařízení."
+        : "Oznámení se nepodařilo povolit. " + error.message;
+      pushBusy = false;
+      showPushControls(false);
+    }
+  };
+
+  async function disableNotifications() {
+    if (!pushSubscription) return true;
+    const endpoint = pushSubscription.endpoint;
+    let locallyRemoved;
+    try { locallyRemoved = await pushSubscription.unsubscribe(); }
+    catch (error) { locallyRemoved = false; }
+    try { await managePush("unsubscribeUnitPush",{endpoint}); }
+    catch (error) { if (!locallyRemoved) return false; }
+    pushSubscription = null;
+    return true;
+  }
+
+  disablePush.onclick = async () => {
+    if (pushBusy) return;
+    pushBusy = true;
+    showPushControls(true);
+    const disabled = await disableNotifications();
+    if (disabled) {
+      try { localStorage.removeItem(storageKey); } catch (error) {}
+    }
+    pushBusy = false;
+    showPushControls(!disabled);
+    pushStatus.textContent = disabled ? "Oznámení jsou vypnutá." : "Oznámení se nepodařilo vypnout.";
+  };
+
+  copyLink.onclick = async () => {
+    const link = new URL(location.pathname,location.origin);
+    link.hash = new URLSearchParams({pristup:token}).toString();
+    try {
+      await navigator.clipboard.writeText(link.href);
+      pushStatus.textContent = "Odkaz je zkopírovaný. Vlož ho do aplikace otevřené z plochy.";
+    } catch (error) {
+      pushStatus.textContent = "Odkaz se nepodařilo zkopírovat. Použij původní odkaz od organizátora.";
+    }
+  };
+
+  login.onsubmit = event => {
+    event.preventDefault();
+    const input = el("unitAccessLink");
+    try {
+      const link = new URL(input.value.trim());
+      const supplied = new URLSearchParams(link.hash.slice(1)).get("pristup");
+      if (link.origin !== location.origin || link.pathname !== location.pathname || !/^[a-f0-9]{64}$/.test(supplied)) {
+        throw new Error();
+      }
+      token = supplied;
+      input.value = "";
+      try { sessionStorage.setItem(storageKey,token); } catch (error) {}
+      startSession();
+    } catch (error) {
+      message.textContent = "Vlož platný odkaz pro tuto aplikaci.";
+    }
+  };
+
+  function startSession() {
+    login.hidden = true;
     refresh.hidden = false;
     signOut.hidden = false;
     load();
-  } else {
+    preparePush();
+  }
+
+  showConnection();
+  if (token) startSession();
+  else {
+    login.hidden = false;
     message.textContent = "Otevři soukromý odkaz nebo QR kód, který ti předal organizátor.";
   }
   refresh.onclick = load;
-  signOut.onclick = () => clearAccess("Jednotka je odhlášená. Přihlásíš se původním odkazem, pokud je stále platný.");
+  signOut.onclick = async () => {
+    if (pushBusy) return;
+    pushBusy = true;
+    signOut.disabled = true;
+    const disabled = await disableNotifications();
+    pushBusy = false;
+    signOut.disabled = false;
+    if (!disabled) {
+      message.textContent = "Oznámení se nepodařilo odhlásit. Zkus to znovu po připojení.";
+      return;
+    }
+    clearAccess("Jednotka je odhlášená. Přihlásíš se původním odkazem, pokud je stále platný.");
+  };
+  navigator.serviceWorker?.addEventListener("message",event => {
+    if (event.data?.type === "showUnitNotice") {
+      focusedNotice = event.data.id;
+      load();
+    }
+  });
   window.addEventListener("online", () => { showConnection(); load(); });
   window.addEventListener("offline", () => {
     showConnection();

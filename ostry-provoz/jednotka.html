@@ -7,6 +7,9 @@
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
   <title>Soutěžní jednotka · Hasičská revue</title>
+  <link rel="manifest" href="jednotka.webmanifest">
+  <link rel="icon" href="jednotka-ikona-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="jednotka-ikona-192.png">
   <script src="config.js" defer></script>
   <script src="jednotka.js" defer></script>
   <style>
@@ -21,6 +24,7 @@
     button:focus-visible{outline:3px solid #174e91;outline-offset:3px}
     .actions{display:flex;gap:8px;flex-wrap:wrap}.muted,footer{color:var(--muted)}
     .pause{border-color:#b87700;background:#fff5dc}.standby{background:#fff5dc;border-color:#b87700}.connection{font-weight:700}
+    #unitNotices [aria-current="true"]{background:#fff5dc;outline:2px solid #b87700}input{width:100%;font:inherit;min-height:48px;padding:8px;border:1px solid #c5d2df;border-radius:9px;margin:5px 0}
     footer{font-size:13px;margin:16px 0}.message:empty{display:none}
   </style>
 </head>
@@ -30,6 +34,11 @@
     <p id="unitEdition" class="muted" hidden></p>
     <h1 id="unitName">Soutěžní jednotka</h1>
     <p id="unitMessage" class="message" role="status">Načítám přístup jednotky…</p>
+    <form id="unitLogin" hidden>
+      <label for="unitAccessLink">Vlož soukromý odkaz jednotky</label>
+      <input id="unitAccessLink" type="password" required autocomplete="off">
+      <button type="submit">Otevřít přehled</button>
+    </form>
     <div id="unitDashboard" hidden>
       <section id="unitStationPanel" aria-labelledby="unitStationTitle">
         <h2 id="unitStationTitle">Startovní stanoviště</h2>
@@ -57,6 +66,15 @@
       <p id="unitConnection" class="connection" role="status"></p>
       <p id="unitLastUpdate" class="muted" hidden></p>
       <p class="muted">Sdílení polohy je vypnuté.</p>
+    </section>
+    <section id="unitPushPanel" aria-labelledby="unitPushTitle" hidden>
+      <h2 id="unitPushTitle">Oznámení v telefonu</h2>
+      <p id="unitPushStatus" role="status"></p>
+      <div class="actions">
+        <button id="unitEnablePush" type="button" hidden>Povolit oznámení</button>
+        <button id="unitDisablePush" type="button" hidden>Vypnout oznámení</button>
+        <button id="unitCopyLink" type="button" hidden>Zkopírovat přístup pro aplikaci</button>
+      </div>
     </section>
     <div class="actions">
       <button id="unitRefresh" type="button" hidden>Obnovit údaje</button>

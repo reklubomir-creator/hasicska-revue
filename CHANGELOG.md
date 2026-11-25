@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-alpha.6.1 — 2026-11-25
+
+- Přidána podpora Web Push v samostatném přehledu jednotky, včetně otevření vybrané zprávy ze systémového oznámení.
+- Odběry jsou vázány na platný přístup jednotky. Doručovací proces ukládá potvrzená odeslání a opakuje dočasné chyby.
+- Nasazení vyžaduje testovací Apps Script, klíče VAPID a spuštěný doručovací proces. Postup je v [návodu](push-relay/README.md).
+
 ## 1.1.0-alpha.6 — 2026-11-25
 
 - Organizátor může zahájit časovanou pauzu pro všechny jednotky nebo pro jednu a případně ji ukončit dříve. Během pauzy systém dotčené jednotce nepřidělí další přesun.

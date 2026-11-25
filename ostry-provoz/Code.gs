@@ -1389,16 +1389,110 @@ function saveEditionProgressEntry_(sheet, year, entry, previous) {
   else target.appendRow(row);
 }
 
+const UNIT_PUSH_SHEET = 'Odběry oznámení';
+
+function unitPushSheet_(create) {
+  const spreadsheet = spreadsheet_();
+  let sheet = spreadsheet.getSheetByName(UNIT_PUSH_SHEET);
+  if (!sheet && create) {
+    sheet = spreadsheet.insertSheet(UNIT_PUSH_SHEET);
+    sheet.appendRow(['ID odběru', 'Vytvořeno', 'Odběr JSON']);
+  }
+  return sheet;
+}
+
+function validUnitPushEndpoint_(endpoint) {
+  return typeof endpoint === 'string' && endpoint.length <= 2048 &&
+    /^https:\/\/(?:fcm\.googleapis\.com|updates\.push\.services\.mozilla\.com|(?:[a-z0-9-]+\.)*web\.push\.apple\.com)\/[A-Za-z0-9_~.%:@/+=-]+$/.test(endpoint);
+}
+
+function findUnitAccess_(token, rows) {
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) return null;
+  const hash = unitAccessHash_(token);
+  const access = rows.find(row => row[2] === hash);
+  if (!access) return null;
+  const edition = getSavedCompetitionEdition_(Number(access[0]));
+  if (!edition || edition.status === 'archived') return null;
+  const unit = edition.units.find(item => 'unit:' + item.id === access[1]);
+  return unit ? {hash:hash,edition:edition,unit:unit} : null;
+}
+
+function manageUnitPush_(data) {
+  const access = findUnitAccess_(data.token,competitionEditionRows_(unitAccessSheet_(false)));
+  if (!access) return {ok:false,code:'INVALID_UNIT_ACCESS',error:'Přístup jednotky není platný.'};
+  const removing = data.action === 'unsubscribeUnitPush';
+  const endpoint = removing ? data.endpoint : data.subscription?.endpoint;
+  if (!validUnitPushEndpoint_(endpoint)) return {ok:false,error:'Tento typ odběru není podporovaný.'};
+  const id = 'push:' + unitAccessHash_(endpoint);
+  const sheet = unitPushSheet_(false);
+  const rows = competitionEditionRows_(sheet);
+  const index = rows.findIndex(row => row[0] === id);
+  const previous = index >= 0 ? JSON.parse(rows[index][2]) : null;
+  if (removing) {
+    if (previous?.accessHash === access.hash) sheet.deleteRow(index + 2);
+    return {ok:true};
+  }
+  const keys = data.subscription?.keys;
+  if (typeof keys?.p256dh !== 'string' || !/^[A-Za-z0-9_-]{87}$/.test(keys.p256dh) ||
+      typeof keys.auth !== 'string' || !/^[A-Za-z0-9_-]{22}$/.test(keys.auth)) {
+    return {ok:false,error:'Odběr neobsahuje platné klíče.'};
+  }
+  if (previous?.accessHash !== access.hash &&
+      rows.filter(row => JSON.parse(row[2]).accessHash === access.hash).length >= 5) {
+    return {ok:false,error:'Jednotka už používá pět zařízení pro oznámení.'};
+  }
+  const since = previous?.accessHash === access.hash ? Number(rows[index][1]) : Date.now();
+  const details = {accessHash:access.hash,subscription:{endpoint:endpoint,keys:{p256dh:keys.p256dh,auth:keys.auth}}};
+  const row = [id,since,JSON.stringify(details)];
+  const target = sheet || unitPushSheet_(true);
+  if (index >= 0) target.getRange(index + 2,1,1,3).setValues([row]);
+  else target.appendRow(row);
+  return {ok:true};
+}
+
+function unitPushRelay_(data) {
+  const secret = PropertiesService.getScriptProperties().getProperty('UNIT_PUSH_RELAY_SECRET');
+  if (!secret || secret.length < 32 || data.secret !== secret) return {ok:false,error:'Přístup k doručování nebyl ověřen.'};
+  const sheet = unitPushSheet_(false);
+  const rows = competitionEditionRows_(sheet);
+  if (data.action === 'removeExpiredUnitPush') {
+    const index = rows.findIndex(row => row[0] === data.id);
+    if (index >= 0 && JSON.parse(rows[index][2]).subscription.endpoint === data.endpoint) {
+      sheet.deleteRow(index + 2);
+    }
+    return {ok:true};
+  }
+  const accesses = new Map(competitionEditionRows_(unitAccessSheet_(false)).map(row => [row[2],row]));
+  const editions = new Map();
+  const now = Date.now();
+  const deliveries = [];
+  for (const [id,since,stored] of rows) {
+    const device = JSON.parse(stored);
+    const access = accesses.get(device.accessHash);
+    if (!access || !validUnitPushEndpoint_(device.subscription.endpoint)) continue;
+    const year = Number(access[0]);
+    if (!editions.has(year)) {
+      const edition = getSavedCompetitionEdition_(year);
+      if (edition?.status === 'active') {
+        const entries = editionProgressRows_(editionProgressSheet_(false),year);
+        editions.set(year,{entries:entries,dispatch:editionDispatch_(edition,entries,now)});
+      } else editions.set(year,null);
+    }
+    const current = editions.get(year);
+    const progress = current?.dispatch.units.get(String(access[1]).slice('unit:'.length));
+    if (!progress) continue;
+    const notices = editionUnitNotices_(current.entries,progress,now)
+      .filter(notice => notice.at >= Number(since) && notice.at >= now - 900000);
+    if (notices.length) deliveries.push({id:id,subscription:device.subscription,notices:notices.map(notice => notice.id)});
+  }
+  return {ok:true,deliveries:deliveries};
+}
+
 function readUnitDashboard_(data) {
   const denied = {ok:false,code:'INVALID_UNIT_ACCESS',error:'Přístup jednotky není platný.'};
-  if (typeof data.token !== 'string' || !/^[a-f0-9]{64}$/.test(data.token)) return denied;
-  const hash = unitAccessHash_(data.token);
-  const access = competitionEditionRows_(unitAccessSheet_(false)).find(row => row[2] === hash);
+  const access = findUnitAccess_(data.token,competitionEditionRows_(unitAccessSheet_(false)));
   if (!access) return denied;
-  const edition = getSavedCompetitionEdition_(Number(access[0]));
-  if (!edition || edition.status === 'archived') return denied;
-  const unit = edition.units.find(item => 'unit:' + item.id === access[1]);
-  if (!unit) return denied;
+  const {edition,unit} = access;
   const entries = edition.status === 'active' ? editionProgressRows_(editionProgressSheet_(false), edition.year) : [];
   const progress = editionDispatch_(edition, entries).units.get(unit.id);
   const station = edition.status === 'active' ? progress.station : null;
@@ -1430,6 +1524,14 @@ function doPost(e) {
 
     if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation','startEditionPause','endEditionPause','sendEditionNotice'].includes(data.action)) {
       return json(editionProgress_(data));
+    }
+
+    if (['subscribeUnitPush','unsubscribeUnitPush'].includes(data.action)) {
+      return json(manageUnitPush_(data));
+    }
+
+    if (['readUnitPushDeliveries','removeExpiredUnitPush'].includes(data.action)) {
+      return json(unitPushRelay_(data));
     }
 
     if (data.action === 'readUnitDashboard') {

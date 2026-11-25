@@ -1,0 +1,8 @@
+{
+  "name": "hasicska-revue-push-relay",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22.13"},
+  "scripts": {"start": "node relay.mjs"},
+  "dependencies": {"web-push": "3.6.7"}
+}
