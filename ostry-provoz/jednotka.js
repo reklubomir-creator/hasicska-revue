@@ -8,8 +8,9 @@
   let request;
   const stateLabels = {
     preparation: "Ročník se připravuje",
-    waiting: "Čeká na start",
+    waiting: "Čeká se na uvolnění dalšího stanoviště",
     active: "Probíhá soutěž",
+    evaluating: "Probíhá hodnocení",
     standby: "Pohotovost",
     paused: "Pauza",
     finished: "Soutěž dokončena"
@@ -40,7 +41,7 @@
     el("unitName").textContent = data.name;
     el("unitState").textContent = stateLabels[data.state] || "Stav není dostupný";
     el("unitStationTitle").textContent = data.state === "preparation" ? "Startovní stanoviště" : "Aktuální stanoviště";
-    el("unitStation").textContent = data.station?.name || "Start zatím nebyl přidělen";
+    el("unitStation").textContent = data.station?.name || (data.state === "finished" ? "Všechna stanoviště jsou absolvována" : data.state === "waiting" ? "Vyčkej na pokyn k přesunu" : "Stanoviště se zobrazí po startu soutěže");
     el("unitLocation").textContent = data.station?.location || "";
     el("unitLocation").hidden = !data.station?.location;
     const standby = data.station?.kind === "standby";
@@ -133,5 +134,5 @@
     if (lastUpdate) message.textContent = "Zobrazuji poslední načtené údaje.";
   });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
-  setInterval(() => { if (!document.hidden) load(); }, 30000);
+  setInterval(() => { if (!document.hidden) load(); }, 5000);
 })();

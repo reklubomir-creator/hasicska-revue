@@ -465,12 +465,12 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
       <button type="button" class="soft" id="editionLoad">Načíst ročníky</button>
       <p id="editionMessage" class="muted" role="status"></p>
       <form id="editionEditor" hidden>
-        <p class="muted">Zde připravíš nastavení ročníku. Ostré hodnocení a výsledky používají stávající data soutěže.</p>
+        <p class="muted">Tlačítko Start soutěže zveřejní jednotkám jejich první stanoviště a uzamkne rozlosování.</p>
         <div class="field"><label for="editionSelect">Ročník k úpravě</label><select id="editionSelect"></select></div>
         <div class="edition-row">
           <div class="field"><label for="editionYear">Rok</label><input id="editionYear" type="number" min="2000" max="2100" required></div>
           <div class="field"><label for="editionName">Název</label><input id="editionName" maxlength="120" required></div>
-          <div class="field"><label for="editionStatus">Stav</label><select id="editionStatus"><option value="preparation">Příprava</option><option value="archived">Archiv přípravy</option></select></div>
+          <div class="field"><label for="editionStatus">Stav</label><select id="editionStatus"><option value="preparation">Příprava</option><option value="active" hidden>Probíhá soutěž</option><option value="archived">Archiv přípravy</option></select></div>
         </div>
         <div id="editionLists"></div>
         <section id="editionAccess" class="panel edition-list" hidden>
@@ -487,7 +487,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
             <div id="editionAccessQr" aria-label="QR kód soukromého odkazu" role="img"></div>
           </div>
         </section>
-        <button class="primary" type="submit">Uložit ročník</button>
+        <button class="primary" type="submit">Uložit ročník</button> <button id="editionStart" class="soft" type="submit" hidden>Start soutěže</button> <a href="prubeh.html">Průběh ročníku a hodnocení</a>
       </form>
     </fieldset>
   </div>
@@ -1839,6 +1839,9 @@ if(reviewerMode){
  document.querySelectorAll(".nav, .side, #readmePanel, #reviewerQrPanel, #productionTestPanel, #refreshInfo").forEach(n=>n.style.display="none");
  showPage("assessment");
  initStandaloneReviewer();
+ const editionLink=document.createElement("a");
+ editionLink.href="prubeh.html";editionLink.textContent="Hodnocení nového ročníku";
+ el("assessment").prepend(editionLink);
 
 }
 if(observerMode){

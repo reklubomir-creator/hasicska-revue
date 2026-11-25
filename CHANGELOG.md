@@ -1,5 +1,12 @@
 # Změny Hasičské revue
 
+## 1.1.0-alpha.4 — 2026-11-25
+
+- Tlačítko Start soutěže odhalí jednotkám startovní stanoviště. Po uzavření stanoviště jednotka čeká na uvolnění cíle.
+- Velitel stanoviště otevře obsazené stanoviště tlačítkem Můžeme poslat novou jednotku až po potvrzení dokončení dosavadní jednotky. Čekající jednotky dostávají volný cíl v pořadí, ve kterém dokončily předchozí stanoviště.
+- Přehled ročníku se obnovuje automaticky a zobrazuje obsazení, stav hodnocení a absolvovaná stanoviště podle oprávnění. Pohotovost se do součtu nepočítá.
+- Studna umožňuje samostatně potvrdit průchod a doplnit hodnocení později. U nového ročníku zatím potvrzuje uzavřený kvíz organizátor. Původní kvíz, Studna a historické listy zůstávají oddělené.
+
 ## 1.1.0-alpha.3 — 2026-11-25
 
 - Správa ročníků vydává soukromý odkaz a QR kód pro konkrétní jednotku. Vydáním nového odkazu nebo zrušením přístupu se předchozí odkaz zneplatní. Tabulka ukládá pouze otisk klíče.

@@ -1,4 +1,4 @@
-const APP_VERSION="1.1.0-alpha.3";
+const APP_VERSION="1.1.0-alpha.4";
 const TEST_API_URL=""; // URL samostatného testovacího nasazení Apps Scriptu
 const PRODUCTION_API_URL="https://script.google.com/macros/s/AKfycbwuEk9g6WroMHecImGviCG8aMujLvdxbDsrnTNrPzB7HBEgGfLBP-Vz3kOXsDHU8ZVjrw/exec";
 function revueApiUrl(value=TEST_API_URL){

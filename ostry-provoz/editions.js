@@ -165,6 +165,7 @@
     year.readOnly = Boolean(draft.revision);
     name.value = draft.name;
     status.value = draft.status;
+    el("editionStart").hidden = draft.status !== "preparation";
     dirty = false;
     updateSelector();
     renderEditor();
@@ -264,14 +265,16 @@
   editor.onsubmit = async event => {
     event.preventDefault();
     if (busy) return;
-    const edition = { ...draft, year: Number(year.value), name: name.value, status: status.value };
+    const start = event.submitter === el("editionStart");
+    if (start && !confirm("Spustit soutěž a zobrazit jednotkám jejich první stanoviště?")) return;
+    const edition = { ...draft, year: Number(year.value), name: name.value, status: start ? "active" : status.value };
     const response = await request("saveCompetitionEdition", { edition, expectedRevision: draft.revision });
     if (!response) return;
     editions = editions.filter(item => item.year !== response.edition.year);
     editions.push(response.edition);
     editions.sort((a, b) => b.year - a.year);
     openEdition(response.edition);
-    setMessage("Ročník uložen.");
+    setMessage(start ? "Soutěž spuštěna. Jednotky vidí své první stanoviště." : "Ročník uložen.");
   };
 
   window.addEventListener("beforeunload", event => {
