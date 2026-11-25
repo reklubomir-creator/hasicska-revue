@@ -398,6 +398,12 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 .edition-fieldset{border:0;padding:0;margin:0;min-width:0}
 .edition-fieldset legend,.edition-list h3{font-weight:800;margin-bottom:12px}
 .edition-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:8px;align-items:end;margin:0 0 12px}
+ .edition-unit-contacts{grid-column:1/-1;margin:0;padding:8px 12px;background:#e8eff7;border-radius:8px}
+.edition-unit-contacts li{margin-left:15px}
+.edition-unit-contacts a{color:#102d4e;font-weight:700}
+.edition-merge{display:grid;gap:8px;margin:12px 0;padding:12px;border:1px solid #b9c9da;border-radius:10px}
+.edition-merge p{margin:0}
+.edition-merge .edition-station-setting{min-height:44px}
 .edition-station-setting{display:flex;align-items:center;gap:8px;grid-column:1/-1;font-size:14px;font-weight:650}
 .edition-station-setting input{width:24px;height:24px;flex:none}
 .edition-row .field{min-width:0;margin:0;font-size:14px;font-weight:650}
@@ -516,8 +522,6 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
             <input id="editionRegistrationLink" readonly>
             <button class="soft" id="editionCopyRegistration" type="button">Zkopírovat registrační odkaz</button>
           </div>
-          <p id="editionRegistered"></p>
-          <ul id="editionRegisteredContacts"></ul>
         </section>
         <section id="editionAccess" class="panel edition-list" hidden>
           <h3>Přístup jednotky</h3>

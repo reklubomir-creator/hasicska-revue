@@ -1,5 +1,12 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.6 — 2026-11-25
+
+- Registrovaný kontakt i ručně zadaní velitelé se zobrazují přímo u příslušné jednotky. Telefon lze otevřít v aplikaci pro volání.
+- Dvě nebo více jednotek lze spojit do jedné soutěžní jednotky. Má jeden start, společný postup a hodnocení. Dříve vydané odkazy členů zobrazují společnou jednotku.
+- Z formuláře jednotky bylo odstraněno pole pro poznámku.
+- Závěrečná hodnocení se zobrazují samostatně za původní jednotky. Společné zápisy ze stanovišť se promítnou každému členu a výsledky kvízu se zadávají zvlášť.
+
 ## 1.1.0-beta.5 — 2026-11-25
 
 - Vedení může rozeslat společný registrační odkaz. Velitel vybere připravenou jednotku a zadá jméno a telefon. Údaje se zobrazují vedení v předregistraci daného ročníku.

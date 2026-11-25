@@ -222,6 +222,85 @@
     }
   };
 
+  let finalData;
+  const finalUnitSelect = el("finalUnit");
+  const finalRows = el("finalAssessmentRows");
+
+  function renderFinalAssessment() {
+    finalRows.replaceChildren();
+    const unit = finalData?.units.find(item => item.id === finalUnitSelect.value);
+    if (!unit) return;
+    const title = document.createElement("h3");
+    title.textContent = unit.name;
+    finalRows.append(title);
+    if (unit.sharedName) {
+      const shared = document.createElement("p");
+      shared.className = "muted";
+      shared.textContent = "Společný průjezd: " + unit.sharedName;
+      finalRows.append(shared);
+    }
+    for (const assessment of unit.assessments) {
+      const row = document.createElement("article");
+      const title = document.createElement("strong");
+      title.textContent = assessment.name;
+      const detail = document.createElement("p");
+      row.append(title,detail);
+      if (assessment.kind === "quiz") {
+        detail.textContent = assessment.percentage === null ? "Výsledek kvízu chybí." : "Výsledek: " + assessment.percentage + " %";
+        if (finalData.editable) {
+          const label = document.createElement("label");
+          const input = document.createElement("input");
+          input.type = "number";
+          input.min = "0";
+          input.max = "100";
+          input.required = true;
+          input.value = assessment.percentage ?? "";
+          label.append("Samostatný výsledek kvízu v %",input);
+          const save = document.createElement("button");
+          save.type = "button";
+          save.className = "secondary";
+          save.textContent = "Uložit výsledek kvízu";
+          save.onclick = async () => {
+            if (busy || !input.reportValidity()) return;
+            busy = true;
+            save.disabled = true;
+            try {
+              await api("saveEditionMemberQuiz",{unitId:unit.id,stationId:assessment.stationId,
+                percentage:Number(input.value),expectedPercentage:assessment.percentage});
+              el("message").textContent = "Výsledek kvízu uložen pro " + unit.name + ".";
+              assessment.percentage = Number(input.value);
+              renderFinalAssessment();
+            } catch (error) { el("message").textContent = error.message; }
+            finally { busy = false; save.disabled = false; }
+          };
+          row.append(label,save);
+        }
+      } else {
+        detail.textContent = assessment.result || (assessment.completed ? "Průchod potvrzen, hodnocení chybí." : "Bez hodnocení.");
+        if (assessment.notes) {
+          const notes = document.createElement("p");
+          notes.textContent = assessment.notes;
+          row.append(notes);
+        }
+      }
+      finalRows.append(row);
+    }
+  }
+
+  el("loadFinalAssessments").onclick = async () => {
+    if (busy) return;
+    busy = true;
+    try {
+      finalData = await api("readEditionFinalAssessments");
+      options(finalUnitSelect,"Vyber původní jednotku",finalData.units);
+      if (!finalUnitSelect.value && finalData.units.length) finalUnitSelect.value = finalData.units[0].id;
+      el("finalUnitField").hidden = false;
+      renderFinalAssessment();
+    } catch (error) { el("message").textContent = error.message; }
+    finally { busy = false; }
+  };
+  finalUnitSelect.onchange = renderFinalAssessment;
+
   function showOverview(data) {
     const signature = JSON.stringify(data);
     if (overviewSignature === signature) return;
@@ -230,6 +309,7 @@
     overview = data;
     if (first) el("gatePanel").open = !data.organizer;
     el("edition").textContent = data.edition;
+    el("finalAssessments").hidden = !data.organizer || data.status === "preparation";
     options(el("stationFilter"),"Všechna dostupná stanoviště",data.stations);
     options(el("unitFilter"),"Všechny dostupné jednotky",data.units);
     el("overview").hidden = Boolean(selected);
@@ -420,6 +500,10 @@
     overviewSignature = null;
     pendingNotice = null;
     instructionDrafts.clear();
+    finalData = null;
+    finalRows.replaceChildren();
+    el("finalUnitField").hidden = true;
+    el("finalAssessments").open = false;
     el("dispatchSettings").open = false;
     el("noticeText").value = "";
     el("overview").hidden = true;

@@ -169,3 +169,48 @@ test("předregistrace přiřadí kontakt k připravené jednotce a zobrazí výj
   assert.equal(post("readUnitDashboard",{token}).code,"INVALID_UNIT_ACCESS");
   assert.equal(post("listCompetitionEditions",{credential}).editions[0].registrations.length,1);
 });
+
+test("tři sloučené jednotky mají jeden start a sdílí postup i na již vydaném odkazu člena", () => {
+  const app = createAppsScript({ORGANIZER_PIN:credential});
+  const post = (action,fields = {}) => app.post({action,year,credential,...fields});
+  const token = randomBytes(32).toString("hex");
+  const setup = {...edition,startsAt:"2027-10-24T13:30",venue:"Blansko",meetingPlace:"Zbrojnice",
+    units:[...edition.units,{id:"c",name:"Jednotka C"}],stations:[...edition.stations,{id:"quiz",name:"Kvíz",kind:"quiz"}]};
+  const prepared = post("saveCompetitionEdition",{expectedRevision:null,edition:setup}).edition;
+  assert.equal(post("issueUnitAccess",{unitId:"a",token}).ok,true);
+  const merged = {...prepared,merges:[{id:"abc",unitIds:["a","b","c"]}],
+    draw:[{id:"merged-start",unitId:"abc",stationId:"s"}]};
+  assert.equal(post("saveCompetitionEdition",{expectedRevision:prepared.revision,
+    edition:{...merged,merges:[...merged.merges,{id:"duplicated",unitIds:["a","c"]}]}}).ok,false);
+  assert.equal(post("saveCompetitionEdition",{expectedRevision:prepared.revision,
+    edition:{...merged,draw:[...merged.draw,{id:"duplicate-start",unitId:"a",stationId:"p"}]}}).ok,false);
+  const saved = post("saveCompetitionEdition",{expectedRevision:prepared.revision,edition:merged}).edition;
+  const invitation = randomBytes(32).toString("hex");
+  const groupToken = randomBytes(32).toString("hex");
+  assert.equal(post("issueEditionRegistration",{invitation}).ok,true);
+  assert.deepEqual(post("readEditionRegistration",{invitation}).units.map(unit => unit.id),["abc"]);
+  assert.equal(post("registerEditionUnit",{invitation,token:groupToken,unitId:"abc",name:"Velitel",phone:"123 456 789"}).ok,true);
+  const updated = post("listCompetitionEditions").editions[0];
+  assert.equal(updated.registrations[0].unitId,"abc");
+  assert.equal(post("saveCompetitionEdition",{expectedRevision:saved.revision,edition:{...merged,status:"active"}}).ok,true);
+  const dashboard = key => post("readUnitDashboard",{token:key}).dashboard;
+  assert.equal(dashboard(token).name,"Jednotka A + Jednotka B + Jednotka C");
+  assert.equal(dashboard(token).station.name,"Studna");
+  assert.equal(post("acknowledgeUnitDispatch",{token,stationId:"s"}).ok,true);
+  assert.ok(dashboard(groupToken).dispatch.receivedAt);
+  assert.equal(post("acknowledgeUnitArrival",{token:groupToken,stationId:"s"}).ok,true);
+  assert.equal(dashboard(token).state,"active");
+  assert.deepEqual(post("readEditionProgress").units.map(unit => unit.id),["abc"]);
+  const assessment = {unitId:"abc",stationId:"s",reviewerId:"judge"};
+  assert.equal(post("startEditionAssessment",assessment).ok,true);
+  assert.equal(post("saveEditionAssessment",{...assessment,result:"Drobné nedostatky",notes:"Společný zápis",submissionId:randomUUID()}).ok,true);
+  for (const [unitId,percentage] of [["a",82],["b",55],["c",0]]) {
+    assert.equal(post("saveEditionMemberQuiz",{unitId,stationId:"quiz",percentage,expectedPercentage:null}).ok,true);
+  }
+  assert.equal(post("saveEditionMemberQuiz",{unitId:"abc",stationId:"quiz",percentage:100,expectedPercentage:null}).ok,false);
+  assert.equal(post("readEditionFinalAssessments",{credential:token}).ok,false);
+  const final = post("readEditionFinalAssessments");
+  assert.deepEqual(final.units.map(unit => unit.name),["Jednotka A","Jednotka B","Jednotka C"]);
+  assert.deepEqual(final.units.map(unit => unit.assessments.find(item => item.kind === "quiz").percentage),[82,55,0]);
+  assert.ok(final.units.every(unit => unit.assessments.length === 2 && unit.assessments[0].notes === "Společný zápis"));
+});
