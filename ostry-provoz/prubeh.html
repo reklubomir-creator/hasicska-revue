@@ -39,7 +39,7 @@
   </div>
   <div id="activePauses" class="result-list"></div>
 </details>
-<details id="gatePanel" class="panel" hidden><summary>Uvolnění stanovišť</summary><div id="gates" class="result-list"></div></details>
+<details id="gatePanel" class="panel" hidden><summary>Uvolnění stanovišť</summary><p>Po dokončení hodnocení může hodnotitel potvrdit, že stanoviště přijme další jednotku. Teprve pak se čekající jednotce zobrazí pokyn k přesunu.</p><div id="gates" class="result-list"></div></details>
 <details id="finalAssessments" class="panel" hidden>
   <summary>Závěrečná hodnocení po jednotkách</summary>
   <div class="form-grid">
@@ -56,7 +56,14 @@
 <label>Hodnotitel <select id="reviewer" required></select></label>
 <button id="start" class="secondary" type="button">Zahájit hodnocení ručně</button>
 <div id="assessmentFields" class="form-grid" hidden>
-<label>Výsledek <select id="result"><option>V pořádku</option><option>Drobné nedostatky</option><option>Závažné nedostatky</option></select></label>
+<fieldset class="assessment-result">
+  <legend>Výsledek hodnocení</legend>
+  <div class="assessment-result-options">
+    <label class="assessment-result-option result-good"><input type="radio" name="assessmentResult" value="V pořádku" checked><span>V pořádku</span></label>
+    <label class="assessment-result-option result-minor"><input type="radio" name="assessmentResult" value="Drobné nedostatky"><span>Drobné nedostatky</span></label>
+    <label class="assessment-result-option result-major"><input type="radio" name="assessmentResult" value="Závažné nedostatky"><span>Závažné nedostatky</span></label>
+  </div>
+</fieldset>
 <label>Poznámka <textarea id="notes" maxlength="12000"></textarea></label>
 <div class="actions"><button id="dictateNotes" class="secondary" type="button">🎙 Diktovat poznámku</button></div>
 <p id="dictationStatus" class="muted" role="status"></p>

@@ -1,5 +1,10 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.15 — 2026-11-25
+
+- Hodnocení nabízí tři barevné volby vedle sebe. Rozepsaný zápis zachovává zvolený výsledek.
+- Přehled vysvětluje, že uvolnění stanoviště povolí příjezd další jednotky až po dokončení hodnocení.
+
 ## 1.1.0-beta.13 — 2026-11-25
 
 - Diktování při hodnocení průběžně zapisuje rozpoznaný text do poznámky. Na Androidu slučuje překryvy, aby se text při zpřesnění přepisu neopakoval.

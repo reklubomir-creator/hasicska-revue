@@ -319,14 +319,15 @@
     let draft;
     try { draft = JSON.parse(localStorage.getItem(draftKey)); } catch (error) {}
     el("notes").value = draft?.notes || "";
-    el("result").value = draft?.result || "V pořádku";
+    const result = resultOptions.find(option => option.value === draft?.result) || resultOptions[0];
+    result.checked = true;
     submission = draft?.submission || null;
     el("draftStatus").textContent = draft ? "Koncept obnoven." : "";
   }
 
   function storeDraft() {
     try {
-      localStorage.setItem(draftKey, JSON.stringify({ notes:el("notes").value, result:el("result").value, submission }));
+      localStorage.setItem(draftKey, JSON.stringify({ notes:el("notes").value, result:selectedResult(), submission }));
       el("draftStatus").textContent = "Koncept uložen v zařízení.";
     } catch (error) {
       el("draftStatus").textContent = "Koncept se nepodařilo uložit do zařízení.";
@@ -469,7 +470,13 @@
     loadDraft();
     if (selected.arrived && !el("start").hidden) beginAssessment();
   };
-  for (const id of ["result","notes"]) el(id).oninput = () => { submission = null; storeDraft(); };
+  const resultOptions = [...document.querySelectorAll('input[name="assessmentResult"]')];
+  function selectedResult() {
+    return resultOptions.find(option => option.checked).value;
+  }
+  for (const field of [...resultOptions,notes]) {
+    field.oninput = () => { submission = null; storeDraft(); };
+  }
   async function beginAssessment() {
     if (!el("reviewer").reportValidity()) return;
     if (await update("startEditionAssessment")) {
@@ -494,7 +501,7 @@
     }
     submission ||= crypto.randomUUID();
     storeDraft();
-    if (await update("saveEditionAssessment",{ result:el("result").value, notes:el("notes").value, submissionId:submission })) {
+    if (await update("saveEditionAssessment",{ result:selectedResult(), notes:el("notes").value, submissionId:submission })) {
       try {
         const savedDraft = JSON.parse(localStorage.getItem(draftKey));
         if (savedDraft?.submission === submission) localStorage.removeItem(draftKey);
