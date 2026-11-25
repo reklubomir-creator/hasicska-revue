@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.8 — 2026-11-25
+
+- Záložka Velitelé má jeden přehled kontaktů a sbalenou část pro ruční přiřazení. Předregistrace má přednost před ručním záznamem bez telefonu a e-mailu.
+- Výjezdová zpráva se nastavuje přímo u příslušného stanoviště ve Správě ročníků.
+- Pozorovatel vidí vyplněné místo nebo adresu aktuálního stanoviště.
+
 ## 1.1.0-beta.7 — 2026-11-25
 
 - Kontakt jde upravit přímo u jednotky. Předregistrovaní velitelé se zobrazují také v sekci Velitelé a při registraci lze doplnit e-mail.
