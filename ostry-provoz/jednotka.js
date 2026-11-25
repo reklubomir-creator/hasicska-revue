@@ -9,6 +9,9 @@
   let replaceDeviceAccess = false;
   let lastUpdate = null;
   let request;
+  let dispatchStationId;
+  let acknowledging = false;
+  let dispatchReceived = false;
   let pushRegistration;
   let pushSubscription;
   let pushBusy = false;
@@ -26,7 +29,8 @@
     waiting: "Čeká se na uvolnění dalšího stanoviště",
     active: "Probíhá soutěž",
     evaluating: "Probíhá hodnocení",
-    standby: "Pohotovost",
+    standby: "Pohotovost na zbrojnici · pauza",
+    enroute: "Přesun na stanoviště",
     paused: "Pauza",
     finished: "Soutěž dokončena"
   };
@@ -63,6 +67,28 @@
     el("unitEdition").hidden = false;
     el("unitName").textContent = data.name;
     el("unitState").textContent = stateLabels[data.state] || "Stav není dostupný";
+    dispatchStationId = data.dispatch?.stationId;
+    dispatchReceived = Boolean(data.dispatch?.receivedAt);
+    el("unitReceived").hidden = dispatchReceived;
+    el("unitReceivedStatus").hidden = !dispatchReceived;
+    el("unitArrived").hidden = !dispatchReceived;
+    el("unitDispatch").hidden = !dispatchStationId;
+    el("unitStationPanel").hidden = Boolean(dispatchStationId);
+    if (dispatchStationId) {
+      const location = data.station.location;
+      el("unitDispatchTitle").textContent = data.station.name;
+      el("unitDispatchLocation").textContent = location;
+      el("unitDispatchLocation").hidden = !location;
+      el("unitDispatchMessage").textContent = data.dispatch.message;
+      el("unitDispatchMessage").hidden = !data.dispatch.message;
+      const map = el("unitDispatchMap");
+      map.hidden = !location;
+      if (location) {
+        const query = new URLSearchParams({api:"1",query:location});
+        map.href = "https://www.google.com/maps/search/?" + query;
+      }
+    }
+    el("unitReceived").disabled = el("unitArrived").disabled = acknowledging || !navigator.onLine;
     el("unitStationTitle").textContent = data.state === "preparation" ? "Startovní stanoviště" : "Aktuální stanoviště";
     el("unitStation").textContent = data.station?.name || (data.state === "finished" ? "Všechna stanoviště jsou absolvována" : ["waiting","paused"].includes(data.state) ? "Vyčkej na pokyn k přesunu" : "Stanoviště se zobrazí po startu soutěže");
     el("unitLocation").textContent = data.station?.location || "";
@@ -73,8 +99,8 @@
     el("unitStatusPanel").classList.toggle("pause",Boolean(data.pause));
     const end = data.pause && new Date(data.pause.endsAt).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
     el("unitPause").textContent = data.pause
-      ? ["Pauza do " + end + ". S přesunem vyčkej.",data.pause.text].filter(Boolean).join(" ")
-      : (data.state === "preparation" ? "" : "Pauza není naplánována.");
+      ? ["Mimořádná pauza do " + end + ". S přesunem vyčkej.",data.pause.text].filter(Boolean).join(" ")
+      : "";
     const notices = data.notices || [];
     const noticeList = el("unitNotices");
     noticeList.replaceChildren(...notices.map(notice => {
@@ -163,6 +189,30 @@
       refresh.disabled = false;
     }
   }
+
+  async function acknowledgeDispatch(action) {
+    if (acknowledging || !dispatchStationId || !token) return;
+    acknowledging = true;
+    el("unitReceived").disabled = el("unitArrived").disabled = true;
+    try {
+      const response = await fetch(revueApiUrl(),{
+        method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},
+        body:JSON.stringify({action,stationId:dispatchStationId,token}),
+        signal:AbortSignal.timeout(12000),referrerPolicy:"no-referrer"
+      });
+      if (!response.ok) throw new Error("Potvrzení se nepodařilo odeslat.");
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error);
+      await load();
+    } catch (error) {
+      message.textContent = error.message;
+    } finally {
+      acknowledging = false;
+      el("unitReceived").disabled = el("unitArrived").disabled = !navigator.onLine;
+    }
+  }
+  el("unitReceived").onclick = () => acknowledgeDispatch("acknowledgeUnitDispatch");
+  el("unitArrived").onclick = () => acknowledgeDispatch("acknowledgeUnitArrival");
 
   async function managePush(action, details) {
     const response = await fetch(revueApiUrl(),{

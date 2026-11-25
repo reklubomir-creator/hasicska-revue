@@ -1,5 +1,13 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.4 — 2026-11-25
+
+- Jednotka vidí výjezdovou zprávu s cílem, pokyny a mapou. Vedení nastavuje text pro každé stanoviště a vidí čas převzetí pokynu i příjezdu.
+- Po potvrzení příjezdu se hodnocení při otevření formuláře zahájí automaticky s vybraným hodnotitelem. Po uložení vyhodnocení může hodnotitel uvolnit stanoviště pro další jednotku.
+- Pohotovost je označena jako pauza na zbrojnici. Mimořádné pauzy se zobrazují pouze v případě, že jsou aktivní.
+- Vráceno české diktování poznámky při hodnocení. Přepsaný text se ukládá jako rozpracovaný koncept.
+- Doplněn samostatný náhled ročníku pro pozorovatele. Ukazuje aktuální stav jednotek, stanoviště a postup. Přístup chrání vlastní kód, který se nastavuje jako `EDITION_OBSERVER_CODE` v Apps Scriptu.
+
 ## 1.1.0-beta.3 — 2026-11-25
 
 - Studna se vybírá jako běžné soutěžní stanoviště. Potvrzení průchodu a dodatečné hodnocení má vlastní volbu.

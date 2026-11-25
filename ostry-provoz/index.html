@@ -1874,6 +1874,10 @@ if(observerMode){
  document.body.classList.remove("qr-fullscreen");
  document.querySelectorAll(".qr-reveal-button.revealed").forEach(qr=>qr.classList.remove("revealed"));
  document.body.classList.add("observer-mode");
+ const editionObserverLink=document.createElement("a");
+ editionObserverLink.href="prubeh.html?observer=1";
+ editionObserverLink.textContent="Přehled nového ročníku pro pozorovatele";
+ el("home").prepend(editionObserverLink);
  document.title="Hasičská revue · Pozorovatelský přehled";
  localStorage.setItem("hasicskaRevueCurrentPage","home");
  const reviewerQr=el("revealReviewerQr");if(reviewerQr)reviewerQr.closest(".qr-card")?.remove();

@@ -15,6 +15,11 @@
   <link rel="stylesheet" href="teren.css">
   <style>
     body { --content-width: 41rem; }
+    #unitDispatch { background: #102d4e; color: white; border-color:#102d4e; }
+    #unitDispatch h2 { font-size: clamp(1.4rem,5vw,2rem); }
+    #unitDispatchMessage { white-space: pre-wrap; }
+    #unitDispatch .actions a,#unitDispatch button { display:inline-grid; place-items:center; min-height:48px; padding:.6rem .9rem; border-radius:.6rem; background:white; color:#102d4e; font-weight:750; }
+    #unitDispatch .actions :focus-visible { outline-color:white; }
     #unitStationPanel { border-inline-start: 5px solid var(--ink); }
     #unitStation { font-size: clamp(1.25rem,5vw,1.7rem); line-height: 1.2; }
     #unitStationPanel.standby, .pause { background: var(--warn-bg); border-color: #9a620d; }
@@ -38,11 +43,23 @@
       <button type="submit">Otevřít přehled</button>
     </form>
     <div id="unitDashboard" hidden>
+      <section class="panel" id="unitDispatch" aria-labelledby="unitDispatchTitle" hidden>
+        <p>Soutěžní výjezd · Přesun na stanoviště</p>
+        <h2 id="unitDispatchTitle"></h2>
+        <p id="unitDispatchLocation" hidden></p>
+        <p id="unitDispatchMessage" hidden></p>
+        <p id="unitReceivedStatus" role="status" hidden>Pokyn přijat. Vedení má potvrzení.</p>
+        <div class="actions">
+          <button id="unitReceived" type="button">Přijali jsme pokyn</button>
+          <a id="unitDispatchMap" target="_blank" rel="noopener noreferrer" hidden>Otevřít v mapě</a>
+          <button id="unitArrived" type="button">Jsme na místě</button>
+        </div>
+      </section>
       <section class="panel" id="unitStationPanel" aria-labelledby="unitStationTitle">
         <h2 id="unitStationTitle">Startovní stanoviště</h2>
         <p><strong id="unitStation"></strong></p>
         <p id="unitLocation" class="muted" hidden></p>
-        <p id="unitStandby" hidden>Pohotovost se nezapočítává mezi soutěžní stanoviště.</p>
+        <p id="unitStandby" hidden>Pauza na zbrojnici. Počkej na pokyn k dalšímu přesunu.</p>
       </section>
       <section class="panel" id="unitStatusPanel" aria-labelledby="unitStatusTitle">
         <h2 id="unitStatusTitle">Stav soutěže</h2>

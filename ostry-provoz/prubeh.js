@@ -1,6 +1,13 @@
 (() => {
   const el = id => document.getElementById(id);
-  const states = { preparation:"Příprava", waiting:"Čeká na uvolnění dalšího stanoviště", active:"Na stanovišti", standby:"Pohotovost", paused:"Pauza", evaluating:"PRÁVĚ HODNOTÍ", finished:"Dokončeno", closed:"Uzavřeno" };
+  const observer = new URLSearchParams(location.search).get("observer") === "1";
+  const readAction = observer ? "readEditionObserver" : "readEditionProgress";
+  if (observer) {
+    el("progressTitle").textContent = "Náhled pro pozorovatele";
+    el("credentialLabel").textContent = "Kód pozorovatele";
+    document.title = "Pozorovatel · Hasičská revue";
+  }
+  const states = { preparation:"Příprava", waiting:"Čeká na uvolnění dalšího stanoviště", active:"Na stanovišti", enroute:"Na cestě", standby:"Pohotovost · pauza na zbrojnici", paused:"Mimořádná pauza", evaluating:"PRÁVĚ HODNOTÍ", finished:"Dokončeno", closed:"Uzavřeno" };
   let login, overview, overviewSignature, selected, draftKey, submission, pendingNotice, busy = false, reading = false;
   el("version").textContent = "Verze " + APP_VERSION;
   el("year").value = new Date().getFullYear() + 1;
@@ -42,7 +49,7 @@
         row.append(title, detail);
         if (gate.canOpen) {
           const button = document.createElement("button");
-          button.textContent = "Můžeme poslat novou jednotku";
+          button.textContent = gate.unitId ? "Můžeme poslat novou jednotku" : "Otevřít volné stanoviště";
           button.onclick = async () => {
             if (busy) return;
             busy = true;
@@ -75,13 +82,22 @@
       detail.textContent = [states[unit.state],station?.name].filter(Boolean).join(" · ");
       detail.classList.toggle("evaluating",unit.state === "evaluating");
       row.append(name,detail);
-      if (overview.organizer) {
+      if (overview.organizer && station) {
+        const receipts = document.createElement("p");
+        const format = time => new Date(time).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+        receipts.textContent = [
+          unit.receivedAt ? "Pokyn přijat v " + format(unit.receivedAt) : "Přijetí pokynu nepotvrzeno",
+          unit.arrivedAt ? "Příjezd potvrzen v " + format(unit.arrivedAt) : null
+        ].filter(Boolean).join(" · ");
+        row.append(receipts);
+      }
+      if (overview.organizer || (overview.observer && unit.remaining !== null)) {
         const progress = document.createElement("p");
         const completed = unit.completed.length ? unit.completed.join(", ") : "zatím žádné";
         progress.textContent = "Absolvováno " + completed + ". Zbývá " + unit.remaining + ".";
         row.append(progress);
       }
-      const available = overview.status === "active" ? [station, ...unit.delayed.map(id => overview.stations.find(item => item.id === id))] : [];
+      const available = !overview.observer && overview.status === "active" ? [station, ...unit.delayed.map(id => overview.stations.find(item => item.id === id))] : [];
       for (const choice of available.filter(Boolean)) {
         if (stationFilter && choice.id !== stationFilter) continue;
         if (["standby","quiz"].includes(choice.kind) && !overview.organizer) continue;
@@ -159,6 +175,53 @@
     organizationAction("sendEditionNotice",{unitId:el("noticeRecipient").value,text});
   };
 
+  const instructionDrafts = new Map();
+  const instructionSelect = el("dispatchStation");
+  const instruction = el("dispatchInstruction");
+
+  function showInstruction(stationId) {
+    const station = overview.stations.find(item => item.id === stationId);
+    const draft = instructionDrafts.get(stationId);
+    el("dispatchLocation").textContent = station?.location || "Místo doplň ve Správě ročníků.";
+    instruction.value = draft?.message ?? station?.dispatchMessage ?? "";
+    instruction.disabled = el("saveDispatchInstruction").disabled = !station;
+  }
+
+  function renderDispatchSettings(data) {
+    el("dispatchSettings").hidden = !data.organizer || data.status === "archived";
+    if (el("dispatchSettings").hidden) return;
+    options(instructionSelect,"Vyber stanoviště",data.stations);
+    if (!instructionSelect.value && data.stations.length) instructionSelect.value = data.stations[0].id;
+    if (document.activeElement !== instruction) showInstruction(instructionSelect.value);
+  }
+
+  instructionSelect.onchange = () => showInstruction(instructionSelect.value);
+  instruction.oninput = () => {
+    const stationId = instructionSelect.value;
+    const station = overview.stations.find(item => item.id === stationId);
+    const original = instructionDrafts.get(stationId)?.original ?? station.dispatchMessage;
+    instructionDrafts.set(stationId,{original,message:instruction.value});
+  };
+  el("saveDispatchInstruction").onclick = async () => {
+    if (busy) return;
+    const stationId = instructionSelect.value;
+    const draft = instructionDrafts.get(stationId);
+    if (!draft) return;
+    busy = true;
+    el("dispatchSettings").inert = true;
+    try {
+      await api("saveEditionDispatchMessage",{stationId,message:draft.message,expectedMessage:draft.original});
+      instructionDrafts.delete(stationId);
+      el("message").textContent = "Výjezdová zpráva uložena.";
+    } catch (error) {
+      el("message").textContent = error.message;
+    } finally {
+      busy = false;
+      el("dispatchSettings").inert = false;
+      refresh();
+    }
+  };
+
   function showOverview(data) {
     const signature = JSON.stringify(data);
     if (overviewSignature === signature) return;
@@ -172,6 +235,7 @@
     el("overview").hidden = Boolean(selected);
     render();
     renderOrganization(data);
+    renderDispatchSettings(data);
   }
 
   async function refresh() {
@@ -179,7 +243,7 @@
     reading = true;
     const session = login;
     try {
-      const data = await api("readEditionProgress", {}, session);
+      const data = await api(readAction, {}, session);
       if (login === session) {
         showOverview(data);
       }
@@ -189,7 +253,7 @@
   }
 
   function open(unit, station) {
-    selected = { unitId:unit.id, stationId:station.id };
+    selected = { unitId:unit.id, stationId:station.id, arrived:Boolean(unit.arrivedAt) };
     const delayed = unit.delayed.includes(station.id);
     const passes = ["standby","quiz"].includes(station.kind);
     el("overview").hidden = true;
@@ -206,7 +270,9 @@
     el("passage").textContent = station.kind === "standby" ? "Ukončit pohotovost"
       : station.kind === "quiz" ? "Potvrdit uzavřený kvíz" : "Potvrdit průchod stanovištěm";
     el("message").textContent = "";
+    el("dictationStatus").textContent = "";
     loadDraft();
+    if (selected.arrived && !delayed && !passes && el("reviewer").value) beginAssessment();
   }
 
   function loadDraft() {
@@ -248,11 +314,83 @@
   }
 
   function closeAssessment() {
+    stopDictation();
     selected = null;
     el("assessment").hidden = true;
     el("overview").hidden = false;
     refresh();
   }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const microphone = el("dictateNotes");
+  const voiceStatus = el("dictationStatus");
+  const notes = el("notes");
+  let recognition = null;
+
+  function stopDictation() {
+    if (!recognition) return;
+    const speech = recognition;
+    recognition = null;
+    speech.abort();
+    notes.readOnly = false;
+    microphone.textContent = "🎙 Diktovat poznámku";
+  }
+
+  microphone.onclick = () => {
+    if (recognition) {
+      recognition.stop();
+      return;
+    }
+    if (!SpeechRecognition) {
+      voiceStatus.textContent = "Tento prohlížeč nepodporuje webové diktování. Použij mikrofon na klávesnici telefonu.";
+      notes.focus();
+      return;
+    }
+    const speech = new SpeechRecognition();
+    recognition = speech;
+    const original = notes.value.trimEnd();
+    const key = draftKey;
+    let hadError = false;
+    speech.lang = "cs-CZ";
+    speech.continuous = true;
+    speech.interimResults = true;
+    notes.readOnly = true;
+    microphone.textContent = "Zastavit diktování";
+    voiceStatus.textContent = "Poslouchám…";
+    speech.onresult = event => {
+      if (recognition !== speech || draftKey !== key) return;
+      const phrases = [];
+      for (const result of Array.from(event.results)) {
+        if (result.isFinal) {
+          const phrase = result[0]?.transcript.trim();
+          if (phrase && phrases.at(-1) !== phrase) phrases.push(phrase);
+        }
+      }
+      const next = [original,...phrases].filter(Boolean).join(" ").slice(0,notes.maxLength);
+      if (next !== notes.value) {
+        notes.value = next;
+        submission = null;
+        storeDraft();
+      }
+    };
+    speech.onerror = () => {
+      if (recognition !== speech) return;
+      hadError = true;
+      voiceStatus.textContent = "Diktování se nepodařilo. Zkontroluj oprávnění mikrofonu nebo použij diktování klávesnice.";
+    };
+    speech.onend = () => {
+      if (recognition !== speech) return;
+      recognition = null;
+      notes.readOnly = false;
+      microphone.textContent = "🎙 Diktovat poznámku";
+      if (!hadError) voiceStatus.textContent = "Diktování ukončeno. Zkontroluj přepis před uložením.";
+    };
+    try { speech.start(); }
+    catch (error) {
+      stopDictation();
+      voiceStatus.textContent = "Diktování se nepodařilo spustit.";
+    }
+  };
 
   el("login").onsubmit = async event => {
     event.preventDefault();
@@ -265,7 +403,7 @@
     el("organization").open = false;
     busy = true;
     try {
-      showOverview(await api("readEditionProgress",{},session));
+      showOverview(await api(readAction,{},session));
       login = session;
       el("login").hidden = true;
       el("credential").value = "";
@@ -281,6 +419,8 @@
     overview = null;
     overviewSignature = null;
     pendingNotice = null;
+    instructionDrafts.clear();
+    el("dispatchSettings").open = false;
     el("noticeText").value = "";
     el("overview").hidden = true;
     el("message").textContent = "";
@@ -289,9 +429,13 @@
   };
   el("stationFilter").onchange = render;
   el("unitFilter").onchange = render;
-  el("reviewer").onchange = loadDraft;
+  el("reviewer").onchange = () => {
+    stopDictation();
+    loadDraft();
+    if (selected.arrived && !el("start").hidden) beginAssessment();
+  };
   for (const id of ["result","notes"]) el(id).oninput = () => { submission = null; storeDraft(); };
-  el("start").onclick = async () => {
+  async function beginAssessment() {
     if (!el("reviewer").reportValidity()) return;
     if (await update("startEditionAssessment")) {
       el("reviewer").disabled = true;
@@ -299,7 +443,8 @@
       el("assessmentFields").hidden = false;
       el("notes").focus();
     }
-  };
+  }
+  el("start").onclick = beginAssessment;
   el("passage").onclick = async () => {
     if (el("reviewer").required && !el("reviewer").reportValidity()) return;
     if (await update("completeEditionPassage")) closeAssessment();
@@ -307,6 +452,11 @@
   el("assessment").onsubmit = async event => {
     event.preventDefault();
     if (busy || el("assessmentFields").hidden) return;
+    if (recognition) {
+      recognition.stop();
+      voiceStatus.textContent = "Po dokončení přepisu zkontroluj poznámku a ulož hodnocení.";
+      return;
+    }
     submission ||= crypto.randomUUID();
     storeDraft();
     if (await update("saveEditionAssessment",{ result:el("result").value, notes:el("notes").value, submissionId:submission })) {
@@ -314,6 +464,7 @@
         const savedDraft = JSON.parse(localStorage.getItem(draftKey));
         if (savedDraft?.submission === submission) localStorage.removeItem(draftKey);
       } catch (error) {}
+      el("gatePanel").open = true;
       closeAssessment();
     }
   };

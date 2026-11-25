@@ -12,11 +12,11 @@
 <body>
 <header class="site-header"><div class="site-header-inner"><img src="jednotka-ikona-192.png" width="36" height="36" alt="">Hasičská revue</div></header>
 <main>
-<h1>Průběh ročníku</h1>
+<h1 id="progressTitle">Průběh ročníku</h1>
 <form id="login" class="panel">
 <div class="form-grid columns">
 <label>Rok <input id="year" type="number" min="2000" max="2100" required></label>
-<label>Kód stanoviště nebo organizační PIN <input id="credential" type="password" autocomplete="off" required></label>
+<label><span id="credentialLabel">Kód stanoviště nebo organizační PIN</span> <input id="credential" type="password" autocomplete="off" required></label>
 </div>
 <div class="actions"><button>Načíst ročník</button></div>
 </form>
@@ -28,7 +28,7 @@
 <label>Jednotka <select id="unitFilter"></select></label>
 </div>
 <details id="organization" class="panel" hidden>
-  <summary>Pauzy a zprávy</summary>
+  <summary>Mimořádná pauza a zprávy vedení</summary>
   <div class="form-grid columns">
   <label>Příjemce <select id="noticeRecipient"></select></label>
   <label>Délka pauzy v minutách <input id="pauseMinutes" type="number" min="1" max="120" value="10"></label>
@@ -39,6 +39,15 @@
   </div>
   <div id="activePauses" class="result-list"></div>
 </details>
+<details id="dispatchSettings" class="panel" hidden>
+  <summary>Výjezdové zprávy stanovišť</summary>
+  <div class="form-grid">
+    <label>Stanoviště <select id="dispatchStation"></select></label>
+    <p id="dispatchLocation" class="muted"></p>
+    <label>Pokyny k příjezdu a zadání <textarea id="dispatchInstruction" maxlength="800" placeholder="Např. příjezd od hlavní silnice, zůstaňte u označeného vjezdu."></textarea></label>
+    <div class="actions"><button id="saveDispatchInstruction" type="button">Uložit výjezdovou zprávu</button></div>
+  </div>
+</details>
 <details id="gatePanel" class="panel" hidden><summary>Uvolnění stanovišť</summary><div id="gates" class="result-list"></div></details>
 <h3>Jednotky</h3>
 <div id="units" class="result-list"></div>
@@ -46,10 +55,12 @@
 <form id="assessment" class="panel form-grid" hidden>
 <h2 id="assessmentTitle"></h2>
 <label>Hodnotitel <select id="reviewer" required></select></label>
-<button id="start" type="button">Hodnotit</button>
+<button id="start" class="secondary" type="button">Zahájit hodnocení ručně</button>
 <div id="assessmentFields" class="form-grid" hidden>
 <label>Výsledek <select id="result"><option>V pořádku</option><option>Drobné nedostatky</option><option>Závažné nedostatky</option></select></label>
 <label>Poznámka <textarea id="notes" maxlength="12000"></textarea></label>
+<div class="actions"><button id="dictateNotes" class="secondary" type="button">🎙 Diktovat poznámku</button></div>
+<p id="dictationStatus" class="muted" role="status"></p>
 <p id="draftStatus" role="status"></p>
 <button type="submit">Uložit hodnocení</button>
 </div>

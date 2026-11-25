@@ -1045,7 +1045,7 @@ function competitionEditions_(data) {
     return {ok:false,error:'Před zahájením přiřaď každé jednotce startovní stanoviště.'};
   }
   if (previous?.status === 'active' ||
-      (previous?.status === 'archived' && editionProgressRows_(editionProgressSheet_(false), edition.year).length)) {
+      (previous?.status === 'archived' && editionProgressRows_(editionProgressSheet_(false), edition.year).some(entry => entry.unitId !== '@dispatch'))) {
     const sameConfiguration = Object.keys(edition).every(key =>
       key === 'status' || JSON.stringify(edition[key]) === JSON.stringify(previous[key]));
     if (!sameConfiguration || edition.status === 'preparation') {
@@ -1272,9 +1272,30 @@ function editionDispatch_(edition, entries, now = Date.now()) {
       : edition.status === 'archived' ? (progress.position < progress.route.length ? 'closed' : 'finished')
       : progress.pause ? 'paused'
       : !station ? (progress.position < progress.route.length ? 'waiting' : 'finished')
-      : station.kind === 'standby' ? 'standby' : record?.startedAt ? 'evaluating' : 'active';
+      : record?.startedAt ? 'evaluating' : !record?.arrivedAt ? 'enroute' : station.kind === 'standby' ? 'standby' : 'active';
   }
   return {stations:stations, units:units};
+}
+
+function readEditionObserver_(data) {
+  const code = PropertiesService.getScriptProperties().getProperty('EDITION_OBSERVER_CODE');
+  if (!code || typeof data.credential !== 'string' || data.credential !== code) {
+    return {ok:false,error:'Kód pozorovatele není platný.'};
+  }
+  const edition = getSavedCompetitionEdition_(Number(data.year));
+  if (!edition) return {ok:false,error:'Ročník nebyl nalezen.'};
+  const visible = edition.status !== 'preparation';
+  const entries = visible ? editionProgressRows_(editionProgressSheet_(false),edition.year) : [];
+  const dispatch = editionDispatch_(edition,entries);
+  return {ok:true,observer:true,organizer:false,edition:edition.name,status:edition.status,
+    stations:visible ? edition.stations.map(station => ({id:station.id,name:station.name})) : [],
+    units:edition.units.map(unit => {
+      const progress = dispatch.units.get(unit.id);
+      return {id:unit.id,name:unit.name,state:progress.state,
+        stationId:visible ? progress.station?.id || null : null,
+        completed:visible ? progress.completed.map(station => station.name) : [],
+        remaining:visible ? progress.remaining : null,delayed:[]};
+    }),gates:[],reviewers:[],pauses:[]};
 }
 
 function editionProgress_(data) {
@@ -1293,6 +1314,15 @@ function editionProgress_(data) {
   }
   const sheet = editionProgressSheet_(false);
   const entries = editionProgressRows_(sheet, year);
+  if (data.action === 'saveEditionDispatchMessage') {
+    if (!organizer || edition.status === 'archived' || !edition.stations.some(station => station.id === data.stationId)) return denied;
+    const message = typeof data.message === 'string' ? data.message.trim() : '';
+    if (message.length > 800) return {ok:false,error:'Výjezdová zpráva může mít nejvýše 800 znaků.'};
+    const previous = entries.find(entry => entry.unitId === '@dispatch' && entry.stationId === data.stationId);
+    if ((previous?.message || '') !== data.expectedMessage) return {ok:false,error:'Zpráva se mezitím změnila. Načti její aktuální znění.'};
+    saveEditionProgressEntry_(sheet,year,{unitId:'@dispatch',stationId:data.stationId,message:message},previous);
+    return {ok:true};
+  }
   if (['startEditionPause','endEditionPause','sendEditionNotice'].includes(data.action)) {
     return organizer && edition.status === 'active' ? editionAnnouncements_(data,edition,sheet,entries) : denied;
   }
@@ -1307,7 +1337,11 @@ function editionProgress_(data) {
       return {id:unit.id, name:unit.name, state:progress.state,
         stationId:allowedIds.has(progress.station?.id) ? progress.station.id : null,
         completed:organizer ? progress.completed.map(station => station.name) : [],
-        remaining:organizer ? progress.remaining : null, delayed:delayed.map(station => station.id)};
+        remaining:organizer ? progress.remaining : null, delayed:delayed.map(station => station.id),
+        ...(allowedIds.has(progress.station?.id) ? {
+          arrivedAt:progress.records.get(progress.station.id)?.arrivedAt || null,
+          ...(organizer ? {receivedAt:progress.records.get(progress.station.id)?.receivedAt || null} : {})
+        } : {})};
     }).filter(Boolean);
     const gates = allowed.map(station => {
       const gate = dispatch.stations.get(station.id);
@@ -1320,7 +1354,11 @@ function editionProgress_(data) {
     const pauses = organizer ? entries.filter(entry => entry.pause && editionPauseEnd_(entry) > now)
       .map(entry => ({id:entry.id,unitId:entry.unitId,endsAt:entry.pause.endsAt,text:entry.pause.text})) : [];
     return {ok:true,edition:edition.name, status:edition.status, organizer:organizer, units:units, gates:gates, pauses:pauses,
-      stations:allowed.map(station => ({id:station.id, name:station.name, kind:station.kind})),
+      stations:allowed.map(station => ({
+        id:station.id,name:station.name,kind:station.kind,
+        ...(organizer ? {location:station.location,dispatchMessage:entries.find(entry => entry.unitId === '@dispatch' &&
+          entry.stationId === station.id)?.message || ''} : {})
+      })),
       reviewers:edition.reviewers.filter(reviewer => allowedIds.has(reviewer.stationId))};
   }
 
@@ -1493,6 +1531,28 @@ function unitPushRelay_(data) {
   return {ok:true,deliveries:deliveries};
 }
 
+function acknowledgeUnitDispatch_(data) {
+  const access = findUnitAccess_(data.token,competitionEditionRows_(unitAccessSheet_(false)));
+  if (!access) return {ok:false,code:'INVALID_UNIT_ACCESS',error:'Přístup jednotky není platný.'};
+  const {edition,unit} = access;
+  if (edition.status !== 'active') return {ok:false,error:'Soutěž právě neprobíhá.'};
+  const sheet = editionProgressSheet_(false);
+  const entries = editionProgressRows_(sheet,edition.year);
+  const progress = editionDispatch_(edition,entries).units.get(unit.id);
+  if (!progress.station || progress.station.id !== data.stationId) {
+    return {ok:false,error:'Stanoviště se změnilo. Načti aktuální pokyn k přesunu.'};
+  }
+  const previous = progress.records.get(data.stationId);
+  if (data.action === 'acknowledgeUnitArrival' && !previous?.receivedAt) {
+    return {ok:false,error:'Nejprve potvrď přijetí pokynu.'};
+  }
+  const field = data.action === 'acknowledgeUnitArrival' ? 'arrivedAt' : 'receivedAt';
+  if (!previous?.[field]) {
+    saveEditionProgressEntry_(sheet,edition.year,{...previous,unitId:unit.id,stationId:data.stationId,[field]:Date.now()},previous);
+  }
+  return {ok:true};
+}
+
 function readUnitDashboard_(data) {
   const denied = {ok:false,code:'INVALID_UNIT_ACCESS',error:'Přístup jednotky není platný.'};
   const access = findUnitAccess_(data.token,competitionEditionRows_(unitAccessSheet_(false)));
@@ -1506,6 +1566,9 @@ function readUnitDashboard_(data) {
     edition:edition.name,
     state:progress.state,
     station:station ? {name:station.name,location:station.location,kind:station.kind} : null,
+    ...(station && !progress.records.get(station.id)?.arrivedAt && !progress.records.get(station.id)?.startedAt
+      ? {dispatch:{stationId:station.id,receivedAt:progress.records.get(station.id)?.receivedAt || null,message:entries.find(entry => entry.unitId === '@dispatch' &&
+        entry.stationId === station.id)?.message || ''}} : {}),
     completed:progress.completed.map(item => item.name),
     completedCount:progress.completed.length,
     pause:progress.pause ? {endsAt:progress.pause.pause.endsAt,text:progress.pause.pause.text} : null,
@@ -1527,7 +1590,10 @@ function doPost(e) {
     lock.waitLock(10000);
     lockAcquired = true;
 
-    if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation','startEditionPause','endEditionPause','sendEditionNotice'].includes(data.action)) {
+    if (['acknowledgeUnitDispatch','acknowledgeUnitArrival'].includes(data.action)) return json(acknowledgeUnitDispatch_(data));
+    if (data.action === 'readEditionObserver') return json(readEditionObserver_(data));
+
+    if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation','startEditionPause','endEditionPause','sendEditionNotice','saveEditionDispatchMessage'].includes(data.action)) {
       return json(editionProgress_(data));
     }
 

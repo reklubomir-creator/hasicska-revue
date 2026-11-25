@@ -17,7 +17,7 @@ const edition = {
 
 test("ročník prochází startem, hodnocením, pauzou, předáním, push a archivací přes skutečné API handlery", () => {
   const app = createAppsScript({
-    ORGANIZER_PIN:credential,UNIT_PUSH_RELAY_SECRET:secret,
+    ORGANIZER_PIN:credential,UNIT_PUSH_RELAY_SECRET:secret,EDITION_OBSERVER_CODE:"pozorovatel-test",
     ASSESSMENT_STATION_TOKENS:JSON.stringify({Studna:"hodnotitel-studna"})
   });
   const historical = app.insertSheet("Zápisy stanovišť");
@@ -37,13 +37,37 @@ test("ročník prochází startem, hodnocením, pauzou, předáním, push a arch
   ok("issueUnitAccess",{unitId:"a",token});
   const dashboard = () => ok("readUnitDashboard",{credential:undefined,token}).dashboard;
   assert.equal(dashboard().station,null);
+  const observe = () => ok("readEditionObserver",{credential:"pozorovatel-test"});
+  assert.equal(observe().stations.length,0);
+  assert.equal(observe().units[0].stationId,null);
+  assert.equal(caller("readEditionObserver",{credential:"nesprávný"}).ok,false);
+  assert.equal(caller("listCompetitionEditions",{credential:"pozorovatel-test"}).ok,false);
 
   const subscription = {endpoint:"https://fcm.googleapis.com/fcm/send/test-integration",
     keys:{p256dh:"a".repeat(87),auth:"b".repeat(22)}};
   ok("subscribeUnitPush",{credential:undefined,token,subscription});
+  assert.equal(caller("saveEditionDispatchMessage",{credential:"hodnotitel-studna",stationId:"s",message:"Cizí pokyn",expectedMessage:""}).ok,false);
+  ok("saveEditionDispatchMessage",{stationId:"s",message:"Příjezd zadní branou.",expectedMessage:""});
+  assert.equal(caller("saveEditionDispatchMessage",{stationId:"s",message:"Přepsání",expectedMessage:""}).ok,false);
   const active = ok("saveCompetitionEdition",{edition:{...preparation,status:"active"},
     expectedRevision:preparation.revision}).edition;
   assert.equal(dashboard().station.name,"Studna");
+  assert.equal(dashboard().dispatch.message,"Příjezd zadní branou.");
+  assert.equal(dashboard().state,"enroute");
+  assert.equal(caller("acknowledgeUnitArrival",{token,stationId:"s"}).ok,false);
+  assert.equal(caller("acknowledgeUnitDispatch",{token,stationId:"p"}).ok,false);
+  ok("acknowledgeUnitDispatch",{token,stationId:"s"});
+  const receivedAt = dashboard().dispatch.receivedAt;
+  assert.ok(receivedAt);
+  ok("acknowledgeUnitDispatch",{token,stationId:"s"});
+  assert.equal(dashboard().dispatch.receivedAt,receivedAt);
+  ok("acknowledgeUnitArrival",{token,stationId:"s"});
+  assert.equal(dashboard().state,"active");
+  assert.equal(dashboard().dispatch,undefined);
+  const organizerUnit = ok("readEditionProgress").units.find(unit => unit.id === "a");
+  assert.equal(organizerUnit.receivedAt,receivedAt);
+  assert.ok(organizerUnit.arrivedAt);
+  assert.ok(ok("readEditionProgress",{credential:"hodnotitel-studna"}).units.find(unit => unit.id === "a").arrivedAt);
   assert.equal(caller("saveCompetitionEdition",{edition:{...active,units:[...active.units].reverse()},
     expectedRevision:active.revision}).ok,false);
   assert.equal(caller("openEditionStation",{stationId:"p",unitId:"b"}).ok,false);
@@ -51,6 +75,12 @@ test("ročník prochází startem, hodnocením, pauzou, předáním, push a arch
   const review = {unitId:"a",stationId:"s",reviewerId:"judge",credential:"hodnotitel-studna"};
   ok("startEditionAssessment",review);
   assert.equal(dashboard().state,"evaluating");
+  const observed = observe();
+  assert.equal(observed.units.find(unit => unit.id === "a").state,"evaluating");
+  assert.deepEqual(observed.reviewers,[]);
+  assert.deepEqual(observed.gates,[]);
+  assert.deepEqual(observed.pauses,[]);
+  assert.equal(caller("openEditionStation",{credential:"pozorovatel-test",stationId:"s",unitId:"a"}).ok,false);
   const saved = {...review,result:"V pořádku",notes:"Zkouška",submissionId:randomUUID()};
   ok("saveEditionAssessment",saved);
   ok("saveEditionAssessment",saved);

@@ -75,7 +75,7 @@ test("a paused unit is dispatched after its pause and sees only its own notices"
   assert.equal(notices.some(item => item.id === "all"),true);
 
   const resumed = context.editionDispatch_(edition,entries,180100).units.get("a");
-  assert.equal(resumed.state,"active");
+  assert.equal(resumed.state,"enroute");
   assert.equal(resumed.station.id,"two");
   const after = context.editionUnitNotices_(entries,resumed,180100);
   assert.equal(after.some(item => item.id === "pause:end"),true);
