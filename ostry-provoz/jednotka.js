@@ -102,25 +102,15 @@
     el("unitArrived").hidden = !dispatchReceived;
     el("unitDispatch").hidden = !dispatchStationId;
     el("unitStationPanel").hidden = Boolean(dispatchStationId);
+    const stationNumber = data.station?.number;
+    const stationLabel = stationNumber ? "Stanoviště č. " + stationNumber : "";
     if (dispatchStationId) {
-      const location = data.station.location;
-      el("unitDispatchTitle").textContent = data.station.name;
-      el("unitDispatchLocation").textContent = location;
-      el("unitDispatchLocation").hidden = !location;
-      el("unitDispatchMessage").textContent = data.dispatch.message;
-      el("unitDispatchMessage").hidden = !data.dispatch.message;
-      const map = el("unitDispatchMap");
-      map.hidden = !location;
-      if (location) {
-        const query = new URLSearchParams({api:"1",query:location});
-        map.href = "https://www.google.com/maps/search/?" + query;
-      }
+      el("unitDispatchTitle").textContent = stationLabel;
+      el("unitDispatchMessage").textContent = data.dispatch.message || "Výjezdová SMS zatím není připravená.";
     }
     el("unitReceived").disabled = el("unitArrived").disabled = acknowledging || !navigator.onLine;
     el("unitStationTitle").textContent = data.state === "preparation" ? "Startovní stanoviště" : "Aktuální stanoviště";
-    el("unitStation").textContent = data.station?.name || (data.state === "finished" ? "Všechna stanoviště jsou absolvována" : ["waiting","paused"].includes(data.state) ? "Vyčkej na pokyn k přesunu" : "Stanoviště se zobrazí po startu soutěže");
-    el("unitLocation").textContent = data.station?.location || "";
-    el("unitLocation").hidden = !data.station?.location;
+    el("unitStation").textContent = stationLabel || (data.state === "finished" ? "Všechna stanoviště jsou absolvována" : ["waiting","paused"].includes(data.state) ? "Vyčkej na pokyn k přesunu" : "Stanoviště se zobrazí po startu soutěže");
     const standby = data.station?.kind === "standby";
     el("unitStationPanel").classList.toggle("standby", standby);
     el("unitStandby").hidden = !standby;
@@ -145,9 +135,9 @@
     }
     el("unitCompletedCount").textContent = data.completedCount;
     const list = el("unitCompleted");
-    list.replaceChildren(...data.completed.map(name => {
+    list.replaceChildren(...data.completed.map(number => {
       const item = document.createElement("li");
-      item.textContent = name;
+      item.textContent = "Stanoviště č. " + number;
       return item;
     }));
     list.hidden = !data.completed.length;

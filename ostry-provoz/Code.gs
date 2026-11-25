@@ -1326,7 +1326,7 @@ function editionAnnouncements_(data, edition, sheet, entries) {
 function editionUnitNotices_(entries, progress, now) {
   const notices = progress.stationUpdates.slice(-5).map(update => ({
     id:'station:' + update.station.id + ':' + update.at, at:update.at,
-    text:'Přidělené stanoviště: ' + update.station.name
+    text:'Přidělené stanoviště č. ' + update.number
   }));
   for (const entry of entries) {
     if (entry.unitId !== '*' && entry.unitId !== progress.unit.id) continue;
@@ -1345,7 +1345,7 @@ function editionUnitNotices_(entries, progress, now) {
 }
 
 function editionDispatch_(edition, entries, now = Date.now()) {
-  const stations = new Map(edition.stations.map(station => [station.id, {station:station, occupant:null, ready:false}]));
+  const stations = new Map(edition.stations.map((station,index) => [station.id, {station:station, number:index + 1, occupant:null, ready:false}]));
   const units = new Map();
   for (const unit of competitionUnits_(edition)) {
     const start = edition.draw.find(item => item.unitId === unit.id);
@@ -1355,7 +1355,7 @@ function editionDispatch_(edition, entries, now = Date.now()) {
     units.set(unit.id, progress);
     if (progress.station) {
       stations.get(progress.station.id).occupant = unit.id;
-      if (edition.activatedAt) progress.stationUpdates.push({station:progress.station,at:edition.activatedAt});
+      if (edition.activatedAt) progress.stationUpdates.push({station:progress.station,number:first + 1,at:edition.activatedAt});
     }
   }
   const events = [];
@@ -1401,7 +1401,7 @@ function editionDispatch_(edition, entries, now = Date.now()) {
       target.ready = false;
       target.occupant = progress.unit.id;
       progress.station = next;
-      progress.stationUpdates.push({station:next,at:event.at});
+      progress.stationUpdates.push({station:next,number:target.number,at:event.at});
       waiting.splice(i,1);
     }
   }
@@ -1747,18 +1747,19 @@ function readUnitDashboard_(data) {
   if (!access) return denied;
   const {edition,unit} = access;
   const entries = edition.status === 'active' ? editionProgressRows_(editionProgressSheet_(false), edition.year) : [];
-  const progress = editionDispatch_(edition, entries).units.get(unit.id);
+  const dispatch = editionDispatch_(edition, entries);
+  const progress = dispatch.units.get(unit.id);
   const station = edition.status === 'active' ? progress.station : null;
   return {ok:true,dashboard:{
     name:unit.name,
     edition:edition.name,
     state:progress.state,
     ...(edition.status === 'preparation' ? {preparation:editionRegistrationInfo_(edition)} : {}),
-    station:station ? {name:station.name,location:station.location,kind:station.kind} : null,
+    station:station ? {number:dispatch.stations.get(station.id).number,kind:station.kind} : null,
     ...(station && !progress.records.get(station.id)?.arrivedAt && !progress.records.get(station.id)?.startedAt
       ? {dispatch:{stationId:station.id,receivedAt:progress.records.get(station.id)?.receivedAt || null,message:entries.find(entry => entry.unitId === '@dispatch' &&
         entry.stationId === station.id)?.message || ''}} : {}),
-    completed:progress.completed.map(item => item.name),
+    completed:progress.completed.map(item => dispatch.stations.get(item.id).number),
     completedCount:progress.completed.length,
     pause:progress.pause ? {endsAt:progress.pause.pause.endsAt,text:progress.pause.pause.text} : null,
     notices:editionUnitNotices_(entries,progress,Date.now())

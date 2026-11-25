@@ -1,5 +1,9 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.17 — 2026-11-25
+
+- Pohled jednotky používá čísla stanovišť. Výjezdová karta zobrazuje číslo a text SMS, bez samostatného názvu, adresy a mapy.
+
 ## 1.1.0-beta.15 — 2026-11-25
 
 - Hodnocení nabízí tři barevné volby vedle sebe. Rozepsaný zápis zachovává zvolený výsledek.

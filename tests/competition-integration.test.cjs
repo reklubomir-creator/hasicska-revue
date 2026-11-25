@@ -51,8 +51,11 @@ test("ročník prochází startem, hodnocením, pauzou, předáním, push a arch
   assert.equal(caller("saveEditionDispatchMessage",{stationId:"s",message:"Přepsání",expectedMessage:""}).ok,false);
   const active = ok("saveCompetitionEdition",{edition:{...preparation,status:"active"},
     expectedRevision:preparation.revision}).edition;
-  assert.equal(dashboard().station.name,"Studna");
+  assert.equal(dashboard().station.number,1);
   assert.equal(dashboard().dispatch.message,"Příjezd zadní branou.");
+  assert.equal(dashboard().station.name,undefined);
+  assert.equal(dashboard().station.location,undefined);
+  assert.ok(dashboard().notices.some(notice => notice.text === "Přidělené stanoviště č. 1"));
   assert.equal(dashboard().state,"enroute");
   assert.equal(caller("acknowledgeUnitArrival",{token,stationId:"s"}).ok,false);
   assert.equal(caller("acknowledgeUnitDispatch",{token,stationId:"p"}).ok,false);
@@ -86,6 +89,7 @@ test("ročník prochází startem, hodnocením, pauzou, předáním, push a arch
   ok("saveEditionAssessment",saved);
   assert.equal(dashboard().state,"waiting");
   assert.equal(dashboard().completedCount,1);
+  assert.deepEqual(dashboard().completed,[1]);
   assert.equal(dashboard().station,null);
 
   const pauseId = randomUUID();
@@ -100,7 +104,7 @@ test("ročník prochází startem, hodnocením, pauzou, předáním, push a arch
   ok("sendEditionNotice",{unitId:"a",eventId:noticeId,text:"Zpráva pro A"});
   ok("sendEditionNotice",{unitId:"b",eventId:randomUUID(),text:"Zpráva pro B"});
   ok("endEditionPause",{unitId:"a",eventId:pauseId});
-  assert.equal(dashboard().station.name,"Pohotovost");
+  assert.equal(dashboard().station.number,2);
   assert.equal(dashboard().completedCount,1);
   assert.ok(dashboard().notices.some(item => item.id === pauseId + ":end"));
   const deliveries = ok("readUnitPushDeliveries",{secret,credential:undefined}).deliveries;
@@ -169,7 +173,7 @@ test("předregistrace přiřadí kontakt k připravené jednotce a zobrazí výj
   assert.equal(post("saveCompetitionEdition",{credential,expectedRevision:prepared.revision,edition:{...prepared,status:"active"}}).ok,true);
   const after = post("readUnitDashboard",{token}).dashboard;
   assert.equal(after.preparation,undefined);
-  assert.equal(after.station.name,"Studna");
+  assert.equal(after.station.number,1);
   assert.equal(post("readEditionRegistration",{invitation}).ok,false);
   assert.equal(post("revokeUnitAccess",{credential,unitId:"a"}).ok,true);
   assert.equal(post("readUnitDashboard",{token}).code,"INVALID_UNIT_ACCESS");
@@ -201,7 +205,7 @@ test("tři sloučené jednotky mají jeden start a sdílí postup i na již vyda
   assert.equal(post("saveCompetitionEdition",{expectedRevision:saved.revision,edition:{...merged,status:"active"}}).ok,true);
   const dashboard = key => post("readUnitDashboard",{token:key}).dashboard;
   assert.equal(dashboard(token).name,"Jednotka A + Jednotka B + Jednotka C");
-  assert.equal(dashboard(token).station.name,"Studna");
+  assert.equal(dashboard(token).station.number,1);
   assert.equal(post("acknowledgeUnitDispatch",{token,stationId:"s"}).ok,true);
   assert.ok(dashboard(groupToken).dispatch.receivedAt);
   assert.equal(post("acknowledgeUnitArrival",{token:groupToken,stationId:"s"}).ok,true);
