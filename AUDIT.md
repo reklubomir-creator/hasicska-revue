@@ -26,3 +26,11 @@ Worker přijímá polohu ve formátu OsmAnd a kontroluje ID zařízení proti ha
 Použij novou testovací Google tabulku a k ní vázaný Apps Script s kódem z `ostry-provoz/Code.gs`. V jeho Script Properties nastav vlastní `ORGANIZER_PIN` a `ASSESSMENT_STATION_TOKENS` jako JSON objekt, kde klíčem je přesný název stanoviště a hodnotou samostatný náhodný kód. Kód zadej jako heslo v hodnoticím formuláři.
 
 URL testovacího Apps Scriptu nastav do `TEST_API_URL` v souboru `ostry-provoz/config.js`. Konfigurace platí také pro samostatná rozhraní hodnotitele a jednotky. Vývojová stránka zamítá známou produkční adresu Apps Scriptu. Testovací URL musí směřovat k testovací tabulce. Provozní PIN ani kódy do frontendu nepatří.
+
+
+## Stav před nasazením 1.1.0-beta.1
+
+- Místní testy pokrývají výměnu dat mezi API a rozhraními organizátora, hodnotitele a jednotky. Google Sheets je v testu nahrazen paměťovým úložištěm. Chromium ověřilo i obnovení konceptu po načtení stránky a chování při odpojení a znovupřipojení.
+- Produkční zdroj kvízu po schválené změně obsahuje 15 otázek pro každou roli. Starší větve obsahují 20 otázek. Test hlídá počet i to, že účastnický klíč neumožní uzavřít kvíz ani číst správu ročníků.
+- Před nasazením je potřeba ověřit skutečný Apps Script s oddělenou testovací tabulkou, doručování při zavřené aplikaci na iOS a Androidu a přístupy původních rozhraní. Původní operace pro sdílený stav, kontakty a některé výsledky dosud nemají kompletní serverovou kontrolu rolí.
+- Nový ročník zatím zaznamenává uzavření kvízu potvrzením organizátora. Automatické propojení s původním kvízem, výsledkové listiny a závěrečné zprávy nového ročníku potřebují navazující práci. Historické výstupy zůstávají v původním rozhraní. GPS je odložená.

@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.1 — 2026-11-25
+
+- Integrační testy spouštějí skutečné API handlery s místní náhradou Google Sheets. Pokrývají přípravu a start ročníku, hodnocení, povolení přesunu, pauzu, adresování oznámení, archivaci a ochranu historického listu.
+- Prohlížečový scénář v Chromiu ověřil administraci, přístup jednotky, obnovení konceptu, předání stanoviště, zprávy a návrat z offline režimu. Opraveno předčasné zobrazení pole soukromého odkazu.
+- Produkční kvíz ve zdrojích obsahuje 15 schválených otázek na roli. Starší vývojové větve mají sady po 20 otázkách. Beta zachovává schválenou sadu. Podmínky před nasazením shrnuje [audit](AUDIT.md).
+
 ## 1.1.0-alpha.6.1 — 2026-11-25
 
 - Přidána podpora Web Push v samostatném přehledu jednotky, včetně otevření vybrané zprávy ze systémového oznámení.
