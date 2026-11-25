@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.2 — 2026-11-25
+
+- Sjednocený vzhled přehledu jednotky, hodnocení a průběhu ročníku. Aktuální stanoviště a čekání na přesun jsou čitelnější. Stav připojení a pohotovost mají vlastní vizuální zvýraznění.
+- Správa ročníků má sbalené seznamy, větší dotykové ovládání a přehlednější mobilní formuláře. Průběh ročníku má sbalitelné uvolňování stanovišť a organizaci pauz.
+- Ověřeno místně v Chromiu při šířkách 320, 390, 768 a 1440 px.
+
 ## 1.1.0-beta.1 — 2026-11-25
 
 - Integrační testy spouštějí skutečné API handlery s místní náhradou Google Sheets. Pokrývají přípravu a start ročníku, hodnocení, povolení přesunu, pauzu, adresování oznámení, archivaci a ochranu historického listu.

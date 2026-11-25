@@ -1,7 +1,7 @@
 (() => {
   const el = id => document.getElementById(id);
   const states = { preparation:"Příprava", waiting:"Čeká na uvolnění dalšího stanoviště", active:"Na stanovišti", standby:"Pohotovost", paused:"Pauza", evaluating:"PRÁVĚ HODNOTÍ", finished:"Dokončeno", closed:"Uzavřeno" };
-  let login, overview, selected, draftKey, submission, pendingNotice, busy = false, reading = false;
+  let login, overview, overviewSignature, selected, draftKey, submission, pendingNotice, busy = false, reading = false;
   el("version").textContent = "Verze " + APP_VERSION;
   el("year").value = new Date().getFullYear() + 1;
 
@@ -28,7 +28,8 @@
     const unitFilter = el("unitFilter").value;
     const gates = el("gates");
     gates.replaceChildren();
-    if (overview.status === "active") {
+    el("gatePanel").hidden = overview.status !== "active" || !overview.gates.length;
+    if (!el("gatePanel").hidden) {
       for (const gate of overview.gates) {
         if (stationFilter && stationFilter !== gate.stationId) continue;
         const station = overview.stations.find(item => item.id === gate.stationId);
@@ -159,7 +160,12 @@
   };
 
   function showOverview(data) {
+    const signature = JSON.stringify(data);
+    if (overviewSignature === signature) return;
+    const first = !overview;
+    overviewSignature = signature;
     overview = data;
+    if (first) el("gatePanel").open = !data.organizer;
     el("edition").textContent = data.edition;
     options(el("stationFilter"),"Všechna dostupná stanoviště",data.stations);
     options(el("unitFilter"),"Všechny dostupné jednotky",data.units);
@@ -254,15 +260,32 @@
     const session = { year:Number(el("year").value), credential:el("credential").value.trim() };
     el("overview").hidden = true;
     login = null;
+    overview = null;
+    overviewSignature = null;
+    el("organization").open = false;
     busy = true;
     try {
       showOverview(await api("readEditionProgress",{},session));
       login = session;
+      el("login").hidden = true;
       el("credential").value = "";
+      el("edition").focus();
       el("message").textContent = "";
     } catch (error) {
       el("message").textContent = error.message;
     } finally { busy = false; }
+  };
+  el("switchEdition").onclick = () => {
+    if (busy) return;
+    login = null;
+    overview = null;
+    overviewSignature = null;
+    pendingNotice = null;
+    el("noticeText").value = "";
+    el("overview").hidden = true;
+    el("message").textContent = "";
+    el("login").hidden = false;
+    el("year").focus();
   };
   el("stationFilter").onchange = render;
   el("unitFilter").onchange = render;

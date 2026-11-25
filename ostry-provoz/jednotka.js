@@ -52,7 +52,10 @@
   el("unitVersion").textContent = "Verze " + APP_VERSION;
 
   function showConnection(text) {
-    el("unitConnection").textContent = text || (navigator.onLine ? "Online" : "Bez připojení");
+    const status = text || (navigator.onLine ? "Online" : "Bez připojení");
+    const connection = el("unitConnection");
+    if (connection.textContent !== status) connection.textContent = status;
+    connection.dataset.state = status === "Online" ? "online" : "offline";
   }
 
   function showDashboard(data) {

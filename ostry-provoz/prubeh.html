@@ -7,41 +7,47 @@
 <title>Průběh ročníku · Hasičská revue</title>
 <script src="config.js" defer></script>
 <script src="prubeh.js" defer></script>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#102d4e;font:16px/1.5 system-ui,sans-serif}header{background:#af2b1e;color:white;padding:15px;font-weight:750}main{max-width:760px;margin:auto;padding:16px}section,form{background:white;border:1px solid #dce5ef;border-radius:14px;padding:16px;margin:12px 0}h1,h2,p{margin:0 0 8px}h2{font-size:19px}label{display:block;margin:8px 0}input,select,textarea,button{font:inherit;width:100%;min-height:46px;border:1px solid #c5d2df;border-radius:9px;padding:8px}textarea{min-height:100px}button{background:#102d4e;color:white;font-weight:650;margin:5px 0;cursor:pointer}button.secondary{background:#e8eff7;color:#102d4e}button:disabled{opacity:.6}article{border-top:1px solid #dce5ef;padding:12px 0}.evaluating{color:#8b4200;font-weight:800}footer{font-size:13px;margin:14px 0}
-</style>
+<link rel="stylesheet" href="teren.css">
 </head>
 <body>
-<header>Hasičská revue</header>
+<header class="site-header"><div class="site-header-inner"><img src="jednotka-ikona-192.png" width="36" height="36" alt="">Hasičská revue</div></header>
 <main>
 <h1>Průběh ročníku</h1>
-<form id="login">
+<form id="login" class="panel">
+<div class="form-grid columns">
 <label>Rok <input id="year" type="number" min="2000" max="2100" required></label>
 <label>Kód stanoviště nebo organizační PIN <input id="credential" type="password" autocomplete="off" required></label>
-<button>Načíst ročník</button>
+</div>
+<div class="actions"><button>Načíst ročník</button></div>
 </form>
-<p id="message" role="status"></p>
-<section id="overview" hidden>
-<h2 id="edition"></h2>
+<p id="message" class="status-message" role="status"></p>
+<section id="overview" class="panel" hidden>
+<div class="panel-heading"><h2 id="edition" tabindex="-1"></h2><button id="switchEdition" class="secondary" type="button">Změnit ročník</button></div>
+<div class="form-grid columns overview-filters">
 <label>Stanoviště <select id="stationFilter"></select></label>
 <label>Jednotka <select id="unitFilter"></select></label>
-<div id="organization" hidden>
-  <h2>Pauzy a zprávy</h2>
+</div>
+<details id="organization" class="panel" hidden>
+  <summary>Pauzy a zprávy</summary>
+  <div class="form-grid columns">
   <label>Příjemce <select id="noticeRecipient"></select></label>
   <label>Délka pauzy v minutách <input id="pauseMinutes" type="number" min="1" max="120" value="10"></label>
+  </div>
   <label>Pokyn k pauze nebo text zprávy <textarea id="noticeText" maxlength="400"></textarea></label>
-  <button id="beginPause" type="button">Zahájit pauzu</button>
+  <div class="actions"><button class="secondary" id="beginPause" type="button">Zahájit pauzu</button>
   <button id="sendNotice" type="button">Odeslat zprávu</button>
-  <div id="activePauses"></div>
-</div>
-<div id="gates"></div>
-<div id="units"></div>
+  </div>
+  <div id="activePauses" class="result-list"></div>
+</details>
+<details id="gatePanel" class="panel" hidden><summary>Uvolnění stanovišť</summary><div id="gates" class="result-list"></div></details>
+<h3>Jednotky</h3>
+<div id="units" class="result-list"></div>
 </section>
-<form id="assessment" hidden>
+<form id="assessment" class="panel form-grid" hidden>
 <h2 id="assessmentTitle"></h2>
 <label>Hodnotitel <select id="reviewer" required></select></label>
 <button id="start" type="button">Hodnotit</button>
-<div id="assessmentFields" hidden>
+<div id="assessmentFields" class="form-grid" hidden>
 <label>Výsledek <select id="result"><option>V pořádku</option><option>Drobné nedostatky</option><option>Závažné nedostatky</option></select></label>
 <label>Poznámka <textarea id="notes" maxlength="12000"></textarea></label>
 <p id="draftStatus" role="status"></p>

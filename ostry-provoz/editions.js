@@ -49,12 +49,15 @@
   }
 
   function renderEditor() {
+    const expanded = new Set([...lists.querySelectorAll("details[open]")].map(section => section.dataset.list));
     lists.replaceChildren();
     for (const [key, title, addLabel, fields] of schemas) {
-      const section = document.createElement("section");
+      const section = document.createElement("details");
       section.className = "panel edition-list";
-      const heading = document.createElement("h3");
-      heading.textContent = title;
+      section.dataset.list = key;
+      section.open = expanded.has(key);
+      const heading = document.createElement("summary");
+      heading.textContent = title + " (" + draft[key].length + ")";
       section.append(heading);
       for (const [index, item] of draft[key].entries()) {
         const row = document.createElement("div");
