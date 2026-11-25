@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-alpha.2 — 2026-11-25
+
+- Přidána správa přípravy ročníků s organizačním PINem a kontrolou souběžných úprav.
+- Každý ročník má vlastní konfiguraci jednotek, kontaktů velitelů, typů stanovišť, přiřazení hodnotitelů, seznamu pozorovatelů a rozlosování. Zbývající starty lze dolosovat se zachováním již vybraných.
+- Konfigurace se ukládá v Google Sheets do samostatného listu podle roku. Stávající hodnocení a výsledky zůstávají v původním úložišti. Přepínání ostrého ročníku a jeho výsledků zatím není součástí této verze.
+
 ## 1.1.0-alpha.1 — 2026-11-25
 
 - Nové i upravované hodnocení ukládá poznámku a výsledek do místního konceptu. Koncepty jsou oddělené podle ročníku, hodnotitele, jednotky, stanoviště a typu zápisu. Při otevření formuláře se obnoví jeho koncept. Po spuštění se obnoví poslední dostupný koncept daného hodnotitele.

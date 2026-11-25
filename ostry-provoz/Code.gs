@@ -947,6 +947,107 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
+const EDITIONS_SHEET = 'Příprava ročníků';
+
+function competitionEditionSheet_(create) {
+  const spreadsheet = spreadsheet_();
+  let sheet = spreadsheet.getSheetByName(EDITIONS_SHEET);
+  if (!sheet && create) {
+    sheet = spreadsheet.insertSheet(EDITIONS_SHEET);
+    sheet.appendRow(['Ročník', 'Revize', 'Nastavení JSON']);
+  }
+  return sheet;
+}
+
+function competitionEditionRows_(sheet) {
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
+}
+
+function competitionEditionText_(value, limit, required) {
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (text.length > limit || (required && !text)) throw new Error('Zkontroluj povinná pole a délku textu.');
+  return text;
+}
+
+function competitionEditionItems_(items, normalize) {
+  if (!Array.isArray(items) || items.length > 40) throw new Error('Každý seznam může mít nejvýše 40 položek.');
+  const ids = new Set();
+  return items.map(item => {
+    const id = competitionEditionText_(item && item.id, 36, true);
+    if (!/^[a-zA-Z0-9-]+$/.test(id) || ids.has(id)) throw new Error('Neplatný nebo opakovaný identifikátor položky.');
+    ids.add(id);
+    return Object.assign({id:id}, normalize(item));
+  });
+}
+
+function normalizeCompetitionEdition_(input) {
+  if (!input || typeof input !== 'object') throw new Error('Chybí nastavení ročníku.');
+  const year = Number(input.year);
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) throw new Error('Zadej platný rok.');
+  if (!['preparation','archived'].includes(input.status)) throw new Error('Neplatný stav ročníku.');
+  const text = competitionEditionText_;
+  const units = competitionEditionItems_(input.units, item => ({
+    name:text(item.name,120,true), details:text(item.details,300,false)
+  }));
+  const stations = competitionEditionItems_(input.stations, item => {
+    if (!['scored','standby','studna','quiz'].includes(item.kind)) throw new Error('Neplatný typ stanoviště.');
+    return {name:text(item.name,120,true), kind:item.kind, location:text(item.location,240,false)};
+  });
+  for (const items of [units, stations]) {
+    const names = items.map(item => item.name.toLocaleLowerCase('cs-CZ'));
+    if (new Set(names).size !== names.length) throw new Error('Názvy jednotek a stanovišť musí být jedinečné.');
+  }
+  const unitIds = new Set(units.map(unit => unit.id));
+  const stationIds = new Set(stations.map(station => station.id));
+  const commanders = competitionEditionItems_(input.commanders, item => {
+    if (!unitIds.has(item.unitId)) throw new Error('Každému veliteli přiřaď existující jednotku.');
+    return {name:text(item.name,120,true), unitId:item.unitId, phone:text(item.phone,40,false), email:text(item.email,120,false)};
+  });
+  const reviewers = competitionEditionItems_(input.reviewers, item => {
+    if (!stationIds.has(item.stationId)) throw new Error('Každému hodnotiteli přiřaď existující stanoviště.');
+    return {name:text(item.name,120,true), stationId:item.stationId};
+  });
+  const observers = competitionEditionItems_(input.observers, item => ({name:text(item.name,120,true)}));
+  const drawnUnits = new Set();
+  const occupiedStations = new Set();
+  const draw = competitionEditionItems_(input.draw, item => {
+    if (!unitIds.has(item.unitId) || !stationIds.has(item.stationId)) throw new Error('Každému startu přiřaď jednotku a stanoviště.');
+    if (drawnUnits.has(item.unitId) || occupiedStations.has(item.stationId)) throw new Error('Jednotka i startovní stanoviště mohou být v rozlosování jen jednou.');
+    drawnUnits.add(item.unitId);
+    occupiedStations.add(item.stationId);
+    return {unitId:item.unitId, stationId:item.stationId};
+  });
+  return {year:year, name:text(input.name,120,true), status:input.status,
+    units:units, stations:stations, commanders:commanders, reviewers:reviewers, observers:observers, draw:draw};
+}
+
+function competitionEditions_(data) {
+  if (!canManageAssessment_(data.credential)) return {ok:false,error:'Správa ročníků vyžaduje organizační PIN.'};
+  if (data.action === 'listCompetitionEditions') {
+    const rows = competitionEditionRows_(competitionEditionSheet_(false));
+    return {ok:true,editions:rows.map(row => Object.assign(JSON.parse(row[2]), {revision:row[1]}))};
+  }
+  let edition;
+  try { edition = normalizeCompetitionEdition_(data.edition); }
+  catch (error) { return {ok:false,error:error.message}; }
+  const payload = JSON.stringify(edition);
+  if (payload.length > 45000) return {ok:false,error:'Nastavení ročníku je příliš dlouhé.'};
+  const sheet = competitionEditionSheet_(false);
+  const rows = competitionEditionRows_(sheet);
+  const index = rows.findIndex(row => Number(row[0]) === edition.year);
+  const currentRevision = index < 0 ? null : rows[index][1];
+  if (currentRevision !== data.expectedRevision) {
+    return {ok:false,error:'Ročník mezitím vznikl nebo se změnil. Otevři znovu jeho aktuální verzi.'};
+  }
+  const revision = Utilities.getUuid();
+  const activeSheet = sheet || competitionEditionSheet_(true);
+  const row = [edition.year, revision, payload];
+  if (index < 0) activeSheet.appendRow(row);
+  else activeSheet.getRange(index + 2, 1, 1, 3).setValues([row]);
+  return {ok:true,edition:Object.assign(edition,{revision:revision})};
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   let lockAcquired = false;
@@ -960,6 +1061,10 @@ function doPost(e) {
 
     lock.waitLock(10000);
     lockAcquired = true;
+
+    if (data.action === 'listCompetitionEditions' || data.action === 'saveCompetitionEdition') {
+      return json(competitionEditions_(data));
+    }
 
     if (data.action === 'saveReport') {
       return json(reportStorageSave_(data));
