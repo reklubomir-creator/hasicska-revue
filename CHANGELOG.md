@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.7 — 2026-11-25
+
+- Kontakt jde upravit přímo u jednotky. Předregistrovaní velitelé se zobrazují také v sekci Velitelé a při registraci lze doplnit e-mail.
+- Dolosování doplní částečně vyplněné starty, zachová dokončené dvojice a vynechá prázdné řádky. Chyby zobrazuje přímo u tlačítka.
+- Ověřeno více samostatných sloučení v jediném ročníku.
+
 ## 1.1.0-beta.6 — 2026-11-25
 
 - Registrovaný kontakt i ručně zadaní velitelé se zobrazují přímo u příslušné jednotky. Telefon lze otevřít v aplikaci pro volání.

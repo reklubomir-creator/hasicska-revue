@@ -31,6 +31,8 @@
   let draft;
   let dirty = false;
   let busy = false;
+  let contactEditor;
+  let drawFeedback = "";
 
   function setMessage(text, error = false) {
     message.textContent = text;
@@ -61,33 +63,123 @@
   function contactsAt(element) {
     const unitId = element.dataset.unitContact;
     const merge = draft.merges.find(item => item.id === unitId);
+    const directory = element.dataset.directory === "true";
     const ids = new Set([unitId,...(merge?.unitIds || [])]);
     const seen = new Set();
-    const contacts = [...(draft.registrations || []),...draft.commanders].filter(contact => {
-      if (!ids.has(contact.unitId) || !contact.name) return false;
+    const contacts = [
+      ...(draft.registrations || []).map(contact => ({contact,source:"registration"})),
+      ...(directory ? [] : draft.commanders.map(contact => ({contact,source:"manual"})))
+    ].filter(({contact}) => {
+      if ((!directory && !ids.has(contact.unitId)) || !contact.name) return false;
       const key = JSON.stringify([contact.unitId,contact.name,contact.phone?.replace(/\D/g,"")]);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-    element.replaceChildren(...contacts.map(contact => {
+    element.replaceChildren(...contacts.map(({contact,source}) => {
       const line = document.createElement("li");
-      const original = merge && draft.units.find(unit => unit.id === contact.unitId);
+      const original = (merge || directory) && [...draft.units,...competingUnits()].find(unit => unit.id === contact.unitId);
       line.textContent = (original ? original.name + " · " : "") + contact.name;
-      if (contact.phone) {
-        const phone = document.createElement("a");
-        const number = contact.phone.replace(/[^+0-9]/g,"");
-        if (number) phone.href = "tel:" + number;
-        phone.textContent = contact.phone;
-        line.append(" · ",phone);
+      for (const [value,href] of [
+        [contact.phone,"tel:" + (contact.phone || "").replace(/[^+0-9]/g,"")],
+        [contact.email,"mailto:" + encodeURIComponent(contact.email || "")]
+      ]) {
+        if (!value) continue;
+        const link = document.createElement("a");
+        link.href = href;
+        link.textContent = value;
+        line.append(" · ",link);
+      }
+      if (draft.status !== "archived") {
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "soft";
+        edit.textContent = "Upravit kontakt";
+        edit.onclick = () => editContact(line,contact,source);
+        line.append(" ",edit);
       }
       return line;
     }));
     if (!contacts.length) {
       const empty = document.createElement("li");
-      empty.textContent = "Kontakt velitele zatím chybí";
+      empty.textContent = directory ? "Z předregistrace zatím nikdo nepřibyl." : "Kontakt velitele zatím chybí";
       element.append(empty);
     }
+  }
+
+  function refreshContactCards() {
+    for (const contacts of lists.querySelectorAll("[data-unit-contact]")) contactsAt(contacts);
+  }
+
+  function editContact(line, contact, source) {
+    if (busy || contactEditor) return;
+    const block = document.createElement("div");
+    block.className = "edition-merge";
+    const inputs = Object.fromEntries([
+      ["name","Jméno","text",120],["phone","Telefon","tel",30],["email","E-mail","email",120]
+    ].map(([key,title,type,max]) => {
+      const label = document.createElement("label");
+      label.className = "field";
+      const field = document.createElement("input");
+      field.type = type;
+      field.maxLength = max;
+      field.required = key === "name" || (key === "phone" && source === "registration");
+      field.value = contact[key] || "";
+      label.append(title,field);
+      block.append(label);
+      return [key,field];
+    }));
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "primary";
+    save.textContent = "Uložit kontakt";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "soft";
+    cancel.textContent = "Zrušit";
+    const finish = () => { contactEditor = null; refreshContactCards(); };
+    cancel.onclick = finish;
+    save.onclick = async () => {
+      if (busy || !Object.values(inputs).every(field => field.reportValidity())) return;
+      const next = Object.fromEntries(Object.entries(inputs).map(([key,field]) => [key,field.value.trim()]));
+      const prior = editions.find(item => item.year === draft.year)?.commanders.find(item => item.id === contact.id);
+      if (source === "manual" && !prior) {
+        Object.assign(contact,next);
+        dirty = true;
+        finish();
+        renderEditor();
+        setMessage("Kontakt upraven v rozepsaném ročníku. Ulož ročník.");
+        return;
+      }
+      const response = await request("updateEditionCommander",{
+        year:draft.year,unitId:contact.unitId,contactId:contact.id,source,...next,
+        expected:prior || contact,expectedRevision:draft.revision
+      });
+      if (!response) return;
+      const savedEdition = editions.find(item => item.year === draft.year);
+      if (source === "manual") {
+        Object.assign(contact,response.contact);
+        Object.assign(prior,response.contact);
+        draft.revision = response.revision;
+        if (savedEdition) savedEdition.revision = response.revision;
+      } else {
+        draft.registrations = draft.registrations.map(item => item.unitId === contact.unitId ? response.contact : item);
+        if (savedEdition) savedEdition.registrations = draft.registrations;
+      }
+      finish();
+      if (source === "manual") renderEditor();
+      setMessage("Kontakt velitele uložen.");
+    };
+    block.onkeydown = event => {
+      if (event.key === "Enter" && event.target.tagName === "INPUT") {
+        event.preventDefault();
+        save.click();
+      }
+    };
+    block.append(save,cancel);
+    line.append(block);
+    contactEditor = block;
+    inputs.name.focus();
   }
 
   function makeContacts(unitId) {
@@ -176,6 +268,7 @@
   }
 
   function renderEditor() {
+    contactEditor = null;
     const expanded = new Set([...lists.querySelectorAll("details[open]")].map(section => section.dataset.list));
     lists.replaceChildren();
     for (const [key, title, addLabel, fields] of schemas) {
@@ -184,8 +277,20 @@
       section.dataset.list = key;
       section.open = expanded.has(key);
       const heading = document.createElement("summary");
-      heading.textContent = title + " (" + draft[key].length + ")";
+      const count = draft[key].length + (key === "commanders" ? draft.registrations?.length || 0 : 0);
+      heading.textContent = title + " (" + count + ")";
+      if (key === "commanders") heading.id = "editionCommanderHeading";
       section.append(heading);
+      if (key === "commanders") {
+        const label = document.createElement("h3");
+        label.textContent = "Velitelé z předregistrace";
+        const directory = document.createElement("ul");
+        directory.className = "edition-unit-contacts";
+        directory.dataset.unitContact = "";
+        directory.dataset.directory = "true";
+        contactsAt(directory);
+        section.append(label,directory);
+      }
       for (const [index, item] of draft[key].entries()) {
         const row = document.createElement("div");
         row.className = "edition-row";
@@ -297,36 +402,26 @@
         fill.className = "soft";
         fill.textContent = "Dolosovat zbývající";
         fill.onclick = fillDraw;
-        section.append(fill);
+        const feedback = document.createElement("p");
+        feedback.id = "editionDrawFeedback";
+        feedback.setAttribute("role","status");
+        feedback.textContent = drawFeedback;
+        section.append(fill,feedback);
       }
       lists.append(section);
     }
   }
 
   function fillDraw() {
-    const drawnUnits = new Set(draft.draw.map(item => item.unitId));
-    const drawnStations = new Set(draft.draw.map(item => item.stationId));
-    if (drawnUnits.has(undefined) || drawnUnits.has("") || drawnStations.has(undefined) || drawnStations.has("")
-      || drawnUnits.size !== draft.draw.length || drawnStations.size !== draft.draw.length) {
-      setMessage("Nejdřív doplň a zkontroluj stávající starty.", true);
+    const result = buildRemainingDraw(competingUnits(),draft.stations,draft.draw);
+    drawFeedback = result.message;
+    if (!result.ok) {
+      el("editionDrawFeedback").textContent = drawFeedback;
       return;
     }
-    const remaining = competingUnits().filter(unit => !drawnUnits.has(unit.id));
-    const available = draft.stations.filter(station => !drawnStations.has(station.id));
-    if (remaining.length > available.length) {
-      setMessage("Pro zbývající jednotky chybí volná stanoviště.", true);
-      return;
-    }
-    for (let index = available.length - 1; index > 0; index--) {
-      const other = Math.floor(Math.random() * (index + 1));
-      [available[index], available[other]] = [available[other], available[index]];
-    }
-    remaining.forEach((unit, index) => {
-      draft.draw.push({ id: crypto.randomUUID(), unitId: unit.id, stationId: available[index].id });
-    });
-    dirty ||= remaining.length > 0;
+    dirty ||= JSON.stringify(draft.draw) !== JSON.stringify(result.draw);
+    draft.draw = result.draw;
     renderEditor();
-    setMessage(remaining.length ? "Zbývající starty jsou vylosované. Ulož ročník." : "Všechny jednotky už mají start.");
   }
 
   function openEdition(edition) {
@@ -334,6 +429,7 @@
       year: new Date().getFullYear() + 1, name: "", status: "preparation", revision: null
     }, Object.fromEntries(schemas.map(([key]) => [key, []])));
     draft.merges ||= [];
+    drawFeedback = "";
     year.value = draft.year;
     year.readOnly = Boolean(draft.revision);
     name.value = draft.name;
@@ -453,11 +549,13 @@
     draft.registrations = saved.registrations;
     const entry = editions.find(edition => edition.year === draft.year);
     if (entry) entry.registrations = saved.registrations;
-    for (const contacts of lists.querySelectorAll("[data-unit-contact]")) contactsAt(contacts);
+    refreshContactCards();
+    const heading = el("editionCommanderHeading");
+    if (heading) heading.textContent = "Velitelé (" + (draft.commanders.length + draft.registrations.length) + ")";
   }
 
   el("editionRefreshRegistrations").onclick = async () => {
-    if (busy || !draft?.revision) return;
+    if (busy || contactEditor || !draft?.revision) return;
     const response = await request("listCompetitionEditions");
     if (!response) return;
     applyRegistrations(response.editions.find(edition => edition.year === draft.year));
@@ -466,12 +564,12 @@
 
   let checkingContacts = false;
   setInterval(async () => {
-    if (busy || checkingContacts || document.hidden || panel.classList.contains("hidden") || !draft?.revision) return;
+    if (busy || contactEditor || checkingContacts || document.hidden || panel.classList.contains("hidden") || !draft?.revision) return;
     const current = draft;
     checkingContacts = true;
     try {
       const response = await quizPost({action:"listCompetitionEditions",credential:pin.value.trim()});
-      if (draft === current && response?.ok) applyRegistrations(response.editions.find(edition => edition.year === current.year));
+      if (!busy && !contactEditor && draft === current && response?.ok) applyRegistrations(response.editions.find(edition => edition.year === current.year));
     } catch {
       // The manual refresh remains available if the connection drops.
     } finally {
@@ -519,3 +617,41 @@
     if (dirty) event.preventDefault();
   });
 })();
+
+function buildRemainingDraw(units, stations, original) {
+  const unitIds = new Set(units.map(unit => unit.id));
+  const stationIds = new Set(stations.map(station => station.id));
+  const pinnedUnits = new Set();
+  const pinnedStations = new Set();
+  const draw = original.filter(row => row.unitId || row.stationId).map(row => ({...row}));
+  for (const row of draw) {
+    if ((row.unitId && (!unitIds.has(row.unitId) || pinnedUnits.has(row.unitId))) ||
+        (row.stationId && (!stationIds.has(row.stationId) || pinnedStations.has(row.stationId)))) {
+      return {ok:false,message:"Některá jednotka nebo stanoviště jsou přiřazené dvakrát nebo už nejsou dostupné."};
+    }
+    if (row.unitId) pinnedUnits.add(row.unitId);
+    if (row.stationId) pinnedStations.add(row.stationId);
+  }
+  if (units.length > stations.length) {
+    return {ok:false,message:"Je " + units.length + " soutěžních jednotek a jen " + stations.length + " startovních stanovišť."};
+  }
+  const shuffle = items => {
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i],items[j]] = [items[j],items[i]];
+    }
+    return items;
+  };
+  const freeUnits = shuffle([...unitIds].filter(id => !pinnedUnits.has(id)));
+  const freeStations = shuffle([...stationIds].filter(id => !pinnedStations.has(id)));
+  for (const row of draw) {
+    if (!row.unitId) row.unitId = freeUnits.shift();
+    if (!row.stationId) row.stationId = freeStations.shift();
+  }
+  if (draw.some(row => !row.unitId || !row.stationId)) {
+    return {ok:false,message:"Některá vybraná stanoviště jsou navíc. Odeber jejich prázdné řádky."};
+  }
+  for (const unitId of freeUnits) draw.push({id:crypto.randomUUID(),unitId,stationId:freeStations.shift()});
+  return {ok:true,draw,message:JSON.stringify(original) === JSON.stringify(draw)
+    ? "Všechny jednotky už mají start." : "Starty jsou dolosované. Zkontroluj je a ulož ročník."};
+}

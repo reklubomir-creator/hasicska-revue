@@ -1204,16 +1204,58 @@ function unitRegistration_(data) {
   if (edition.status !== 'preparation') return {ok:false,error:'Předregistrace je uzavřená. Obrať se na vedení soutěže.'};
   if (reserved.has(key)) return {ok:false,error:'Tato jednotka už má přístup. Pokud jde o omyl, obrať se na vedení.'};
   if (rows.some(row => row[2] === hash)) return {ok:false,error:'Přístupový klíč se už používá.'};
-  const name = typeof data.name === 'string' ? data.name.trim() : '';
-  const phone = typeof data.phone === 'string' ? data.phone.trim() : '';
-  if (!name || name.length > 120 || phone.length > 30 || !/^\+?[0-9 ()-]+$/.test(phone) || !/^\d{9,15}$/.test(phone.replace(/\D/g,''))) {
-    return {ok:false,error:'Vyplň jméno velitele a platné telefonní číslo.'};
-  }
-  const row = [year,key,hash,JSON.stringify({unitId:unit.id,name:name,phone:phone})];
+  const contact = registrationContact_(data);
+  if (!contact) return {ok:false,error:'Vyplň jméno, platný telefon a případně platný e-mail.'};
+  const row = [year,key,hash,JSON.stringify({unitId:unit.id,...contact})];
   const target = sheet || unitAccessSheet_(true);
   if (index < 0) target.appendRow(row);
   else target.getRange(index + 2,1,1,4).setValues([row]);
   return {ok:true};
+}
+
+function registrationContact_(data, requirePhone = true) {
+  const name = typeof data.name === 'string' ? data.name.trim() : '';
+  const phone = typeof data.phone === 'string' ? data.phone.trim() : '';
+  const email = typeof data.email === 'string' ? data.email.trim() : '';
+  const validPhone = phone.length <= 30 && /^\+?[0-9 ()-]+$/.test(phone) && /^\d{9,15}$/.test(phone.replace(/\D/g,''));
+  if (!name || name.length > 120 || ((requirePhone || phone) && !validPhone) ||
+      (email && (email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)))) return null;
+  return {name:name,phone:phone,...(email ? {email:email} : {})};
+}
+
+function updateEditionCommander_(data) {
+  if (!canManageAssessment_(data.credential)) return {ok:false,error:'Úprava kontaktu vyžaduje organizační PIN.'};
+  const year = Number(data.year);
+  const sheet = competitionEditionSheet_(false);
+  const editionRows = competitionEditionRows_(sheet);
+  const index = editionRows.findIndex(row => Number(row[0]) === year);
+  const edition = index >= 0 ? JSON.parse(editionRows[index][2]) : null;
+  if (!edition || edition.status === 'archived') return {ok:false,error:'Upravit lze kontakt v nearchivovaném ročníku.'};
+  const registered = data.source === 'registration';
+  const contact = registrationContact_(data,registered);
+  if (!contact) return {ok:false,error:'Zkontroluj jméno, telefon a e-mail.'};
+  const same = previous => previous && ['name','phone','email'].every(key =>
+    (previous[key] || '') === (data.expected?.[key] || ''));
+  if (registered) {
+    const accessSheet = unitAccessSheet_(false);
+    const rows = unitRegistrationRows_(accessSheet);
+    const row = rows.findIndex(item => Number(item[0]) === year && item[1] === 'unit:' + data.unitId);
+    const previous = row >= 0 && rows[row][3] ? JSON.parse(rows[row][3]) : null;
+    if (!same(previous)) return {ok:false,error:'Kontakt se mezitím změnil. Načti aktuální údaje.'};
+    const saved = {unitId:data.unitId,...contact};
+    accessSheet.getRange(row + 2,4,1,1).setValues([[JSON.stringify(saved)]]);
+    return {ok:true,contact:saved};
+  }
+  if (data.source !== 'manual' || data.expectedRevision !== editionRows[index][1]) {
+    return {ok:false,error:'Ročník se mezitím změnil. Načti aktuální údaje.'};
+  }
+  const commanderIndex = edition.commanders.findIndex(item => item.id === data.contactId && item.unitId === data.unitId);
+  if (!same(edition.commanders[commanderIndex])) return {ok:false,error:'Kontakt se mezitím změnil. Načti aktuální údaje.'};
+  const saved = {...edition.commanders[commanderIndex],...contact,email:contact.email || ''};
+  edition.commanders[commanderIndex] = saved;
+  const revision = Utilities.getUuid();
+  sheet.getRange(index + 2,2,1,2).setValues([[revision,JSON.stringify(edition)]]);
+  return {ok:true,contact:saved,revision:revision};
 }
 
 const EDITION_PROGRESS_SHEET = 'Průběh ročníků';
@@ -1736,6 +1778,8 @@ function doPost(e) {
 
     lock.waitLock(10000);
     lockAcquired = true;
+
+    if (data.action === 'updateEditionCommander') return json(updateEditionCommander_(data));
 
     if (['issueEditionRegistration','readEditionRegistration','registerEditionUnit'].includes(data.action)) {
       return json(unitRegistration_(data));

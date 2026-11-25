@@ -147,7 +147,7 @@ test("předregistrace přiřadí kontakt k připravené jednotce a zobrazí výj
   const available = post("readEditionRegistration",{invitation});
   assert.deepEqual(available.units.map(unit => unit.name),["Jednotka A","Jednotka B"]);
   assert.deepEqual(available.info,info);
-  const registration = {invitation,token,unitId:"a",name:"Jan Velitel",phone:"+420 123 456 789"};
+  const registration = {invitation,token,unitId:"a",name:"Jan Velitel",phone:"+420 123 456 789",email:"jan@example.test"};
   assert.equal(post("registerEditionUnit",{...registration,phone:"abc"}).ok,false);
   assert.equal(post("registerEditionUnit",registration).ok,true);
   assert.equal(post("registerEditionUnit",registration).ok,true);
@@ -155,7 +155,13 @@ test("předregistrace přiřadí kontakt k připravené jednotce a zobrazí výj
   assert.deepEqual(post("readEditionRegistration",{invitation}).units.map(unit => unit.id),["b"]);
   assert.equal(post("listCompetitionEditions",{credential:invitation}).ok,false);
   const saved = post("listCompetitionEditions",{credential}).editions[0];
-  assert.deepEqual(saved.registrations,[{unitId:"a",name:registration.name,phone:registration.phone}]);
+  assert.deepEqual(saved.registrations,[{unitId:"a",name:registration.name,phone:registration.phone,email:registration.email}]);
+  const correction = {year,source:"registration",unitId:"a",name:"Jan Nový",phone:"777 123 456",email:"novy@example.test",
+    expected:saved.registrations[0]};
+  assert.equal(post("updateEditionCommander",{...correction,credential:token}).ok,false);
+  assert.equal(post("updateEditionCommander",{...correction,credential}).ok,true);
+  assert.equal(post("updateEditionCommander",{...correction,credential}).ok,false);
+  assert.equal(post("listCompetitionEditions",{credential}).editions[0].registrations[0].email,"novy@example.test");
   const before = post("readUnitDashboard",{token}).dashboard;
   assert.deepEqual(before.preparation,info);
   assert.equal(before.station,null);
@@ -213,4 +219,24 @@ test("tři sloučené jednotky mají jeden start a sdílí postup i na již vyda
   assert.deepEqual(final.units.map(unit => unit.name),["Jednotka A","Jednotka B","Jednotka C"]);
   assert.deepEqual(final.units.map(unit => unit.assessments.find(item => item.kind === "quiz").percentage),[82,55,0]);
   assert.ok(final.units.every(unit => unit.assessments.length === 2 && unit.assessments[0].notes === "Společný zápis"));
+});
+
+test("dva nezávislé souběžné svazky mají vlastní start a kontakty lze opravit i po startu", () => {
+  const app = createAppsScript({ORGANIZER_PIN:credential});
+  const post = (action,fields) => app.post({action,year,credential,...fields});
+  const units = ["a","b","c","d","e"].map(id => ({id,name:id.toUpperCase()}));
+  const commander = {id:"vel-a",unitId:"a",name:"Původní velitel",phone:"123456789",email:"a@example.test"};
+  const draft = {...edition,status:"active",units,commanders:[commander],
+    stations:[...edition.stations,{id:"t",name:"Slalom",kind:"scored"}],
+    merges:[{id:"ab",unitIds:["a","b"]},{id:"ce",unitIds:["c","e"]}],
+    draw:[{id:"x",unitId:"ab",stationId:"s"},{id:"y",unitId:"ce",stationId:"p"},{id:"z",unitId:"d",stationId:"t"}]};
+  const saved = post("saveCompetitionEdition",{expectedRevision:null,edition:draft});
+  assert.equal(saved.ok,true,saved.error);
+  const progress = post("readEditionProgress",{});
+  assert.deepEqual(progress.units.map(unit => [unit.name,unit.stationId]),[["D","t"],["A + B","s"],["C + E","p"]]);
+  const updated = post("updateEditionCommander",{source:"manual",unitId:"a",contactId:commander.id,
+    expected:commander,expectedRevision:saved.edition.revision,name:"Nový velitel",phone:"987654321",email:"b@example.test"});
+  assert.equal(updated.ok,true,updated.error);
+  assert.notEqual(updated.revision,saved.edition.revision);
+  assert.equal(post("listCompetitionEditions",{}).editions[0].commanders[0].name,"Nový velitel");
 });

@@ -422,7 +422,7 @@
     submit.disabled = true;
     try {
       await registrationRequest("registerEditionUnit",{
-        ...registrationPending,name:el("registrationCommander").value,phone:el("registrationPhone").value
+        ...registrationPending,name:el("registrationCommander").value,phone:el("registrationPhone").value,email:el("registrationEmail").value
       });
       token = registrationPending.token;
       try {
