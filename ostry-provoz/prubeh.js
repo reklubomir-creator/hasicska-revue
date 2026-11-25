@@ -82,6 +82,12 @@
       detail.textContent = [states[unit.state],station?.name].filter(Boolean).join(" · ");
       detail.classList.toggle("evaluating",unit.state === "evaluating");
       row.append(name,detail);
+      if (overview.observer && station?.location) {
+        const address = document.createElement("p");
+        address.className = "muted";
+        address.textContent = station.location;
+        row.append(address);
+      }
       if (overview.organizer && station) {
         const receipts = document.createElement("p");
         const format = time => new Date(time).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
@@ -173,53 +179,6 @@
       return;
     }
     organizationAction("sendEditionNotice",{unitId:el("noticeRecipient").value,text});
-  };
-
-  const instructionDrafts = new Map();
-  const instructionSelect = el("dispatchStation");
-  const instruction = el("dispatchInstruction");
-
-  function showInstruction(stationId) {
-    const station = overview.stations.find(item => item.id === stationId);
-    const draft = instructionDrafts.get(stationId);
-    el("dispatchLocation").textContent = station?.location || "Místo doplň ve Správě ročníků.";
-    instruction.value = draft?.message ?? station?.dispatchMessage ?? "";
-    instruction.disabled = el("saveDispatchInstruction").disabled = !station;
-  }
-
-  function renderDispatchSettings(data) {
-    el("dispatchSettings").hidden = !data.organizer || data.status === "archived";
-    if (el("dispatchSettings").hidden) return;
-    options(instructionSelect,"Vyber stanoviště",data.stations);
-    if (!instructionSelect.value && data.stations.length) instructionSelect.value = data.stations[0].id;
-    if (document.activeElement !== instruction) showInstruction(instructionSelect.value);
-  }
-
-  instructionSelect.onchange = () => showInstruction(instructionSelect.value);
-  instruction.oninput = () => {
-    const stationId = instructionSelect.value;
-    const station = overview.stations.find(item => item.id === stationId);
-    const original = instructionDrafts.get(stationId)?.original ?? station.dispatchMessage;
-    instructionDrafts.set(stationId,{original,message:instruction.value});
-  };
-  el("saveDispatchInstruction").onclick = async () => {
-    if (busy) return;
-    const stationId = instructionSelect.value;
-    const draft = instructionDrafts.get(stationId);
-    if (!draft) return;
-    busy = true;
-    el("dispatchSettings").inert = true;
-    try {
-      await api("saveEditionDispatchMessage",{stationId,message:draft.message,expectedMessage:draft.original});
-      instructionDrafts.delete(stationId);
-      el("message").textContent = "Výjezdová zpráva uložena.";
-    } catch (error) {
-      el("message").textContent = error.message;
-    } finally {
-      busy = false;
-      el("dispatchSettings").inert = false;
-      refresh();
-    }
   };
 
   let finalData;
@@ -315,7 +274,6 @@
     el("overview").hidden = Boolean(selected);
     render();
     renderOrganization(data);
-    renderDispatchSettings(data);
   }
 
   async function refresh() {
@@ -499,12 +457,10 @@
     overview = null;
     overviewSignature = null;
     pendingNotice = null;
-    instructionDrafts.clear();
     finalData = null;
     finalRows.replaceChildren();
     el("finalUnitField").hidden = true;
     el("finalAssessments").open = false;
-    el("dispatchSettings").open = false;
     el("noticeText").value = "";
     el("overview").hidden = true;
     el("message").textContent = "";
