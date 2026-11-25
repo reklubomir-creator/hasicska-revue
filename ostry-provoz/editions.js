@@ -33,6 +33,7 @@
   let busy = false;
   let contactEditor;
   let drawFeedback = "";
+  let savedDispatch = new Map();
 
   function setMessage(text, error = false) {
     message.textContent = text;
@@ -60,22 +61,29 @@
       .concat(edition.merges.map(merge => ({id:merge.id,name:mergeName(merge,edition)})));
   }
 
+  function visibleCommanders() {
+    const registered = draft.registrations || [];
+    const primary = new Set(registered.map(contact => contact.unitId));
+    const seen = new Set();
+    return [
+      ...registered.map(contact => ({contact,source:"registration"})),
+      ...draft.commanders.filter(contact => !primary.has(contact.unitId) || contact.phone?.trim() || contact.email?.trim())
+        .map(contact => ({contact,source:"manual"}))
+    ].filter(({contact}) => {
+      const name = (contact.name || "").trim();
+      const key = JSON.stringify([contact.unitId,name.toLocaleLowerCase("cs-CZ"),(contact.phone || "").replace(/\D/g,"")]);
+      if (!name || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   function contactsAt(element) {
     const unitId = element.dataset.unitContact;
     const merge = draft.merges.find(item => item.id === unitId);
     const directory = element.dataset.directory === "true";
     const ids = new Set([unitId,...(merge?.unitIds || [])]);
-    const seen = new Set();
-    const contacts = [
-      ...(draft.registrations || []).map(contact => ({contact,source:"registration"})),
-      ...(directory ? [] : draft.commanders.map(contact => ({contact,source:"manual"})))
-    ].filter(({contact}) => {
-      if ((!directory && !ids.has(contact.unitId)) || !contact.name) return false;
-      const key = JSON.stringify([contact.unitId,contact.name,contact.phone?.replace(/\D/g,"")]);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    const contacts = visibleCommanders().filter(({contact}) => directory || ids.has(contact.unitId));
     element.replaceChildren(...contacts.map(({contact,source}) => {
       const line = document.createElement("li");
       const original = (merge || directory) && [...draft.units,...competingUnits()].find(unit => unit.id === contact.unitId);
@@ -102,7 +110,7 @@
     }));
     if (!contacts.length) {
       const empty = document.createElement("li");
-      empty.textContent = directory ? "Z předregistrace zatím nikdo nepřibyl." : "Kontakt velitele zatím chybí";
+      empty.textContent = directory ? "Zatím nejsou zadané kontakty velitelů." : "Kontakt velitele zatím chybí";
       element.append(empty);
     }
   }
@@ -277,19 +285,26 @@
       section.dataset.list = key;
       section.open = expanded.has(key);
       const heading = document.createElement("summary");
-      const count = draft[key].length + (key === "commanders" ? draft.registrations?.length || 0 : 0);
+      const count = key === "commanders" ? visibleCommanders().length : draft[key].length;
       heading.textContent = title + " (" + count + ")";
       if (key === "commanders") heading.id = "editionCommanderHeading";
       section.append(heading);
+      let fieldsSection = section;
       if (key === "commanders") {
-        const label = document.createElement("h3");
-        label.textContent = "Velitelé z předregistrace";
         const directory = document.createElement("ul");
         directory.className = "edition-unit-contacts";
         directory.dataset.unitContact = "";
         directory.dataset.directory = "true";
         contactsAt(directory);
-        section.append(label,directory);
+        const manual = document.createElement("details");
+        manual.dataset.list = "manualCommanders";
+        manual.className = "edition-merge";
+        manual.open = expanded.has("manualCommanders");
+        const label = document.createElement("summary");
+        label.textContent = "Ruční přiřazení velitelů";
+        manual.append(label);
+        fieldsSection = manual;
+        section.append(directory,manual);
       }
       for (const [index, item] of draft[key].entries()) {
         const row = document.createElement("div");
@@ -379,7 +394,14 @@
           renderEditor();
         };
         row.append(remove);
-        section.append(row);
+        if (key === "stations") {
+          const dispatch = document.createElement("div");
+          dispatch.dataset.dispatchStation = item.id;
+          dispatch.className = "edition-unit-contacts";
+          renderStationMessage(dispatch);
+          row.append(dispatch);
+        }
+        fieldsSection.append(row);
       }
       const add = document.createElement("button");
       add.type = "button";
@@ -394,7 +416,7 @@
         renderEditor();
         lists.children[schemas.findIndex(schema => schema[0] === key)].querySelector(".edition-row:last-of-type input, .edition-row:last-of-type select")?.focus();
       };
-      section.append(add);
+      fieldsSection.append(add);
       if (key === "units") renderMerges(section);
       if (key === "draw") {
         const fill = document.createElement("button");
@@ -410,6 +432,49 @@
       }
       lists.append(section);
     }
+  }
+
+  async function loadStationMessages(edition) {
+    try {
+      const response = await quizPost({action:"readEditionProgress",credential:pin.value.trim(),year:edition.year});
+      if (draft !== edition || !response?.ok) return;
+      savedDispatch = new Map(response.stations.map(station => [station.id,station.dispatchMessage || ""]));
+      for (const field of lists.querySelectorAll("[data-dispatch-station]")) renderStationMessage(field);
+    } catch {
+      if (draft === edition) setMessage("Výjezdové zprávy se nepodařilo načíst.",true);
+    }
+  }
+
+  function renderStationMessage(block) {
+    block.hidden = draft.status === "archived";
+    if (block.hidden) return;
+    block.replaceChildren();
+    const stationId = block.dataset.dispatchStation;
+    if (!savedDispatch.has(stationId)) {
+      block.textContent = draft.revision && draft.stations.some(station => station.id === stationId)
+        ? "Výjezdová zpráva bude dostupná po načtení uloženého stanoviště." : "Pro výjezdovou zprávu nejdřív ulož stanoviště.";
+      return;
+    }
+    const label = document.createElement("label");
+    label.className = "field";
+    const input = document.createElement("textarea");
+    input.maxLength = 800;
+    input.value = savedDispatch.get(stationId);
+    label.append("Výjezdová zpráva pro jednotky",input);
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "soft";
+    save.textContent = "Uložit výjezdovou zprávu";
+    save.onclick = async () => {
+      if (busy) return;
+      const message = input.value.trim();
+      const expectedMessage = savedDispatch.get(stationId);
+      if (!await request("saveEditionDispatchMessage",{year:draft.year,stationId,message,expectedMessage})) return;
+      savedDispatch.set(stationId,message);
+      input.value = message;
+      setMessage("Výjezdová zpráva uložena.");
+    };
+    block.append(label,save);
   }
 
   function fillDraw() {
@@ -430,6 +495,7 @@
     }, Object.fromEntries(schemas.map(([key]) => [key, []])));
     draft.merges ||= [];
     drawFeedback = "";
+    savedDispatch = new Map();
     year.value = draft.year;
     year.readOnly = Boolean(draft.revision);
     name.value = draft.name;
@@ -451,6 +517,7 @@
     populateOptions(accessUnit,eligible.map(unit => [unit.id,unit.name]),eligible[0]?.id);
     el("editionIssueAccess").disabled = edition?.status === "archived";
     editor.hidden = false;
+    if (draft.revision && draft.status !== "archived") loadStationMessages(draft);
   }
 
   function confirmDiscard() {
@@ -551,7 +618,7 @@
     if (entry) entry.registrations = saved.registrations;
     refreshContactCards();
     const heading = el("editionCommanderHeading");
-    if (heading) heading.textContent = "Velitelé (" + (draft.commanders.length + draft.registrations.length) + ")";
+    if (heading) heading.textContent = "Velitelé (" + visibleCommanders().length + ")";
   }
 
   el("editionRefreshRegistrations").onclick = async () => {
