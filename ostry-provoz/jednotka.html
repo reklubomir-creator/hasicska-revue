@@ -37,6 +37,21 @@
     <p id="unitEdition" class="muted" hidden></p>
     <h1 id="unitName">Soutěžní jednotka</h1>
     <p id="unitMessage" class="status-message" role="status">Načítám přístup jednotky…</p>
+    <form id="unitRegistration" class="panel form-grid" hidden>
+      <h2>Údaje jednotky</h2>
+      <label>Jednotka <select id="registrationUnit" required></select></label>
+      <label>Jméno a příjmení velitele <input id="registrationCommander" maxlength="120" autocomplete="name" required></label>
+      <label>Telefon na velitele <input id="registrationPhone" type="tel" maxlength="30" autocomplete="tel" required></label>
+      <p class="muted">Jméno a telefon se předají vedení soutěže.</p>
+      <button id="registrationSubmit" type="submit">Zaregistrovat jednotku</button>
+    </form>
+    <section class="panel" id="unitPreparation" aria-labelledby="unitPreparationTitle" hidden>
+      <h2 id="unitPreparationTitle">Informace před startem</h2>
+      <p id="unitEventWhen"></p>
+      <p id="unitEventWhere"></p>
+      <p id="unitMeeting" style="white-space:pre-wrap"></p>
+      <p id="unitWaitingStart" class="muted">Po startu soutěže se tu automaticky zobrazí tvoje první stanoviště.</p>
+    </section>
     <form id="unitLogin" class="panel form-grid" hidden>
       <label for="unitAccessLink">Vlož soukromý odkaz jednotky</label>
       <input id="unitAccessLink" type="password" required autocomplete="off">
@@ -76,7 +91,7 @@
         <ul id="unitCompleted" hidden></ul>
       </section>
     </div>
-    <section class="panel" aria-labelledby="unitConnectionTitle">
+    <section class="panel" id="unitConnectionPanel" aria-labelledby="unitConnectionTitle">
       <h2 id="unitConnectionTitle">Připojení</h2>
       <p id="unitConnection" class="connection" role="status"></p>
       <p id="unitLastUpdate" class="muted" hidden></p>

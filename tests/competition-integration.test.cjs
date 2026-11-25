@@ -134,3 +134,38 @@ test("historický kvíz drží schválených 15 otázek pro každou roli a úča
   assert.equal(app.post({action:"close",pin:token}).ok,false);
   assert.equal(app.post({action:"listCompetitionEditions",credential:token}).ok,false);
 });
+
+test("předregistrace přiřadí kontakt k připravené jednotce a zobrazí výjezd až po startu", () => {
+  const app = createAppsScript({ORGANIZER_PIN:credential});
+  const post = (action,fields = {}) => app.post({action,year,...fields});
+  const invitation = randomBytes(32).toString("hex");
+  const token = randomBytes(32).toString("hex");
+  const info = {startsAt:"2027-10-24T13:30",venue:"Blansko",meetingPlace:"Ve 13:00 u zbrojnice"};
+  const prepared = post("saveCompetitionEdition",{credential,expectedRevision:null,edition:{...edition,...info}}).edition;
+  assert.equal(post("issueEditionRegistration",{credential:"wrong",invitation}).ok,false);
+  assert.equal(post("issueEditionRegistration",{credential,invitation}).ok,true);
+  const available = post("readEditionRegistration",{invitation});
+  assert.deepEqual(available.units.map(unit => unit.name),["Jednotka A","Jednotka B"]);
+  assert.deepEqual(available.info,info);
+  const registration = {invitation,token,unitId:"a",name:"Jan Velitel",phone:"+420 123 456 789"};
+  assert.equal(post("registerEditionUnit",{...registration,phone:"abc"}).ok,false);
+  assert.equal(post("registerEditionUnit",registration).ok,true);
+  assert.equal(post("registerEditionUnit",registration).ok,true);
+  assert.equal(post("registerEditionUnit",{...registration,token:randomBytes(32).toString("hex")}).ok,false);
+  assert.deepEqual(post("readEditionRegistration",{invitation}).units.map(unit => unit.id),["b"]);
+  assert.equal(post("listCompetitionEditions",{credential:invitation}).ok,false);
+  const saved = post("listCompetitionEditions",{credential}).editions[0];
+  assert.deepEqual(saved.registrations,[{unitId:"a",name:registration.name,phone:registration.phone}]);
+  const before = post("readUnitDashboard",{token}).dashboard;
+  assert.deepEqual(before.preparation,info);
+  assert.equal(before.station,null);
+  assert.ok(!JSON.stringify(before).includes(registration.phone));
+  assert.equal(post("saveCompetitionEdition",{credential,expectedRevision:prepared.revision,edition:{...prepared,status:"active"}}).ok,true);
+  const after = post("readUnitDashboard",{token}).dashboard;
+  assert.equal(after.preparation,undefined);
+  assert.equal(after.station.name,"Studna");
+  assert.equal(post("readEditionRegistration",{invitation}).ok,false);
+  assert.equal(post("revokeUnitAccess",{credential,unitId:"a"}).ok,true);
+  assert.equal(post("readUnitDashboard",{token}).code,"INVALID_UNIT_ACCESS");
+  assert.equal(post("listCompetitionEditions",{credential}).editions[0].registrations.length,1);
+});

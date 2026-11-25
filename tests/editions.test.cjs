@@ -15,6 +15,7 @@ test("edition administration checks the organizer PIN and keeps each year and re
   });
   vm.runInContext(readFileSync("ostry-provoz/Code.gs", "utf8"), context);
   context.json = value => value;
+  context.unitAccessSheet_ = () => null;
   context.competitionEditionSheet_ = () => ({
     getLastRow: () => rows.length + 1,
     getRange: (row, column, count) => ({

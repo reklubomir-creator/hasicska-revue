@@ -3,6 +3,11 @@
   const storageKey = "hasicskaRevueUnitAccess";
   const params = new URLSearchParams(location.hash.slice(1));
   const fragment = params.get("pristup");
+  const registrationKey = "hasicskaRevueRegistrationAccess";
+  const registration = el("unitRegistration");
+  const invitation = params.get("registrace");
+  const registrationYear = Number(params.get("rocnik"));
+  let registrationPending;
   let focusedNotice = params.get("zprava");
   if (fragment !== null || focusedNotice) history.replaceState(null,"",location.pathname + location.search);
   let token = fragment || "";
@@ -13,6 +18,7 @@
   let acknowledging = false;
   let dispatchReceived = false;
   let pushRegistration;
+  let pushPrepared = false;
   let pushSubscription;
   let pushBusy = false;
   const login = el("unitLogin");
@@ -36,7 +42,12 @@
   };
 
   try {
-    if (fragment === null) token = sessionStorage.getItem(storageKey) || localStorage.getItem(storageKey) || "";
+    const registered = JSON.parse(localStorage.getItem(registrationKey) || "null");
+    if (fragment === null) {
+      token = invitation ? (registered?.year === registrationYear ? registered.token : "")
+        : sessionStorage.getItem(storageKey) || localStorage.getItem(storageKey) || registered?.token || "";
+    }
+    if (invitation && token) history.replaceState(null,"",location.pathname + location.search);
     if (fragment !== null) {
       const remembered = localStorage.getItem(storageKey);
       replaceDeviceAccess = Boolean(remembered && remembered !== fragment);
@@ -66,6 +77,23 @@
     el("unitEdition").textContent = data.edition;
     el("unitEdition").hidden = false;
     el("unitName").textContent = data.name;
+    el("unitPreparation").hidden = !data.preparation;
+    el("unitConnectionPanel").hidden = Boolean(data.preparation);
+    if (data.preparation) {
+      const {startsAt,venue,meetingPlace} = data.preparation;
+      const date = startsAt ? new Date(startsAt) : null;
+      el("unitEventWhen").textContent = date && !Number.isNaN(date.getTime())
+        ? "Termín: " + date.toLocaleString("cs-CZ",{dateStyle:"long",timeStyle:"short"}) : "";
+      el("unitEventWhere").textContent = venue ? "Místo: " + venue : "";
+      el("unitMeeting").textContent = meetingPlace ? "Sraz: " + meetingPlace : "";
+      dashboard.hidden = true;
+      pushPanel.hidden = true;
+      return;
+    }
+    if (!pushPrepared) {
+      pushPrepared = true;
+      preparePush();
+    }
     el("unitState").textContent = stateLabels[data.state] || "Stav není dostupný";
     dispatchStationId = data.dispatch?.stationId;
     dispatchReceived = Boolean(data.dispatch?.receivedAt);
@@ -135,7 +163,11 @@
     try {
       sessionStorage.removeItem(storageKey);
       localStorage.removeItem(storageKey);
+      localStorage.removeItem(registrationKey);
     } catch (error) {}
+    pushPrepared = false;
+    el("unitPreparation").hidden = true;
+    el("unitConnectionPanel").hidden = false;
     login.hidden = false;
     pushPanel.hidden = true;
     dashboard.hidden = true;
@@ -342,15 +374,75 @@
   };
 
   function startSession() {
+    registration.hidden = true;
     login.hidden = true;
     refresh.hidden = false;
     signOut.hidden = false;
     load();
-    preparePush();
   }
+
+  async function registrationRequest(action, fields = {}) {
+    const response = await fetch(revueApiUrl(),{
+      method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},
+      body:JSON.stringify({action,invitation,year:registrationYear,...fields}),
+      signal:AbortSignal.timeout(12000),referrerPolicy:"no-referrer"
+    });
+    if (!response.ok) throw new Error("Registraci se nepodařilo načíst.");
+    const data = await response.json();
+    if (!data.ok) throw new Error(data.error);
+    return data;
+  }
+
+  async function loadRegistration() {
+    try {
+      const data = await registrationRequest("readEditionRegistration");
+      el("unitEdition").hidden = false;
+      el("unitEdition").textContent = data.edition;
+      const select = el("registrationUnit");
+      select.replaceChildren(new Option("Vyber svou jednotku",""),
+        ...data.units.map(unit => new Option(unit.name,unit.id)));
+      registration.hidden = data.units.length === 0;
+      el("unitConnectionPanel").hidden = true;
+      message.textContent = data.units.length ? "" : "Všechny jednotky už mají přístup. Ozvi se vedení soutěže.";
+    } catch (error) {
+      message.textContent = error.message;
+      registration.hidden = true;
+    }
+  }
+
+  registration.onsubmit = async event => {
+    event.preventDefault();
+    const submit = el("registrationSubmit");
+    if (submit.disabled) return;
+    const unitId = el("registrationUnit").value;
+    if (registrationPending?.unitId !== unitId) {
+      registrationPending = {unitId,token:Array.from(crypto.getRandomValues(new Uint8Array(32)),
+        byte => byte.toString(16).padStart(2,"0")).join("")};
+    }
+    submit.disabled = true;
+    try {
+      await registrationRequest("registerEditionUnit",{
+        ...registrationPending,name:el("registrationCommander").value,phone:el("registrationPhone").value
+      });
+      token = registrationPending.token;
+      try {
+        localStorage.setItem(registrationKey,JSON.stringify({year:registrationYear,token}));
+        sessionStorage.setItem(storageKey,token);
+      } catch (error) {}
+      history.replaceState(null,"",location.pathname + location.search);
+      registration.reset();
+      registrationPending = null;
+      startSession();
+    } catch (error) {
+      message.textContent = error.message;
+    } finally {
+      submit.disabled = false;
+    }
+  };
 
   showConnection();
   if (token) startSession();
+  else if (invitation) loadRegistration();
   else {
     login.hidden = false;
     message.textContent = "Otevři soukromý odkaz nebo QR kód, který ti předal organizátor.";

@@ -1,5 +1,10 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.5 — 2026-11-25
+
+- Vedení může rozeslat společný registrační odkaz. Velitel vybere připravenou jednotku a zadá jméno a telefon. Údaje se zobrazují vedení v předregistraci daného ročníku.
+- Přihlášená jednotka vidí před startem termín, místo a sraz. Po spuštění soutěže přejde bez nového přihlášení na výjezdové rozhraní.
+
 ## 1.1.0-beta.4 — 2026-11-25
 
 - Jednotka vidí výjezdovou zprávu s cílem, pokyny a mapou. Vedení nastavuje text pro každé stanoviště a vidí čas převzetí pokynu i příjezdu.

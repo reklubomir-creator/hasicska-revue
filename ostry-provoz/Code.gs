@@ -1018,7 +1018,10 @@ function normalizeCompetitionEdition_(input) {
     occupiedStations.add(item.stationId);
     return {unitId:item.unitId, stationId:item.stationId};
   });
+  const startsAt = text(input.startsAt,16,false);
+  if (startsAt && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startsAt)) throw new Error('Zadej datum a čas konání.');
   return {year:year, name:text(input.name,120,true), status:input.status,
+    startsAt:startsAt, venue:text(input.venue,240,false), meetingPlace:text(input.meetingPlace,600,false),
     units:units, stations:stations, commanders:commanders, reviewers:reviewers, observers:observers, draw:draw};
 }
 
@@ -1026,7 +1029,10 @@ function competitionEditions_(data) {
   if (!canManageAssessment_(data.credential)) return {ok:false,error:'Správa ročníků vyžaduje organizační PIN.'};
   if (data.action === 'listCompetitionEditions') {
     const rows = competitionEditionRows_(competitionEditionSheet_(false));
-    return {ok:true,editions:rows.map(row => Object.assign(JSON.parse(row[2]), {revision:row[1]}))};
+    const registrations = unitRegistrationRows_(unitAccessSheet_(false));
+    return {ok:true,editions:rows.map(row => Object.assign(JSON.parse(row[2]), {revision:row[1],
+      registrations:registrations.filter(access => Number(access[0]) === Number(row[0]) && access[3])
+        .map(access => JSON.parse(access[3]))}))};
   }
   let edition;
   try { edition = normalizeCompetitionEdition_(data.edition); }
@@ -1047,7 +1053,7 @@ function competitionEditions_(data) {
   if (previous?.status === 'active' ||
       (previous?.status === 'archived' && editionProgressRows_(editionProgressSheet_(false), edition.year).some(entry => entry.unitId !== '@dispatch'))) {
     const sameConfiguration = Object.keys(edition).every(key =>
-      key === 'status' || JSON.stringify(edition[key]) === JSON.stringify(previous[key]));
+      key === 'status' || JSON.stringify(edition[key]) === JSON.stringify(previous[key] ?? (['startsAt','venue','meetingPlace'].includes(key) ? '' : undefined)));
     if (!sameConfiguration || edition.status === 'preparation') {
       return {ok:false,error:'Po zahájení soutěže je konfigurace uzamčená. Můžeš změnit pouze stav.'};
     }
@@ -1061,7 +1067,9 @@ function competitionEditions_(data) {
   const row = [edition.year, revision, payload];
   if (index < 0) activeSheet.appendRow(row);
   else activeSheet.getRange(index + 2, 1, 1, 3).setValues([row]);
-  return {ok:true,edition:Object.assign(edition,{revision:revision})};
+  const registrations = unitRegistrationRows_(unitAccessSheet_(false)).filter(row => Number(row[0]) === edition.year && row[3])
+    .map(row => JSON.parse(row[3]));
+  return {ok:true,edition:Object.assign(edition,{revision:revision,registrations:registrations})};
 }
 
 const UNIT_ACCESS_SHEET = 'Přístupy jednotek';
@@ -1071,7 +1079,7 @@ function unitAccessSheet_(create) {
   let sheet = spreadsheet.getSheetByName(UNIT_ACCESS_SHEET);
   if (!sheet && create) {
     sheet = spreadsheet.insertSheet(UNIT_ACCESS_SHEET);
-    sheet.appendRow(['Ročník', 'Jednotka ID', 'Otisk přístupového klíče']);
+    sheet.appendRow(['Ročník', 'Jednotka ID', 'Otisk přístupového klíče', 'Registrace velitele JSON']);
   }
   return sheet;
 }
@@ -1099,7 +1107,10 @@ function manageUnitAccess_(data) {
   const unitKey = 'unit:' + data.unitId;
   const index = rows.findIndex(row => Number(row[0]) === year && row[1] === unitKey);
   if (data.action === 'revokeUnitAccess') {
-    if (index >= 0) sheet.deleteRow(index + 2);
+    if (index >= 0) {
+      if (unitRegistrationRows_(sheet)[index][3]) sheet.getRange(index + 2,3,1,1).setValues([['']]);
+      else sheet.deleteRow(index + 2);
+    }
     return {ok:true};
   }
   if (edition.status === 'archived') return {ok:false,error:'Pro archivovaný ročník nelze vydat přístup.'};
@@ -1112,6 +1123,63 @@ function manageUnitAccess_(data) {
   const target = sheet || unitAccessSheet_(true);
   if (index >= 0) target.getRange(index + 2, 1, 1, 3).setValues([row]);
   else target.appendRow(row);
+  return {ok:true};
+}
+
+function unitRegistrationRows_(sheet) {
+  return !sheet || sheet.getLastRow() < 2 ? [] : sheet.getRange(2,1,sheet.getLastRow()-1,4).getValues();
+}
+
+function editionRegistrationInfo_(edition) {
+  return {startsAt:edition.startsAt || '',venue:edition.venue || '',meetingPlace:edition.meetingPlace || ''};
+}
+
+function unitRegistration_(data) {
+  const year = Number(data.year);
+  const edition = getSavedCompetitionEdition_(year);
+  const validToken = token => typeof token === 'string' && /^[a-f0-9]{64}$/.test(token);
+  const properties = PropertiesService.getScriptProperties();
+  const property = 'EDITION_REGISTRATION_' + year;
+  if (data.action === 'issueEditionRegistration') {
+    if (!canManageAssessment_(data.credential)) return {ok:false,error:'Vydání odkazu vyžaduje organizační PIN.'};
+    if (edition?.status !== 'preparation' || !validToken(data.invitation)) {
+      return {ok:false,error:'Odkaz lze vydat pro uložený ročník v přípravě.'};
+    }
+    if (!edition.startsAt || !edition.venue || !edition.meetingPlace || !edition.units.length) {
+      return {ok:false,error:'Doplň termín, místo konání, pokyny ke srazu a seznam jednotek.'};
+    }
+    properties.setProperty(property,unitAccessHash_(data.invitation));
+    return {ok:true};
+  }
+  if (!edition || !validToken(data.invitation) || properties.getProperty(property) !== unitAccessHash_(data.invitation)) {
+    return {ok:false,error:'Registrační odkaz není platný. Požádej vedení soutěže o aktuální odkaz.'};
+  }
+  const sheet = unitAccessSheet_(false);
+  const rows = unitRegistrationRows_(sheet);
+  const reserved = new Set(rows.filter(row => Number(row[0]) === year && row[2]).map(row => row[1]));
+  if (data.action === 'readEditionRegistration') {
+    if (edition.status !== 'preparation') return {ok:false,error:'Předregistrace je uzavřená. Obrať se na vedení soutěže.'};
+    return {ok:true,edition:edition.name,info:editionRegistrationInfo_(edition),
+      units:edition.units.filter(unit => !reserved.has('unit:' + unit.id)).map(unit => ({id:unit.id,name:unit.name}))};
+  }
+  const unit = edition.units.find(item => item.id === data.unitId);
+  if (!unit || !validToken(data.token)) return {ok:false,error:'Vyber předem připravenou jednotku.'};
+  const hash = unitAccessHash_(data.token);
+  const key = 'unit:' + unit.id;
+  const index = rows.findIndex(row => Number(row[0]) === year && row[1] === key);
+  if (index >= 0 && rows[index][2] === hash && rows[index][3] && edition.status !== 'archived') return {ok:true};
+  if (edition.status !== 'preparation') return {ok:false,error:'Předregistrace je uzavřená. Obrať se na vedení soutěže.'};
+  if (reserved.has(key)) return {ok:false,error:'Tato jednotka už má přístup. Pokud jde o omyl, obrať se na vedení.'};
+  if (rows.some(row => row[2] === hash)) return {ok:false,error:'Přístupový klíč se už používá.'};
+  const name = typeof data.name === 'string' ? data.name.trim() : '';
+  const phone = typeof data.phone === 'string' ? data.phone.trim() : '';
+  if (!name || name.length > 120 || phone.length > 30 || !/^\+?[0-9 ()-]+$/.test(phone) || !/^\d{9,15}$/.test(phone.replace(/\D/g,''))) {
+    return {ok:false,error:'Vyplň jméno velitele a platné telefonní číslo.'};
+  }
+  const row = [year,key,hash,JSON.stringify({unitId:unit.id,name:name,phone:phone})];
+  const target = sheet || unitAccessSheet_(true);
+  if (index < 0) target.appendRow(row);
+  else target.getRange(index + 2,1,1,4).setValues([row]);
   return {ok:true};
 }
 
@@ -1565,6 +1633,7 @@ function readUnitDashboard_(data) {
     name:unit.name,
     edition:edition.name,
     state:progress.state,
+    ...(edition.status === 'preparation' ? {preparation:editionRegistrationInfo_(edition)} : {}),
     station:station ? {name:station.name,location:station.location,kind:station.kind} : null,
     ...(station && !progress.records.get(station.id)?.arrivedAt && !progress.records.get(station.id)?.startedAt
       ? {dispatch:{stationId:station.id,receivedAt:progress.records.get(station.id)?.receivedAt || null,message:entries.find(entry => entry.unitId === '@dispatch' &&
@@ -1589,6 +1658,10 @@ function doPost(e) {
 
     lock.waitLock(10000);
     lockAcquired = true;
+
+    if (['issueEditionRegistration','readEditionRegistration','registerEditionUnit'].includes(data.action)) {
+      return json(unitRegistration_(data));
+    }
 
     if (['acknowledgeUnitDispatch','acknowledgeUnitArrival'].includes(data.action)) return json(acknowledgeUnitDispatch_(data));
     if (data.action === 'readEditionObserver') return json(readEditionObserver_(data));

@@ -6,6 +6,10 @@
   const year = el("editionYear");
   const name = el("editionName");
   const status = el("editionStatus");
+  const startsAt = el("editionStartsAt");
+  const venue = el("editionVenue");
+  const meetingPlace = el("editionMeeting");
+  const registrationLink = el("editionRegistrationLink");
   const message = el("editionMessage");
   const lists = el("editionLists");
   const access = el("editionAccess");
@@ -192,6 +196,14 @@
     year.readOnly = Boolean(draft.revision);
     name.value = draft.name;
     status.value = draft.status;
+    startsAt.value = draft.startsAt || "";
+    venue.value = draft.venue || "";
+    meetingPlace.value = draft.meetingPlace || "";
+    registrationLink.value = "";
+    el("editionRegistrationLinkField").hidden = true;
+    el("editionRegistration").hidden = !edition?.revision;
+    el("editionIssueRegistration").hidden = draft.status !== "preparation";
+    showRegisteredContacts(draft);
     el("editionStart").hidden = draft.status !== "preparation";
     dirty = false;
     updateSelector();
@@ -269,6 +281,56 @@
     }
   };
 
+  function showRegisteredContacts(edition) {
+    const contacts = (edition.registrations || []).filter(contact => edition.units.some(unit => unit.id === contact.unitId));
+    el("editionRegistered").textContent = contacts.length ? "Kontakty z předregistrace (" + contacts.length + ")" : "Zatím bez kontaktů z předregistrace.";
+    el("editionRegisteredContacts").replaceChildren(...contacts.map(contact => {
+      const line = document.createElement("li");
+      const unit = edition.units.find(item => item.id === contact.unitId);
+      line.textContent = [unit.name,contact.name,contact.phone].join(" · ");
+      return line;
+    }));
+  }
+
+  el("editionIssueRegistration").onclick = async () => {
+    if (busy || !draft?.revision || draft.status !== "preparation") return;
+    if (dirty) { setMessage("Nejdřív ulož termín, místo, sraz a seznam jednotek.",true); return; }
+    if (!draft.startsAt || !draft.venue || !draft.meetingPlace) {
+      setMessage("Doplň a ulož termín, místo konání a pokyny ke srazu.",true);
+      return;
+    }
+    if (!confirm("Vytvořit společný odkaz? Předchozí registrační odkaz se zneplatní.")) return;
+    const invitation = Array.from(crypto.getRandomValues(new Uint8Array(32)),byte => byte.toString(16).padStart(2,"0")).join("");
+    if (!await request("issueEditionRegistration",{year:draft.year,invitation})) return;
+    const url = new URL("jednotka.html",location.href);
+    url.hash = new URLSearchParams({registrace:invitation,rocnik:String(draft.year)}).toString();
+    registrationLink.value = url.href;
+    el("editionRegistrationLinkField").hidden = false;
+    setMessage("Odkaz je připravený k rozeslání.");
+  };
+  el("editionCopyRegistration").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(registrationLink.value);
+      setMessage("Registrační odkaz zkopírován.");
+    } catch {
+      registrationLink.select();
+      setMessage("Odkaz je označený. Zkopíruj ho ručně.");
+    }
+  };
+  el("editionRefreshRegistrations").onclick = async () => {
+    if (busy || !draft?.revision) return;
+    const response = await request("listCompetitionEditions");
+    if (!response) return;
+    const saved = response.editions.find(edition => edition.year === draft.year);
+    if (saved) {
+      draft.registrations = saved.registrations;
+      const entry = editions.find(edition => edition.year === draft.year);
+      if (entry) entry.registrations = saved.registrations;
+      showRegisteredContacts(draft);
+      setMessage("Kontakty z předregistrace aktualizovány.");
+    }
+  };
+
   el("editionLoad").onclick = async () => {
     if (busy || !confirmDiscard()) return;
     const response = await request("listCompetitionEditions");
@@ -287,14 +349,15 @@
     openEdition(editions.find(edition => String(edition.year) === selector.value));
     setMessage("");
   };
-  for (const field of [year, name, status]) field.addEventListener("input", () => { dirty = true; });
+  for (const field of [year, name, status, startsAt, venue, meetingPlace]) field.addEventListener("input", () => { dirty = true; });
 
   editor.onsubmit = async event => {
     event.preventDefault();
     if (busy) return;
     const start = event.submitter === el("editionStart");
     if (start && !confirm("Spustit soutěž a zobrazit jednotkám jejich první stanoviště?")) return;
-    const edition = { ...draft, year: Number(year.value), name: name.value, status: start ? "active" : status.value };
+    const edition = { ...draft, year: Number(year.value), name: name.value, status: start ? "active" : status.value,
+      startsAt: startsAt.value, venue: venue.value, meetingPlace: meetingPlace.value };
     const response = await request("saveCompetitionEdition", { edition, expectedRevision: draft.revision });
     if (!response) return;
     editions = editions.filter(item => item.year !== response.edition.year);

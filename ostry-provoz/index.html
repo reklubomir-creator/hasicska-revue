@@ -498,7 +498,27 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
           <div class="field"><label for="editionName">Název</label><input id="editionName" maxlength="120" required></div>
           <div class="field"><label for="editionStatus">Stav</label><select id="editionStatus"><option value="preparation">Příprava</option><option value="active" hidden>Probíhá soutěž</option><option value="archived">Archiv přípravy</option></select></div>
         </div>
+        <details class="panel edition-list">
+          <summary>Termín a sraz jednotek</summary>
+          <div class="field"><label for="editionStartsAt">Termín soutěže</label><input id="editionStartsAt" type="datetime-local"></div>
+          <div class="field"><label for="editionVenue">Místo konání</label><input id="editionVenue" maxlength="240"></div>
+          <div class="field"><label for="editionMeeting">Kam a kdy se dostavit</label><textarea id="editionMeeting" maxlength="600"></textarea></div>
+        </details>
         <div id="editionLists"></div>
+        <section id="editionRegistration" class="panel edition-list" hidden>
+          <h3>Předregistrace jednotek</h3>
+          <div class="actions">
+            <button class="soft" id="editionIssueRegistration" type="button">Vytvořit společný odkaz</button>
+            <button class="soft" id="editionRefreshRegistrations" type="button">Aktualizovat kontakty</button>
+          </div>
+          <div class="field" id="editionRegistrationLinkField" hidden>
+            <label for="editionRegistrationLink">Odkaz k rozeslání velitelům</label>
+            <input id="editionRegistrationLink" readonly>
+            <button class="soft" id="editionCopyRegistration" type="button">Zkopírovat registrační odkaz</button>
+          </div>
+          <p id="editionRegistered"></p>
+          <ul id="editionRegisteredContacts"></ul>
+        </section>
         <section id="editionAccess" class="panel edition-list" hidden>
           <h3>Přístup jednotky</h3>
           <div class="field"><label for="editionAccessUnit">Jednotka</label><select id="editionAccessUnit"></select></div>

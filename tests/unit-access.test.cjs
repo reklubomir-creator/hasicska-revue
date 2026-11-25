@@ -66,6 +66,7 @@ test("unit links expose only the assigned unit and cannot change competition sta
   const result = JSON.parse(JSON.stringify(read(token, { year: 2028, unitId: "b" })));
   assert.deepEqual(result, { ok: true, dashboard: {
     name: "Jednotka A", edition: "Ročník 2027", state: "preparation",
+    preparation: {startsAt:"",venue:"",meetingPlace:""},
     station: null,
     completed: [], completedCount: 0, pause: null, notices: []
   } });
