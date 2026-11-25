@@ -397,14 +397,9 @@
     voiceStatus.textContent = "Poslouchám…";
     speech.onresult = event => {
       if (recognition !== speech || draftKey !== key) return;
-      const phrases = [];
-      for (const result of Array.from(event.results)) {
-        if (result.isFinal) {
-          const phrase = result[0]?.transcript.trim();
-          if (phrase && phrases.at(-1) !== phrase) phrases.push(phrase);
-        }
-      }
-      const next = [original,...phrases].filter(Boolean).join(" ").slice(0,notes.maxLength);
+      const transcript = liveDictationText(event.results,/Android/i.test(navigator.userAgent));
+      if (!transcript) return;
+      const next = [original,transcript].filter(Boolean).join(" ").slice(0,notes.maxLength);
       if (next !== notes.value) {
         notes.value = next;
         submission = null;
@@ -512,4 +507,27 @@
   document.addEventListener("visibilitychange", refresh);
   window.addEventListener("online", refresh);
   setInterval(refresh, 5000);
+
+function liveDictationText(results, removeAndroidOverlap) {
+  const words = [];
+  const normalized = [];
+  const normalize = word => word.toLocaleLowerCase("cs-CZ").replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,"");
+  for (const result of Array.from(results)) {
+    const fragment = (result[0]?.transcript || "").trim();
+    if (!fragment) continue;
+    const incoming = fragment.split(/\s+/);
+    if (!removeAndroidOverlap) {
+      words.push(...incoming);
+      continue;
+    }
+    const keys = incoming.map(normalize);
+    let overlap = Math.min(normalized.length,keys.length);
+    while (overlap > 0 && !keys.slice(0,overlap).every((key,index) =>
+      key && key === normalized[normalized.length - overlap + index])) overlap--;
+    if (overlap === keys.length && !result.isFinal) continue;
+    words.push(...incoming.slice(overlap));
+    normalized.push(...keys.slice(overlap));
+  }
+  return words.join(" ");
+}
 })();

@@ -1,5 +1,9 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.13 — 2026-11-25
+
+- Diktování při hodnocení průběžně zapisuje rozpoznaný text do poznámky. Na Androidu slučuje překryvy, aby se text při zpřesnění přepisu neopakoval.
+
 ## 1.1.0-beta.8 — 2026-11-25
 
 - Záložka Velitelé má jeden přehled kontaktů a sbalenou část pro ruční přiřazení. Předregistrace má přednost před ručním záznamem bez telefonu a e-mailu.
