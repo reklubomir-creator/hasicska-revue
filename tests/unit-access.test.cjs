@@ -51,7 +51,7 @@ test("unit links expose only the assigned unit and cannot change competition sta
   assert.deepEqual(result, { ok: true, dashboard: {
     name: "Jednotka A", edition: "Ročník 2027", state: "preparation",
     station: null,
-    completed: [], completedCount: 0, pause: null
+    completed: [], completedCount: 0, pause: null, notices: []
   } });
   assert.equal(post({ action: "saveCompetitionEdition", credential: token }).ok, false);
   assert.equal(post({ ...issue, token: nextToken }).ok, true);

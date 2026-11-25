@@ -1031,8 +1031,7 @@ function competitionEditions_(data) {
   let edition;
   try { edition = normalizeCompetitionEdition_(data.edition); }
   catch (error) { return {ok:false,error:error.message}; }
-  const payload = JSON.stringify(edition);
-  if (payload.length > 45000) return {ok:false,error:'Nastavení ročníku je příliš dlouhé.'};
+  if (JSON.stringify(edition).length > 45000) return {ok:false,error:'Nastavení ročníku je příliš dlouhé.'};
   const sheet = competitionEditionSheet_(false);
   const rows = competitionEditionRows_(sheet);
   const index = rows.findIndex(row => Number(row[0]) === edition.year);
@@ -1053,6 +1052,10 @@ function competitionEditions_(data) {
       return {ok:false,error:'Po zahájení soutěže je konfigurace uzamčená. Můžeš změnit pouze stav.'};
     }
   }
+  if (previous?.activatedAt || edition.status === 'active') {
+    edition.activatedAt = previous?.activatedAt || Date.now();
+  }
+  const payload = JSON.stringify(edition);
   const revision = Utilities.getUuid();
   const activeSheet = sheet || competitionEditionSheet_(true);
   const row = [edition.year, revision, payload];
@@ -1132,30 +1135,110 @@ function editionProgressRows_(sheet, year) {
     .map(item => ({index:item.index, ...JSON.parse(item.row[3])}));
 }
 
-function editionDispatch_(edition, entries) {
+function editionCommandTime_(entries) {
+  return entries.reduce((now, entry) => Math.max(now,(entry.at || 0) + 1,
+    (entry.completedAt || 0) + 1,(entry.releasedAt || 0) + 1,(entry.pause?.endedAt || 0) + 1),Date.now());
+}
+
+function editionPauseEnd_(entry) {
+  return entry.pause.endedAt || entry.pause.endsAt;
+}
+
+function editionAnnouncements_(data, edition, sheet, entries) {
+  const unitId = data.unitId;
+  if (unitId !== '*' && !edition.units.some(unit => unit.id === unitId)) return {ok:false,error:'Vyber příjemce.'};
+  const existing = entries.find(entry => entry.id === data.eventId);
+  const now = Date.now();
+  if (data.action === 'endEditionPause') {
+    const entry = existing;
+    if (!entry?.pause || entry.unitId !== unitId) return {ok:false,error:'Pauza už není dostupná.'};
+    if (editionPauseEnd_(entry) <= now) return {ok:true};
+    saveEditionProgressEntry_(sheet,edition.year,{...entry,pause:{...entry.pause,endedAt:Math.min(entry.pause.endsAt,editionCommandTime_(entries))}},entry);
+    return {ok:true};
+  }
+  if (typeof data.eventId !== 'string' || !/^[a-f0-9-]{36}$/.test(data.eventId)) return {ok:false,error:'Chybí identifikátor požadavku.'};
+  const text = typeof data.text === 'string' ? data.text.trim() : '';
+  if (text.length > 400) return {ok:false,error:'Text může mít nejvýše 400 znaků.'};
+  if (existing) {
+    const same = existing.unitId === unitId && (data.action === 'sendEditionNotice'
+      ? existing.notice === text : existing.pause?.text === text && existing.pause.endsAt - existing.at === Number(data.minutes) * 60000);
+    return same ? {ok:true} : {ok:false,error:'Identifikátor patří jinému požadavku.'};
+  }
+  const entry = {id:data.eventId,unitId:unitId,stationId:'',at:editionCommandTime_(entries)};
+  if (data.action === 'sendEditionNotice') {
+    if (!text) return {ok:false,error:'Napiš text zprávy.'};
+    entry.notice = text;
+  } else {
+    const minutes = Number(data.minutes);
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 120) return {ok:false,error:'Pauza může trvat 1 až 120 minut.'};
+    if (entries.some(item => item.pause && item.unitId === unitId && editionPauseEnd_(item) > now)) {
+      return {ok:false,error:'Vybraná jednotka nebo celý ročník už má aktivní pauzu.'};
+    }
+    entry.pause = {text:text,endsAt:entry.at + minutes * 60000};
+  }
+  saveEditionProgressEntry_(sheet,edition.year,entry);
+  return {ok:true};
+}
+
+function editionUnitNotices_(entries, progress, now) {
+  const notices = progress.stationUpdates.slice(-5).map(update => ({
+    id:'station:' + update.station.id + ':' + update.at, at:update.at,
+    text:'Přidělené stanoviště: ' + update.station.name
+  }));
+  for (const entry of entries) {
+    if (entry.unitId !== '*' && entry.unitId !== progress.unit.id) continue;
+    if (entry.notice) notices.push({id:entry.id,at:entry.at,text:entry.notice});
+    if (entry.pause) {
+      notices.push({id:entry.id + ':start',at:entry.at,text:'Začala pauza.' + (entry.pause.text ? ' ' + entry.pause.text : '')});
+      const end = editionPauseEnd_(entry);
+      const reminder = entry.pause.endsAt - 120000;
+      if (now < end && reminder > entry.at && now >= reminder) {
+        notices.push({id:entry.id + ':soon',at:reminder,text:'Pauza končí za méně než dvě minuty.'});
+      }
+      if (end <= now) notices.push({id:entry.id + ':end',at:end,text:'Pauza skončila. Řiď se aktuálním pokynem v přehledu.'});
+    }
+  }
+  return notices.sort((a,b) => b.at - a.at).slice(0,20);
+}
+
+function editionDispatch_(edition, entries, now = Date.now()) {
   const stations = new Map(edition.stations.map(station => [station.id, {station:station, occupant:null, ready:false}]));
   const units = new Map();
   for (const unit of edition.units) {
     const start = edition.draw.find(item => item.unitId === unit.id);
     const first = edition.stations.findIndex(station => station.id === start?.stationId);
     const route = first < 0 ? [] : edition.stations.slice(first).concat(edition.stations.slice(0, first));
-    const progress = {unit:unit, route:route, position:0, station:route[0], completed:[], records:new Map()};
+    const progress = {unit:unit, route:route, position:0, station:route[0], completed:[], records:new Map(), stationUpdates:[]};
     units.set(unit.id, progress);
-    if (progress.station) stations.get(progress.station.id).occupant = unit.id;
+    if (progress.station) {
+      stations.get(progress.station.id).occupant = unit.id;
+      if (edition.activatedAt) progress.stationUpdates.push({station:progress.station,at:edition.activatedAt});
+    }
   }
   const events = [];
   for (const entry of entries) {
-    units.get(entry.unitId)?.records.set(entry.stationId, entry);
+    if (entry.pause) {
+      events.push({at:entry.at,type:'pauseStart',entry:entry});
+      const end = editionPauseEnd_(entry);
+      if (end <= now) events.push({at:end,type:'pauseEnd',entry:entry});
+    }
+    if (entry.stationId) units.get(entry.unitId)?.records.set(entry.stationId, entry);
     if (entry.completedAt) events.push({at:entry.completedAt, type:'completed', entry:entry});
     if (entry.releasedAt) events.push({at:entry.releasedAt, type:'released', entry:entry});
   }
   events.sort((first, second) => first.at - second.at);
   const waiting = [];
+  const pauses = new Map();
   for (const event of events) {
     const {unitId,stationId} = event.entry;
     const gate = stations.get(stationId);
-    if (!gate) continue;
-    if (event.type === 'completed') {
+    if (event.type === 'pauseStart') {
+      pauses.set(unitId,event.entry);
+    } else if (event.type === 'pauseEnd') {
+      if (pauses.get(unitId)?.id === event.entry.id) pauses.delete(unitId);
+    } else if (!gate) {
+      continue;
+    } else if (event.type === 'completed') {
       const progress = units.get(unitId);
       if (progress?.station?.id !== stationId || gate.occupant !== unitId) continue;
       if (gate.station.kind !== 'standby') progress.completed.push(gate.station);
@@ -1171,19 +1254,23 @@ function editionDispatch_(edition, entries) {
       const progress = waiting[i];
       const next = progress.route[progress.position];
       const target = stations.get(next.id);
-      if (!target.ready) { i++; continue; }
+      if (!target.ready || pauses.has('*') || pauses.has(progress.unit.id)) { i++; continue; }
       target.ready = false;
       target.occupant = progress.unit.id;
       progress.station = next;
+      progress.stationUpdates.push({station:next,at:event.at});
       waiting.splice(i,1);
     }
   }
   for (const progress of units.values()) {
     const station = progress.station;
+    const activePauses = [pauses.get('*'),pauses.get(progress.unit.id)].filter(Boolean);
+    progress.pause = progress.position < progress.route.length ? activePauses.sort((a,b) => editionPauseEnd_(b) - editionPauseEnd_(a))[0] : null;
     const record = station && progress.records.get(station.id);
     progress.remaining = progress.route.filter(item => item.kind !== 'standby').length - progress.completed.length;
     progress.state = edition.status === 'preparation' ? 'preparation'
       : edition.status === 'archived' ? (progress.position < progress.route.length ? 'closed' : 'finished')
+      : progress.pause ? 'paused'
       : !station ? (progress.position < progress.route.length ? 'waiting' : 'finished')
       : station.kind === 'standby' ? 'standby' : record?.startedAt ? 'evaluating' : 'active';
   }
@@ -1201,6 +1288,9 @@ function editionProgress_(data) {
   if (!organizer && edition.status !== 'active') return denied;
   const sheet = editionProgressSheet_(false);
   const entries = editionProgressRows_(sheet, year);
+  if (['startEditionPause','endEditionPause','sendEditionNotice'].includes(data.action)) {
+    return organizer && edition.status === 'active' ? editionAnnouncements_(data,edition,sheet,entries) : denied;
+  }
   const dispatch = editionDispatch_(edition, entries);
   if (data.action === 'readEditionProgress') {
     const allowedIds = new Set(allowed.map(station => station.id));
@@ -1221,7 +1311,10 @@ function editionProgress_(data) {
       return {stationId:station.id, unitId:gate.occupant || '', unitName:occupant?.unit.name || '',
         ready:gate.ready, canOpen:!gate.ready && (!occupant || Boolean(completed))};
     });
-    return {ok:true,edition:edition.name, status:edition.status, organizer:organizer, units:units, gates:gates,
+    const now = Date.now();
+    const pauses = organizer ? entries.filter(entry => entry.pause && editionPauseEnd_(entry) > now)
+      .map(entry => ({id:entry.id,unitId:entry.unitId,endsAt:entry.pause.endsAt,text:entry.pause.text})) : [];
+    return {ok:true,edition:edition.name, status:edition.status, organizer:organizer, units:units, gates:gates, pauses:pauses,
       stations:allowed.map(station => ({id:station.id, name:station.name, kind:station.kind})),
       reviewers:edition.reviewers.filter(reviewer => allowedIds.has(reviewer.stationId))};
   }
@@ -1229,7 +1322,7 @@ function editionProgress_(data) {
   const station = allowed.find(item => item.id === data.stationId);
   const unit = edition.units.find(item => item.id === data.unitId);
   if (!station || edition.status !== 'active') return denied;
-  const eventAt = Math.max(Date.now(), ...entries.map(entry => Math.max(entry.completedAt || 0, entry.releasedAt || 0) + 1));
+  const eventAt = editionCommandTime_(entries);
   if (data.action === 'openEditionStation') {
     const gate = dispatch.stations.get(station.id);
     if ((gate.occupant || '') !== data.unitId || gate.ready) {
@@ -1268,7 +1361,7 @@ function editionProgress_(data) {
     entry.assessment = assessment;
     entry.completedAt ||= eventAt;
   } else if (data.action === 'startEditionAssessment') {
-    if (!current || !reviewer || !['scored','studna'].includes(station.kind)) {
+    if (!current || progress.pause || !reviewer || !['scored','studna'].includes(station.kind)) {
       return {ok:false,error:'Jednotka nyní není na tomto hodnoceném stanovišti.'};
     }
     if (entry.startedAt) {
@@ -1316,7 +1409,8 @@ function readUnitDashboard_(data) {
     station:station ? {name:station.name,location:station.location,kind:station.kind} : null,
     completed:progress.completed.map(item => item.name),
     completedCount:progress.completed.length,
-    pause:null
+    pause:progress.pause ? {endsAt:progress.pause.pause.endsAt,text:progress.pause.pause.text} : null,
+    notices:editionUnitNotices_(entries,progress,Date.now())
   }};
 }
 
@@ -1334,7 +1428,7 @@ function doPost(e) {
     lock.waitLock(10000);
     lockAcquired = true;
 
-    if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation'].includes(data.action)) {
+    if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation','startEditionPause','endEditionPause','sendEditionNotice'].includes(data.action)) {
       return json(editionProgress_(data));
     }
 

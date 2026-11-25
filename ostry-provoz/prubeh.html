@@ -25,6 +25,15 @@
 <h2 id="edition"></h2>
 <label>Stanoviště <select id="stationFilter"></select></label>
 <label>Jednotka <select id="unitFilter"></select></label>
+<div id="organization" hidden>
+  <h2>Pauzy a zprávy</h2>
+  <label>Příjemce <select id="noticeRecipient"></select></label>
+  <label>Délka pauzy v minutách <input id="pauseMinutes" type="number" min="1" max="120" value="10"></label>
+  <label>Pokyn k pauze nebo text zprávy <textarea id="noticeText" maxlength="400"></textarea></label>
+  <button id="beginPause" type="button">Zahájit pauzu</button>
+  <button id="sendNotice" type="button">Odeslat zprávu</button>
+  <div id="activePauses"></div>
+</div>
 <div id="gates"></div>
 <div id="units"></div>
 </section>

@@ -41,13 +41,25 @@
     el("unitName").textContent = data.name;
     el("unitState").textContent = stateLabels[data.state] || "Stav není dostupný";
     el("unitStationTitle").textContent = data.state === "preparation" ? "Startovní stanoviště" : "Aktuální stanoviště";
-    el("unitStation").textContent = data.station?.name || (data.state === "finished" ? "Všechna stanoviště jsou absolvována" : data.state === "waiting" ? "Vyčkej na pokyn k přesunu" : "Stanoviště se zobrazí po startu soutěže");
+    el("unitStation").textContent = data.station?.name || (data.state === "finished" ? "Všechna stanoviště jsou absolvována" : ["waiting","paused"].includes(data.state) ? "Vyčkej na pokyn k přesunu" : "Stanoviště se zobrazí po startu soutěže");
     el("unitLocation").textContent = data.station?.location || "";
     el("unitLocation").hidden = !data.station?.location;
     const standby = data.station?.kind === "standby";
     el("unitStationPanel").classList.toggle("standby", standby);
     el("unitStandby").hidden = !standby;
-    el("unitPause").textContent = data.pause || (data.state === "preparation" ? "Informace o pauze zatím nejsou dostupné." : "Pauza není naplánována.");
+    el("unitStatusPanel").classList.toggle("pause",Boolean(data.pause));
+    const end = data.pause && new Date(data.pause.endsAt).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+    el("unitPause").textContent = data.pause
+      ? ["Pauza do " + end + ". S přesunem vyčkej.",data.pause.text].filter(Boolean).join(" ")
+      : (data.state === "preparation" ? "" : "Pauza není naplánována.");
+    const notices = data.notices || [];
+    el("unitNotices").replaceChildren(...notices.map(notice => {
+      const item = document.createElement("li");
+      const time = new Date(notice.at).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+      item.textContent = time + " · " + notice.text;
+      return item;
+    }));
+    el("unitNoticePanel").hidden = !notices.length;
     el("unitCompletedCount").textContent = data.completedCount;
     const list = el("unitCompleted");
     list.replaceChildren(...data.completed.map(name => {

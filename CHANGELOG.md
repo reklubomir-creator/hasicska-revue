@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-alpha.6 — 2026-11-25
+
+- Organizátor může zahájit časovanou pauzu pro všechny jednotky nebo pro jednu a případně ji ukončit dříve. Během pauzy systém dotčené jednotce nepřidělí další přesun.
+- Přehled jednotky zobrazuje konec pauzy, zprávy organizátora, průběžné pokyny a oznámení o novém stanovišti. Zprávy se obnovují v otevřené stránce bez duplicitního zápisu.
+- Doručení push při zavřené aplikaci zbývá. Etapa 1.1.0-alpha.5 pro GPS byla odložena.
+
 ## 1.1.0-alpha.4 — 2026-11-25
 
 - Tlačítko Start soutěže odhalí jednotkám startovní stanoviště. Po uzavření stanoviště jednotka čeká na uvolnění cíle.

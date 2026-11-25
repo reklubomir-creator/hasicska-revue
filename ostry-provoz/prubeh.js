@@ -1,7 +1,7 @@
 (() => {
   const el = id => document.getElementById(id);
-  const states = { preparation:"Příprava", waiting:"Čeká na uvolnění dalšího stanoviště", active:"Na stanovišti", standby:"Pohotovost", evaluating:"PRÁVĚ HODNOTÍ", finished:"Dokončeno", closed:"Uzavřeno" };
-  let login, overview, selected, draftKey, submission, busy = false, reading = false;
+  const states = { preparation:"Příprava", waiting:"Čeká na uvolnění dalšího stanoviště", active:"Na stanovišti", standby:"Pohotovost", paused:"Pauza", evaluating:"PRÁVĚ HODNOTÍ", finished:"Dokončeno", closed:"Uzavřeno" };
+  let login, overview, selected, draftKey, submission, pendingNotice, busy = false, reading = false;
   el("version").textContent = "Verze " + APP_VERSION;
   el("year").value = new Date().getFullYear() + 1;
 
@@ -96,6 +96,68 @@
     if (!list.children.length) list.textContent = "Žádné jednotky pro vybraný filtr.";
   }
 
+  async function organizationAction(action, details) {
+    if (busy) return;
+    const signature = JSON.stringify([action, login.year, details]);
+    if (pendingNotice?.signature !== signature) pendingNotice = {signature,eventId:crypto.randomUUID()};
+    busy = true;
+    el("organization").inert = true;
+    try {
+      await api(action,{eventId:pendingNotice.eventId,...details});
+      pendingNotice = null;
+      if (action !== "endEditionPause") el("noticeText").value = "";
+      el("message").textContent = "Server změnu potvrdil.";
+    } catch (error) {
+      el("message").textContent = error.message;
+    } finally {
+      busy = false;
+      el("organization").inert = false;
+      refresh();
+    }
+  }
+
+  function renderOrganization(data) {
+    const visible = data.organizer && data.status === "active";
+    el("organization").hidden = !visible;
+    if (!visible) return;
+    const select = el("noticeRecipient");
+    const current = select.value;
+    select.replaceChildren(new Option("Všechny jednotky","*"), ...data.units.map(unit => new Option(unit.name,unit.id)));
+    if ([...select.options].some(option => option.value === current)) select.value = current;
+    const list = el("activePauses");
+    list.replaceChildren();
+    for (const pause of data.pauses) {
+      const row = document.createElement("article");
+      const unit = data.units.find(item => item.id === pause.unitId);
+      const detail = document.createElement("p");
+      const end = new Date(pause.endsAt).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+      detail.textContent = (unit?.name || "Všechny jednotky") + " · Pauza do " + end;
+      const endButton = document.createElement("button");
+      endButton.type = "button";
+      endButton.className = "secondary";
+      endButton.textContent = "Ukončit pauzu";
+      endButton.onclick = () => organizationAction("endEditionPause",{unitId:pause.unitId,eventId:pause.id});
+      row.append(detail,endButton);
+      list.append(row);
+    }
+  }
+
+  el("beginPause").onclick = () => {
+    if (!el("pauseMinutes").reportValidity()) return;
+    organizationAction("startEditionPause",{
+      unitId:el("noticeRecipient").value,minutes:Number(el("pauseMinutes").value),text:el("noticeText").value.trim()
+    });
+  };
+  el("sendNotice").onclick = () => {
+    const text = el("noticeText").value.trim();
+    if (!text) {
+      el("message").textContent = "Napiš text zprávy.";
+      el("noticeText").focus();
+      return;
+    }
+    organizationAction("sendEditionNotice",{unitId:el("noticeRecipient").value,text});
+  };
+
   function showOverview(data) {
     overview = data;
     el("edition").textContent = data.edition;
@@ -103,6 +165,7 @@
     options(el("unitFilter"),"Všechny dostupné jednotky",data.units);
     el("overview").hidden = Boolean(selected);
     render();
+    renderOrganization(data);
   }
 
   async function refresh() {
@@ -113,7 +176,6 @@
       const data = await api("readEditionProgress", {}, session);
       if (login === session) {
         showOverview(data);
-        if (!selected) el("message").textContent = "";
       }
     } catch (error) {
       if (login === session && !selected) el("message").textContent = error.message;

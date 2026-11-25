@@ -47,3 +47,42 @@ test("dispatch reserves the next station only after its previous unit finishes a
   assert.equal(state("a").station.id,"two");
   assert.equal(state("a").completed.length,1);
 });
+
+test("a paused unit is dispatched after its pause and sees only its own notices", () => {
+  const context = vm.createContext({});
+  vm.runInContext(readFileSync("ostry-provoz/Code.gs","utf8"),context);
+  const edition = {
+    year:2027,status:"active",activatedAt:10,
+    units:[{id:"a",name:"A"},{id:"b",name:"B"}],
+    stations:[{id:"one",name:"První",kind:"scored"},{id:"two",name:"Druhé",kind:"scored"}],
+    draw:[{unitId:"a",stationId:"one"},{unitId:"b",stationId:"two"}]
+  };
+  const entries = [
+    {id:"pause",unitId:"a",at:100,pause:{text:"Pauza na jídlo",endsAt:180100}},
+    {unitId:"a",stationId:"one",completedAt:200,releasedAt:220},
+    {unitId:"b",stationId:"two",completedAt:300,releasedAt:310},
+    {id:"only-b",unitId:"b",at:500,notice:"Pouze pro B"},
+    {id:"all",unitId:"*",at:600,notice:"Pro všechny"}
+  ];
+  const during = context.editionDispatch_(edition,entries,90000);
+  const paused = during.units.get("a");
+  assert.equal(paused.state,"paused");
+  assert.equal(paused.station,null);
+  assert.equal(during.stations.get("two").ready,true);
+  const notices = context.editionUnitNotices_(entries,paused,90000);
+  assert.equal(notices.some(item => item.id === "pause:soon"),true);
+  assert.equal(notices.some(item => item.id === "only-b"),false);
+  assert.equal(notices.some(item => item.id === "all"),true);
+
+  const resumed = context.editionDispatch_(edition,entries,180100).units.get("a");
+  assert.equal(resumed.state,"active");
+  assert.equal(resumed.station.id,"two");
+  const after = context.editionUnitNotices_(entries,resumed,180100);
+  assert.equal(after.some(item => item.id === "pause:end"),true);
+  assert.equal(after.filter(item => item.id === "station:two:180100").length,1);
+
+  const earlyEntries = [{...entries[0],pause:{...entries[0].pause,endedAt:95000}},...entries.slice(1)];
+  const early = context.editionDispatch_(edition,earlyEntries,95000).units.get("a");
+  assert.equal(early.station.id,"two");
+  assert.equal(early.stationUpdates.at(-1).at,95000);
+});
