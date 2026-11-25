@@ -536,6 +536,20 @@ function assessmentList_() {
     .filter(Boolean);
 }
 
+function canManageAssessment_(credential, station) {
+  if (typeof credential !== 'string' || !credential || credential.length > 256) return false;
+  const props = PropertiesService.getScriptProperties();
+  if (credential === props.getProperty('ORGANIZER_PIN')) return true;
+  if (!station) return false;
+  try {
+    const tokens = JSON.parse(props.getProperty('ASSESSMENT_STATION_TOKENS') || '{}');
+    return Object.prototype.hasOwnProperty.call(tokens, station) &&
+      typeof tokens[station] === 'string' && credential === tokens[station];
+  } catch (error) {
+    return false;
+  }
+}
+
 function assessmentSave_(record, internalWrite) {
   if (!record || typeof record !== 'object' || Array.isArray(record)) {
     return {ok:false,error:'Chybí hodnocení.'};
@@ -561,19 +575,38 @@ function assessmentSave_(record, internalWrite) {
     time:String(record.time || '')
   };
 
+  if (!internalWrite) {
+    if (typeof record.submissionId !== 'string' ||
+        !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(record.submissionId)) {
+      return {ok:false,error:'Chybí platný identifikátor odeslání.'};
+    }
+    if (station === 'Kvíz – hasička Klepačov' || station === 'Pohotovost na zbrojnici') {
+      return {ok:false,error:'Toto stanoviště nepřijímá ruční hodnocení.'};
+    }
+    safe.submissionId = record.submissionId;
+  }
   const payload = JSON.stringify(safe);
   const sh = assessmentSheet_();
   const expectedRevision = Object.prototype.hasOwnProperty.call(record,"expectedRevision") ? record.expectedRevision : undefined;
   if (!internalWrite && expectedRevision === undefined) return {ok:false,error:"Zastaralá verze aplikace. Obnov stránku před uložením."};
   const values = sh.getLastRow() >= 2
-    ? sh.getRange(2,1,sh.getLastRow()-1,3).getValues()
+    ? sh.getRange(2,1,sh.getLastRow()-1,4).getValues()
     : [];
 
   for (let i=0;i<values.length;i++) {
     if (values[i][0] === unit && values[i][1] === station) {
       const currentRevision = values[i][2] instanceof Date ? values[i][2].getTime() : new Date(values[i][2]).getTime();
+      if (!internalWrite) {
+        let stored;
+        try { stored = JSON.parse(values[i][3]); } catch (error) {}
+        if (stored && stored.submissionId === safe.submissionId) {
+          const sameContent = Object.keys(safe).every(key => stored[key] === safe[key]);
+          if (!sameContent) return {ok:false,error:'Identifikátor odeslání už patří jinému obsahu.'};
+          return {ok:true,record:Object.assign({},stored,{revision:currentRevision})};
+        }
+      }
       if (!internalWrite && (expectedRevision === null || Number(expectedRevision) !== currentRevision)) return {ok:false,error:"Konflikt: jiný hodnotitel mezitím uložil tento zápis. Obnov stránku a zkontroluj nové hodnocení."};
-      const updatedAt = new Date();
+      const updatedAt = new Date(Math.max(Date.now(), (Number.isFinite(currentRevision) ? currentRevision : 0) + 1));
       sh.getRange(i+2,1,1,4).setValues([[unit,station,updatedAt,payload]]);
       return {ok:true,record:Object.assign({},safe,{revision:updatedAt.getTime()})};
     }
@@ -933,6 +966,10 @@ function doPost(e) {
     }
 
     if (data.action === 'saveAssessment') {
+      const station = String(data.record && data.record.station || '').trim();
+      if (!station || !canManageAssessment_(data.credential, station)) {
+        return json({ok:false,error:'Pro toto stanoviště chybí platný přístupový kód.'});
+      }
       return json(assessmentSave_(data.record));
     }
 
@@ -941,6 +978,9 @@ function doPost(e) {
     }
 
     if (data.action === 'deleteAssessment') {
+      if (!canManageAssessment_(data.credential)) {
+        return json({ok:false,error:'Mazání vyžaduje organizační PIN.'});
+      }
       return json(assessmentDelete_(data.unit,data.station));
     }
 

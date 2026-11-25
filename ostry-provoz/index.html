@@ -407,7 +407,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 </aside>
 <main class="main">
 <header class="top"><div><div class="eyebrow">Blansko · 25. října 2026</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h1 id="pageTitle">Přehled revue</h1><span id="observerNotice" class="observer-notice">👁 Omezené zobrazení pro pozorovatele · pouze přehled, bez ovládání aplikace</span><span id="lastDashboardRefresh" class="muted" style="font-size:12px">Naposledy obnoveno: --:--:--</span><span id="dashboardChangeCount" class="muted" style="font-size:12px">Změny od poslední kontroly Google Sheets: 0</span></div><div class="muted" id="pageSubtitle">Okrsková prověřovací akce jednotek SDH.</div></div><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap"><span class="pill" title="Aktuální verze aplikace">● Ostrý provoz · v<span id="dashboardAppVersion"></span></span></div></header>
-<section id="home" class="page"><div id="competitionLiveDashboard" class="notice hidden" style="background:#fff1d6;color:#793d00;border:2px solid #db8b16;font-weight:800;font-size:17px;margin-bottom:16px;padding:16px">🚒 OSTRÁ SOUTĚŽ · VERZE 1.0.0 — Pozor, toto již není test! Všechny zápisy a hodnocení jsou skutečné.</div>
+<section id="home" class="page"><div id="competitionLiveDashboard" class="notice hidden" style="background:#fff1d6;color:#793d00;border:2px solid #db8b16;font-weight:800;font-size:17px;margin-bottom:16px;padding:16px">🚒 OSTRÁ SOUTĚŽ · VERZE <span data-app-version></span> — Pozor, toto již není test! Všechny zápisy a hodnocení jsou skutečné.</div>
 <div class="panel readme-panel" id="readmePanel" style="margin-bottom:20px;border:2px solid var(--menu-red);background:linear-gradient(135deg,#fff 0%,#f9e9e7 100%);padding:18px 24px">
 <div class="readme-bar"><strong>📖 Přečti mě – jak používat aplikaci</strong><button type="button" class="soft" id="readmeToggle" aria-expanded="false">Otevřít návod</button></div>
 <div id="readmeContent">
@@ -452,20 +452,21 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 </section>
 <section id="units" class="page hidden"><div class="panel" style="margin-bottom:16px"><div class="panel-head"><div><h2>Rozdělení jednotek na starty</h2><div class="muted">Pokud chceš, označ jednotky s pevným startem. Jinak nech všechny starty volné a vylosuj celé rozdělení.</div></div></div><div class="actions" style="margin:0 0 14px"><button type="button" class="primary" id="drawRemainingStarts">🎲 Vylosovat zbytek</button><button type="button" class="danger" id="activateOfficialDraw" onclick="activateOfficialCompetition()">🚒 Ostré rozlosování – spustit soutěž</button><button type="button" class="soft" id="clearFixedStarts">Zrušit pevné starty</button><button type="button" class="danger" id="clearAllStarts">✖ Zrušit výběr</button></div><div id="routeDrawStatus" class="notice">Nejdřív označ pevné starty u vybraných jednotek, potom vylosuj zbytek.</div><div id="startAssignmentOverview" style="margin:12px 0 16px"></div><div id="routePlanner" class="unit-list"></div><div class="notice">Po startu jednotka pokračuje 1 → 2 → 3 … → 8 → 1. Stanoviště 5 je přestávka bez hodnocení.</div></div></section>
 <section id="unitAdmin" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>Kontaktní údaje jednotek</h2><div class="muted">Doplň jméno velitele, telefon a e-mail. Po uložení se údaje synchronizují přes Google Sheets a budou dostupné na ostatních telefonech.</div></div></div><div id="unitContactsSyncStatus" class="notice" style="margin-bottom:12px">Načítám kontakty z Google…</div><div id="unitAdminList" class="unit-list"></div></div></section>
-<section id="assessment" class="page hidden"><div id="competitionLiveReviewer" class="notice hidden" style="background:#fff1d6;color:#793d00;border:2px solid #db8b16;font-weight:800;font-size:17px;margin-bottom:16px;padding:16px">🚒 OSTRÁ SOUTĚŽ · VERZE 1.0.0 — Toto již není test! Ukládej pouze skutečná hodnocení.</div><div id="reviewerSetupPanel" class="panel hidden"><h2>Nejdřív vyber své jméno</h2><p class="muted">Výběr se uloží v tomto zařízení. Při příštím otevření se rovnou dostaneš na své stanoviště.</p><div id="reviewerNameTiles" class="station-choice-grid"></div></div><div id="reviewerQueuePanel" class="panel hidden"><div class="panel-head"><div><h2 id="reviewerQueueTitle">Tvoje stanoviště</h2><div class="muted">Jednotky jsou seřazené podle toho, jak k tobě budou přijíždět.</div></div><div class="actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="tag">Hodnotitel</span><button type="button" class="soft" id="switchReviewer">Přepnout hodnotitele</button></div></div><div id="reviewerQueueList" class="unit-list"></div><div id="reviewerQueueEmpty" class="empty hidden">Všechny jednotky už máš na tomto stanovišti ohodnocené.</div><section id="reviewerReviewPanel" class="hidden" style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px"><h2>Závěrečná kontrola hodnocení</h2><p class="muted">Projdi si všechny zápisy. U každé jednotky můžeš hodnocení upravit, nebo pokud je vše správně, potvrdit celý přehled.</p><div id="reviewerReviewList" class="unit-list"></div><div id="reviewerReviewConfirmation" class="notice hidden"></div><div class="actions"><button type="button" class="primary" id="confirmReviewerReview">Potvrdit všechna hodnocení</button></div></section></div><div id="arrivalPanel" class="panel hidden"><h2 id="arrivalTitle">Další jednotka</h2><p id="arrivalUnitText"></p><div id="previousStationStatus" class="notice"></div><p class="muted">Než začneš další hodnocení, potvrď, že jednotka skutečně dorazila na stanoviště.</p><div class="actions"><button type="button" class="primary" id="confirmArrival">Jednotka je na místě – otevřít hodnocení</button><button type="button" class="soft" id="backToStations">Zpět na výběr stanoviště</button></div></div><div id="stationChooserPanel" class="panel"><h2>Vyber stanoviště</h2><div id="assessmentStationTiles" class="station-choice-grid"></div></div><div id="assessmentFormPanel" class="panel hidden"><h2>Hodnocení</h2>
+<section id="assessment" class="page hidden"><div id="competitionLiveReviewer" class="notice hidden" style="background:#fff1d6;color:#793d00;border:2px solid #db8b16;font-weight:800;font-size:17px;margin-bottom:16px;padding:16px">🚒 OSTRÁ SOUTĚŽ · VERZE <span data-app-version></span> — Toto již není test! Ukládej pouze skutečná hodnocení.</div><div id="reviewerSetupPanel" class="panel hidden"><h2>Nejdřív vyber své jméno</h2><p class="muted">Výběr se uloží v tomto zařízení. Při příštím otevření se rovnou dostaneš na své stanoviště.</p><div id="reviewerNameTiles" class="station-choice-grid"></div></div><div id="reviewerQueuePanel" class="panel hidden"><div class="panel-head"><div><h2 id="reviewerQueueTitle">Tvoje stanoviště</h2><div class="muted">Jednotky jsou seřazené podle toho, jak k tobě budou přijíždět.</div></div><div class="actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="tag">Hodnotitel</span><button type="button" class="soft" id="switchReviewer">Přepnout hodnotitele</button></div></div><div id="reviewerQueueList" class="unit-list"></div><div id="reviewerQueueEmpty" class="empty hidden">Všechny jednotky už máš na tomto stanovišti ohodnocené.</div><section id="reviewerReviewPanel" class="hidden" style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px"><h2>Závěrečná kontrola hodnocení</h2><p class="muted">Projdi si všechny zápisy. U každé jednotky můžeš hodnocení upravit, nebo pokud je vše správně, potvrdit celý přehled.</p><div id="reviewerReviewList" class="unit-list"></div><div id="reviewerReviewConfirmation" class="notice hidden"></div><div class="actions"><button type="button" class="primary" id="confirmReviewerReview">Potvrdit všechna hodnocení</button></div></section></div><div id="arrivalPanel" class="panel hidden"><h2 id="arrivalTitle">Další jednotka</h2><p id="arrivalUnitText"></p><div id="previousStationStatus" class="notice"></div><p class="muted">Než začneš další hodnocení, potvrď, že jednotka skutečně dorazila na stanoviště.</p><div class="actions"><button type="button" class="primary" id="confirmArrival">Jednotka je na místě – otevřít hodnocení</button><button type="button" class="soft" id="backToStations">Zpět na výběr stanoviště</button></div></div><div id="stationChooserPanel" class="panel"><h2>Vyber stanoviště</h2><div id="assessmentStationTiles" class="station-choice-grid"></div></div><div id="assessmentFormPanel" class="panel hidden"><h2>Hodnocení</h2>
 <div class="field"><label for="assessmentUnit">Jednotka</label><input id="assessmentUnit" readonly placeholder="Automaticky se doplní podle stanoviště"></div>
 <div class="field"><label>Vybrané stanoviště</label><div id="chosenStationLabel" class="notice" style="margin:0"></div><select id="stationSelect" class="hidden" aria-hidden="true" tabindex="-1"></select></div>
 <div class="field"><label for="reviewer">Hodnotitel</label><input id="reviewer" placeholder="Doplní se podle vybraného stanoviště" readonly></div>
 <div class="field" id="statusField"><label>Výsledek</label><div id="statusTiles" class="status-tiles"><button type="button" class="status-tile selected" data-status="V pořádku">V pořádku</button><button type="button" class="status-tile" data-status="Drobné nedostatky">Drobné nedostatky</button><button type="button" class="status-tile" data-status="Závažné nedostatky">Závažné nedostatky</button></div><select id="status" class="hidden" aria-hidden="true" tabindex="-1"><option value="V pořádku">V pořádku</option><option value="Drobné nedostatky">Drobné nedostatky</option><option value="Závažné nedostatky">Závažné nedostatky</option></select></div>
 <div class="field"><label for="notes">Poznámka</label><textarea id="notes" placeholder="Co bylo v pořádku a co je potřeba zlepšit?"></textarea></div>
 <div class="voice"><button id="micButton" class="mic">🎙 Diktovat</button><span class="muted" id="voiceStatus">Diktování závisí na podpoře prohlížeče a mikrofonu.</span></div>
+<div class="field" id="assessmentCredentialField"><label for="assessmentCredential">Přístupový kód stanoviště nebo organizační PIN</label><input id="assessmentCredential" type="password" autocomplete="off"></div>
 <div class="actions"><button class="primary" id="saveAssessment">Uložit zápis</button><button class="soft" id="clearAssessment">Vymazat</button></div>
-<div id="saveMessage" class="notice hidden"></div></div><div id="unitPickerPanel" class="panel hidden"><h2>Vyber další jednotku</h2><div class="muted">Zobrazují se pouze jednotky, které na tomto stanovišti ještě nemají zápis. Klepnutím na dlaždici rovnou otevřeš nový zápis.</div><p><strong id="pickerStationName"></strong></p><div id="unitPickerTiles" class="unit-grid"></div><div id="unitPickerEmpty" class="empty hidden">Všechny jednotky už mají na tomto stanovišti zápis.</div></div></section>
+<p id="assessmentDraftStatus" class="muted" role="status"></p><div id="saveMessage" class="notice hidden"></div></div><div id="unitPickerPanel" class="panel hidden"><h2>Vyber další jednotku</h2><div class="muted">Zobrazují se pouze jednotky, které na tomto stanovišti ještě nemají zápis. Klepnutím na dlaždici rovnou otevřeš nový zápis.</div><p><strong id="pickerStationName"></strong></p><div id="unitPickerTiles" class="unit-grid"></div><div id="unitPickerEmpty" class="empty hidden">Všechny jednotky už mají na tomto stanovišti zápis.</div></div></section>
 <section id="quiz" class="page hidden">
 <div id="quizOrganizer" class="panel">
  <h2>Řízení kvízu a QR kód</h2>
  <p class="muted">Aktivuj právě jednu jednotku. QR platí pouze pro otevřenou relaci; po uzavření už s ním nový účastník kvíz nezahájí.</p>
- <div class="field"><label for="quizApiUrl">Adresa Google Apps Script</label><input id="quizApiUrl" value="https://script.google.com/macros/s/AKfycbwuEk9g6WroMHecImGviCG8aMujLvdxbDsrnTNrPzB7HBEgGfLBP-Vz3kOXsDHU8ZVjrw/exec" readonly aria-readonly="true" title="Adresa je pevně nastavená a nelze ji upravit."></div>
+ <div class="field"><label for="quizApiUrl">Adresa Google Apps Script</label><input id="quizApiUrl" value="" readonly aria-readonly="true" title="Adresa je pevně nastavená a nelze ji upravit."></div>
  <div class="field"><label for="quizOrganizerPin">Organizační PIN</label><input id="quizOrganizerPin" type="password" inputmode="numeric" autocomplete="off" placeholder="" aria-label="Organizační PIN"></div>
  <div class="field"><label for="quizActiveUnit">Aktivovat jednotku</label><select id="quizActiveUnit"></select></div>
  <div class="field"><label for="quizHistoryUnit">Prohlédnout výsledky jednotky (pouze čtení)</label><select id="quizHistoryUnit"></select></div>
@@ -499,7 +500,8 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="1.0.4";
+const APP_VERSION="1.1.0-alpha.1";
+document.querySelectorAll("[data-app-version]").forEach(node=>node.textContent=APP_VERSION);
 let competitionOfficial=false;
 function competitionLive(){return competitionOfficial&&typeof startsAreDrawn==="function"&&startsAreDrawn()}
 async function activateOfficialCompetition(){
@@ -584,18 +586,19 @@ async function verifySavedAssessment(record){
  const response=await quizGet({action:"assessments"});
  if(!response||!response.ok||!Array.isArray(response.records))throw new Error("Kontrola serveru není dostupná.");
  const stored=response.records.find(x=>x.unit===record.unit&&x.station===record.station);
- const matches=stored&&stored.notes===record.notes&&stored.status===record.status&&stored.reviewer===record.reviewer&&stored.date===record.date&&stored.time===record.time;
+ const matches=stored&&stored.submissionId===record.submissionId;
  return matches?stored:null;
 }
-async function saveProductionAssessment(record){
+async function saveProductionAssessment(record,credential){
  const controller=new AbortController();
  const timeout=setTimeout(()=>controller.abort(),15000);
  try{
-  const response=await fetch(quizApiUrl(),{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({action:"saveAssessment",record}),redirect:"follow",signal:controller.signal});
+  const response=await fetch(quizApiUrl(),{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({action:"saveAssessment",record,credential}),redirect:"follow",signal:controller.signal});
   if(!response.ok)throw new Error("Server vrátil "+response.status);
   const data=await response.json();
   if(!data||!data.ok)throw new Error(data&&data.error||"Hodnocení se nepodařilo uložit na server.");
-  return data.record||record;
+  if(data.record?.submissionId!==record.submissionId)throw new Error("Server nepotvrdil identifikátor zápisu.");
+  return data.record;
  }catch(err){
   if(err&&err.name!=="AbortError"&&!(err instanceof TypeError))throw err;
   el("saveMessage").textContent="Ověřuji na serveru, zda se zápis přesto uložil…";
@@ -646,7 +649,7 @@ function recordTimestamp(record){if(!record)return 0;const d=String(record.date|
 function renderHomeStations(){el("homeStations").innerHTML=stations.map((s,i)=>{const d=stationDetails[i];return '<div class="station" data-station-index="'+i+'"><div class="num">STANOVIŠTĚ '+String(i+1).padStart(2,"0")+'</div><h3>'+escaped(s)+'</h3><div class="muted" style="font-size:12px;margin:4px 0 8px">'+escaped(d.where)+'</div><p style="font-size:13px;margin:7px 0">'+escaped(d.task)+'</p></div>'}).join("")}
 function renderStations(target,unit){el(target).innerHTML=stations.map((s,i)=>{let d=stationDetails[i],found=stationIsComplete(unit,s),standby=i===4&&standbyUnits().includes(unit);return '<div class="station"><div class="num">STANOVIŠTĚ '+String(i+1).padStart(2,"0")+'</div><h3>'+escaped(s)+'</h3><div class="muted" style="font-size:12px;margin:4px 0 8px">'+escaped(d.where)+'</div><p style="font-size:13px;margin:7px 0">'+escaped(d.task)+'</p>'+(i===4?'<span class="tag '+(standby?"done":"")+'">'+(standby?"JEDNOTKA JE NA POHOTOVOSTI": "Pohotovost se aktivuje po stanovišti 4")+'</span>':'<details style="font-size:12px;margin:8px 0"><summary>Detaily stanoviště</summary><p><strong>Potřeby:</strong> '+escaped(d.needs)+'</p><p><strong>Hodnotící:</strong> '+escaped(d.reviewer||"—")+'</p><p><strong>Garant:</strong> '+escaped(d.guarantor||"—")+'</p><p><strong>Text SMS:</strong> '+escaped(d.sms||"—")+'</p></details>')+((i===4||i===7)?"":'<div class="actions"><button class="soft" data-station="'+escaped(s)+'">Zapsat hodnocení</button></div>')+'</div>'}).join("");el(target).querySelectorAll("[data-station]").forEach(b=>b.onclick=()=>{el("stationSelect").value=b.dataset.station;syncReviewer();const nextUnit=setAutomaticUnit(b.dataset.station);if(b.dataset.station===stations[5]&&nextUnit&&standbyEligible(nextUnit))completeStandby(nextUnit);renderProgress();showPage("assessment")})}
 function standbyEligible(u){return Number(startStations[u])===5||records.some(r=>r.unit===u&&r.station===stations[3])}function standbyUnits(){const eligible=units.filter(u=>standbyEligible(u)&&!standbyCompletedUnits.includes(u)&&!records.some(r=>r.unit===u&&r.station===stations[5])&&activeAssessmentFor(u)?.station!==stations[5]);eligible.sort((a,b)=>{const latest=u=>records.filter(r=>r.unit===u&&r.station===stations[3]).sort((x,y)=>(x.date||"").localeCompare(y.date||"")||(x.time||"").localeCompare(y.time||"")).at(-1);const ra=latest(a),rb=latest(b);return (ra?.date||"").localeCompare(rb?.date||"")||(ra?.time||"").localeCompare(rb?.time||"")||units.indexOf(a)-units.indexOf(b)});return eligible.slice(0,2)}function renderStandby(){const current=standbyUnits();el("statStandby").textContent=current.length;el("standbyUnitsLabel").textContent=current.length?current.join(", "):"žádná jednotka není na pohotovosti"}function renderProgress(){const onStandby=standbyUnits(),ratedStations=stations.filter((s,i)=>i!==4);el("progressHead").innerHTML="<tr><th>Jednotka</th>"+stations.map((s,i)=>"<th>"+(i===4?"Pohotovost":escaped(s.replace(/\s*[–-].*/, "")))+"</th>").join("")+"<th>Hotovo</th></tr>";el("progressBody").innerHTML=units.map(u=>{const count=ratedStations.filter(s=>s===stations[7]?stationIsComplete(u,s)||quizOverviewCompleted(u):stationIsComplete(u,s)).length,hasStandbyEligibility=standbyEligible(u),hasStation5=records.some(r=>r.unit===u&&r.station===stations[5]),hasCompletedStandby=hasStandbyEligibility&&(standbyCompletedUnits.includes(u)||hasStation5||!onStandby.includes(u));return "<tr><td><strong>"+escaped(u)+"</strong></td>"+stations.map((s,i)=>{if(i===4){const label=hasCompletedStandby?'<span class="tag done">Pohotovost proběhla</span>':onStandby.includes(u)?'<span class="tag">Drží pohotovost</span>':'<span class="muted">—</span>';return "<td>"+label+"</td>"}const r=records.find(r=>r.unit===u&&r.station===s);if(i===7&&!r&&quizOverviewCompleted(u))return "<td><span class=\"tag done\" title=\"Výsledky kvízu načteny ze serveru\">Kvíz hotov</span></td>";if(i===0&&localStorage.getItem("hasicskaRevueLocalProgressDemo")==="1"&&r)return "<td><span class=\"tag done\" title=\"Fiktivní průchod prvním stanovištěm se v testu eviduje automaticky\">Automaticky hotovo</span></td>";return "<td>"+(r?'<span class="tag done" title="Zápis uzavřen: '+escaped(r.date||"—")+(r.time?" "+escaped(r.time):"")+' · '+escaped(r.status)+'">'+(i===0?"Vyhodnoceno":escaped(r.time||r.date||"Uzavřeno"))+'</span>':stationIsComplete(u,s)?'<span class="tag done" title="Automaticky evidovaný průchod bez hodnocení">Automaticky hotovo</span>':'<span class="muted">—</span>')+"</td>"}).join("")+"<td><strong>"+count+" / "+ratedStations.length+"</strong></td></tr>"}).join("")}function renderResults(){renderAssessmentOverview();const visibleRecords=records.filter(r=>r.station!=="Kvíz – hasička Klepačov");el("resultsBody").innerHTML=visibleRecords.map(r=>'<tr><td>'+escaped(r.unit)+'</td><td>'+escaped(r.station)+'</td><td>'+escaped(r.status)+'</td><td>'+escaped(r.reviewer||"—")+'</td><td>'+escaped(r.date)+'</td><td>'+escaped(r.notes||"—")+'</td></tr>').join("");el("noResults").classList.toggle("hidden",visibleRecords.length>0);const issues=records.filter(r=>r.status!=="V pořádku");el("statIssues").textContent=issues.length;el("issuesList").innerHTML=issues.map(r=>'<article class="station" style="margin-bottom:12px"><div class="panel-head"><div><h3>'+escaped(r.unit)+' — '+escaped(r.station)+'</h3><div class="muted" style="font-size:13px">Zapsáno: '+escaped(r.date)+' · Hodnotitel: '+escaped(r.reviewer||"—")+'</div></div><span class="tag">'+escaped(r.status)+'</span></div><p style="white-space:pre-wrap;margin-bottom:0">'+escaped(r.notes||"Popis nedostatku nebyl doplněn.")+'</p></article>').join("");el("issuesEmpty").classList.toggle("hidden",issues.length>0);renderUnits();renderHomeStations();renderProgress();renderStandby()}
-function showPage(page){if(!reviewerMode)localStorage.setItem("hasicskaRevueCurrentPage",page);const refreshInfo=el("refreshInfo");if(refreshInfo)refreshInfo.style.display=page==="home"?"block":"none";document.querySelectorAll(".page").forEach(p=>p.classList.toggle("hidden",p.id!==page));document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));const titles={home:["Přehled revue","Vše důležité na jednom místě."],units:["Rozlosování","Přehled jednotek a jejich stanovišť."],assessment:["Rozhraní hodnotitele","Vyber stanoviště, zhodnoť jednotku a nadiktuj poznámku."],quiz:["Vědomostní kvíz","Automatické vyhodnocení výsledků."],issues:["Zaznamenané nedostatky","Seznam a popis všech zaznamenaných nedostatků."],results:["Výsledky a zprávy","Přehled uložených záznamů."],assessmentOverview:["Náhled hodnocení","Samostatný přehled všech jednotek a stanovišť."],edits:["Upravit zápis","Vyber stanoviště a uprav již uložený zápis."],unitAdmin:["Kontakty na jednotky","Správa telefonních čísel a e-mailů jednotlivých jednotek."]};el("pageTitle").textContent=titles[page][0];el("pageSubtitle").textContent=titles[page][1];if(page==="quiz"){quizLoadCompletedUnits();quizRefreshState().then(()=>quizRestoreClosed());}if(page==="results"){renderResults();renderUnitPdfExports();renderChiefReport();refreshQuizOverview();el("exportChiefReport").onclick=exportChiefReport;}if(page==="assessmentOverview"){renderAssessmentOverview();refreshQuizOverview();const refresh=el("refreshAssessmentOverview");if(refresh)refresh.onclick=async()=>{await loadProductionAssessments();await refreshQuizOverview();renderAssessmentOverview()}}if(page==="edits")renderEditStationTiles();if(page==="unitAdmin"){renderUnitAdmin();loadUnitContactsFromGoogle(true).then(()=>renderUnitAdmin())};if(page==="assessment"){el("arrivalPanel").classList.add("hidden");renderAssessmentStationTiles();el("stationChooserPanel").classList.remove("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden")}if(page==="units"){renderRoutePlanner();}if(page==="home"){renderProgress();renderStandby();refreshQuizOverview()}}
+function showPage(page){if(quizTokenFromUrl&&page!=="quiz")return;if(!reviewerMode)localStorage.setItem("hasicskaRevueCurrentPage",page);const refreshInfo=el("refreshInfo");if(refreshInfo)refreshInfo.style.display=page==="home"?"block":"none";document.querySelectorAll(".page").forEach(p=>p.classList.toggle("hidden",p.id!==page));document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));const titles={home:["Přehled revue","Vše důležité na jednom místě."],units:["Rozlosování","Přehled jednotek a jejich stanovišť."],assessment:["Rozhraní hodnotitele","Vyber stanoviště, zhodnoť jednotku a nadiktuj poznámku."],quiz:["Vědomostní kvíz","Automatické vyhodnocení výsledků."],issues:["Zaznamenané nedostatky","Seznam a popis všech zaznamenaných nedostatků."],results:["Výsledky a zprávy","Přehled uložených záznamů."],assessmentOverview:["Náhled hodnocení","Samostatný přehled všech jednotek a stanovišť."],edits:["Upravit zápis","Vyber stanoviště a uprav již uložený zápis."],unitAdmin:["Kontakty na jednotky","Správa telefonních čísel a e-mailů jednotlivých jednotek."]};el("pageTitle").textContent=titles[page][0];el("pageSubtitle").textContent=titles[page][1];if(page==="quiz"){quizLoadCompletedUnits();quizRefreshState().then(()=>quizRestoreClosed());}if(page==="results"){renderResults();renderUnitPdfExports();renderChiefReport();refreshQuizOverview();el("exportChiefReport").onclick=exportChiefReport;}if(page==="assessmentOverview"){renderAssessmentOverview();refreshQuizOverview();const refresh=el("refreshAssessmentOverview");if(refresh)refresh.onclick=async()=>{await loadProductionAssessments();await refreshQuizOverview();renderAssessmentOverview()}}if(page==="edits")renderEditStationTiles();if(page==="unitAdmin"){renderUnitAdmin();loadUnitContactsFromGoogle(true).then(()=>renderUnitAdmin())};if(page==="assessment"){el("arrivalPanel").classList.add("hidden");renderAssessmentStationTiles();el("stationChooserPanel").classList.remove("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden")}if(page==="units"){renderRoutePlanner();}if(page==="home"){renderProgress();renderStandby();refreshQuizOverview()}}
 document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.addEventListener("click",async event=>{if(event.target.closest("#saveCombinedSmsCommander")){const chosen=document.querySelector('input[name="combinedSmsCommanderUnit"]:checked');if(!chosen)return;combinedSmsCommanderUnit=chosen.value;localStorage.setItem("hasicskaRevueCombinedSmsCommanderUnit",combinedSmsCommanderUnit);const b=event.target.closest("#saveCombinedSmsCommander");b.disabled=true;b.textContent="Ukládám…";isSavingCombinedSmsCommander=true;try{await saveSharedAppState();const check=await quizGet({action:"appState"});if(check&&check.ok&&check.state&&check.state.combinedSmsCommanderUnit===chosen.value){b.textContent="Uloženo";b.title="Uložení potvrzeno serverem."}else{b.textContent="Uložení nepotvrzeno";b.title="Server nepotvrdil uloženou volbu. Zkontroluj připojení a zkus to znovu.";console.warn("Velitel pro SMS se nepodařil ověřit na serveru.",check)}}catch(saveError){b.textContent="Uložení se nezdařilo";b.title=saveError&&saveError.message||"Chyba synchronizace";console.warn("Uložení velitele pro SMS selhalo",saveError)}finally{isSavingCombinedSmsCommander=false;b.disabled=false}return}const editButton=event.target.closest("[data-edit-unit-contact]");if(editButton){unitAdminEditing.add(Number(editButton.dataset.editUnitContact));renderUnitAdmin();return}const button=event.target.closest("[data-save-unit-contact]");if(!button)return;const i=Number(button.dataset.saveUnitContact),unit=unitContactNames[i];if(!unit)return;const commander=el("unitContactCommander"+i),phone=el("unitContactPhone"+i),email=el("unitContactEmail"+i);for(const field of [commander,phone,email]){if(!field.value.trim()){field.focus();field.setCustomValidity("Vyplň všechny údaje jednotky.");field.reportValidity();field.addEventListener("input",()=>field.setCustomValidity(""),{once:true});return}field.setCustomValidity("")}if(!email.checkValidity()){email.reportValidity();return}button.disabled=true;button.textContent="Ukládám…";const contact={commander:commander.value.trim(),phone:phone.value.trim(),email:email.value.trim(),saved:true};const contacts=readLocalUnitContacts();contacts[unit]=contact;localStorage.setItem("hasicskaRevueUnitContacts",JSON.stringify(contacts));try{const result=await quizPost({action:"saveContact",contact:{unit,commander:contact.commander,phone:contact.phone,email:contact.email}});if(!result||!result.ok)throw new Error(result&&result.error||"Server odmítl uložit kontakt.");const status=el("unitContactsSyncStatus");if(status){status.textContent="Kontakt jednotky "+unit+" je uložený v Google Sheets a dostupný na ostatních telefonech.";status.style.background="#eef8f0";status.style.color="#24623b"}unitAdminEditing.delete(i);await loadUnitContactsFromGoogle(false);renderUnitAdmin()}catch(err){console.warn("Uložení kontaktu do Google selhalo",err);const status=el("unitContactsSyncStatus");if(status){status.textContent="Kontakt byl uložen pouze v tomto telefonu. Synchronizace s Google selhala; po nasazení serverové podpory ho bude možné přenést.";status.style.background="#fff0f0";status.style.color="#a32121"}button.disabled=false;button.textContent="Uložit údaje"} });
 document.getElementById("openObserverPreview").onclick=()=>window.open(location.pathname+"?observer=1&v=0.1.104","_blank","noopener");
@@ -659,37 +662,96 @@ function dashboardRecordMap(list){const map={};(Array.isArray(list)?list:[]).for
 function countServerRecordChanges(before,after){let count=0;const keys=new Set([...Object.keys(before||{}),...Object.keys(after||{})]);keys.forEach(k=>{if((before||{})[k]!== (after||{})[k])count++});return count}
 function markDashboardRefresh(changeCount=null){const stamp=el("lastDashboardRefresh");if(stamp)stamp.textContent="Naposledy obnoveno: "+new Date().toLocaleTimeString("cs-CZ",{hour12:false});if(changeCount!==null){const label=el("dashboardChangeCount");if(label)label.textContent="Změny od poslední kontroly Google Sheets: "+changeCount+" "+(changeCount===1?"záznam":changeCount>=2&&changeCount<=4?"záznamy":"záznamů")}}
 async function refreshDashboardFromGoogle(){if(localStorage.getItem("hasicskaRevueLocalProgressDemo")==="1"||reviewerMode||localStorage.getItem("hasicskaRevueCurrentPage")!=="home")return;try{await checkSharedAppStateVersion();const data=await quizGet({action:"assessments"});if(!data||!data.ok||!Array.isArray(data.records))throw new Error(data&&data.error||"Server nevrátil seznam hodnocení.");const nextRecords=data.records;const nextMap=dashboardRecordMap(nextRecords);const changed=dashboardServerBaseline===null?0:countServerRecordChanges(dashboardServerBaseline,nextMap);dashboardServerBaseline=nextMap;records=nextRecords;save();standbyCompletedUnits=JSON.parse(localStorage.getItem("hasicskaRevueStandbyCompleted")||"[]");renderUnits();renderHomeStations();renderProgress();renderStandby();renderResults();renderAssessmentStationTiles();renderEditStationTiles();renderReviewerQueue();renderUnitPdfExports();renderChiefReport();markDashboardRefresh(changed)}catch(err){console.warn("Obnovení přehledu z Google Sheets selhalo",err);const label=el("dashboardChangeCount");if(label)label.textContent="Google Sheets se nepodařilo zkontrolovat"}}
-markDashboardRefresh(0);refreshDashboardFromGoogle();setInterval(refreshDashboardFromGoogle,30000);
+markDashboardRefresh(0);setInterval(refreshDashboardFromGoogle,30000);
 let dashboardRefreshAt=Date.now()+30000;function updateSidebarClock(){const now=new Date();const clock=el("liveClock"),count=el("refreshCountdown");if(clock)clock.textContent=now.toLocaleTimeString("cs-CZ",{hour12:false});if(count){const left=Math.max(0,Math.ceil((dashboardRefreshAt-Date.now())/1000));count.textContent=left+" s";if(left===0)dashboardRefreshAt=Date.now()+30000}}setInterval(updateSidebarClock,1000);updateSidebarClock();document.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>{if(b.dataset.goto==="quiz"){const currentUnit=el("assessmentUnit")?.value?.trim()||selectedUnit;quizFillUnits();if(currentUnit&&units.includes(currentUnit))el("quizActiveUnit").value=currentUnit;}showPage(b.dataset.goto)});el("issuesCard").onclick=()=>showPage("issues");
 fillSelect("stationSelect",stations);el("assessmentUnit").value=selectedUnit;renderAssessmentStationTiles();
- function renderEditStationTiles(){el("editStationTiles").innerHTML=stations.map((s,i)=>({s,i})).filter(({i})=>i!==4&&i!==7).map(({s,i})=>{const n=records.filter(r=>r.station===s).length;return '<button type="button" class="station-choice '+(n?"done":"")+'" data-edit-station="'+i+'"><small>STANOVIŠTĚ '+(i+1)+'</small><strong>'+escaped(s)+'</strong><small>'+n+' uložených zápisů</small></button>'}).join("");el("editStationTiles").querySelectorAll("[data-edit-station]").forEach(b=>b.onclick=()=>renderEditRecords(Number(b.dataset.editStation)))}function renderEditRecords(i){editStationSelection=stations[i];el("editRecordsPanel").classList.remove("hidden");el("editStationHeading").textContent="Uložené zápisy · "+editStationSelection;const list=records.map((r,index)=>({...r,_index:index})).filter(r=>r.station===editStationSelection);el("editRecordTiles").innerHTML=list.map(r=>'<div class="unit"><div style="flex:1"><strong>'+escaped(r.unit)+'</strong><small>'+escaped(r.status)+' · '+escaped(r.station==="Kvíz – hasička Klepačov"?"":(r.notes||"Bez poznámky").slice(0,140))+' / '+escaped(r.date||"Bez data")+' / '+escaped(r.time||"čas neuveden")+'</small></div><button type="button" class="primary" data-edit-record="'+r._index+'">Otevřít a upravit</button></div>').join("");el("editRecordsEmpty").classList.toggle("hidden",list.length>0);el("editRecordTiles").querySelectorAll("[data-edit-record]").forEach(b=>b.onclick=()=>openRecordForEditing(Number(b.dataset.editRecord)))}function openRecordForEditing(index){const r=records[index];if(!r)return;if(reviewerMode){const choice=getLockedReviewer();if(!choice||r.station!==stations[choice.station])return;el("reviewerQueuePanel").classList.add("hidden");el("reviewerReviewPanel").classList.add("hidden")}editingRecord=true;selectedUnit=r.unit;el("stationSelect").value=r.station;el("assessmentUnit").value=r.unit;el("chosenStationLabel").textContent=r.station;el("reviewer").value=r.reviewer||"";el("status").value=r.status||"V pořádku";updateStatusTiles();el("notes").value=r.notes||"";el("saveMessage").classList.add("hidden");el("arrivalPanel").classList.add("hidden");el("stationChooserPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden");showPage("assessment");el("arrivalPanel").classList.add("hidden");el("stationChooserPanel").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");el("pageTitle").textContent="Upravit zápis";el("pageSubtitle").textContent=r.unit+" · "+r.station;el("saveAssessment").textContent="Uložit změny";el("clearAssessment").textContent="Zrušit úpravy";persistEditingDraft();}
-const EDIT_DRAFT_KEY="hasicskaRevueEditingDraft";
-function persistEditingDraft(){if(!editingRecord)return;try{sessionStorage.setItem(EDIT_DRAFT_KEY,JSON.stringify({unit:el("assessmentUnit").value,station:el("stationSelect").value,reviewer:el("reviewer").value,status:el("status").value,notes:el("notes").value}));}catch(e){}}
-function restoreEditingDraft(){try{const raw=sessionStorage.getItem(EDIT_DRAFT_KEY);if(!raw)return;const draft=JSON.parse(raw);const index=records.findIndex(r=>r.unit===draft.unit&&r.station===draft.station);if(index<0){sessionStorage.removeItem(EDIT_DRAFT_KEY);return;}openRecordForEditing(index);el("reviewer").value=draft.reviewer??el("reviewer").value;el("status").value=draft.status??el("status").value;el("notes").value=draft.notes??el("notes").value;updateStatusTiles();persistEditingDraft();}catch(e){console.warn("Rozpracovanou opravu se nepodařilo obnovit",e);}}
-["assessmentUnit","stationSelect","reviewer","status","notes"].forEach(id=>{const field=el(id);if(field){field.addEventListener("input",persistEditingDraft);field.addEventListener("change",persistEditingDraft);}});
-const NEW_ASSESSMENT_DRAFT_KEY="hasicskaRevueNewAssessmentDraft";
-function persistNewAssessmentDraft(){
- if(editingRecord||el("assessmentFormPanel")?.classList.contains("hidden"))return;
- const unit=el("assessmentUnit").value,station=el("stationSelect").value;
- if(!unit||!station)return;
- sessionStorage.setItem(NEW_ASSESSMENT_DRAFT_KEY,JSON.stringify({unit,station,notes:el("notes").value,status:el("status").value,reviewer:el("reviewer").value}));
+ function renderEditStationTiles(){el("editStationTiles").innerHTML=stations.map((s,i)=>({s,i})).filter(({i})=>i!==4&&i!==7).map(({s,i})=>{const n=records.filter(r=>r.station===s).length;return '<button type="button" class="station-choice '+(n?"done":"")+'" data-edit-station="'+i+'"><small>STANOVIŠTĚ '+(i+1)+'</small><strong>'+escaped(s)+'</strong><small>'+n+' uložených zápisů</small></button>'}).join("");el("editStationTiles").querySelectorAll("[data-edit-station]").forEach(b=>b.onclick=()=>renderEditRecords(Number(b.dataset.editStation)))}function renderEditRecords(i){editStationSelection=stations[i];el("editRecordsPanel").classList.remove("hidden");el("editStationHeading").textContent="Uložené zápisy · "+editStationSelection;const list=records.map((r,index)=>({...r,_index:index})).filter(r=>r.station===editStationSelection);el("editRecordTiles").innerHTML=list.map(r=>'<div class="unit"><div style="flex:1"><strong>'+escaped(r.unit)+'</strong><small>'+escaped(r.status)+' · '+escaped(r.station==="Kvíz – hasička Klepačov"?"":(r.notes||"Bez poznámky").slice(0,140))+' / '+escaped(r.date||"Bez data")+' / '+escaped(r.time||"čas neuveden")+'</small></div><button type="button" class="primary" data-edit-record="'+r._index+'">Otevřít a upravit</button></div>').join("");el("editRecordsEmpty").classList.toggle("hidden",list.length>0);el("editRecordTiles").querySelectorAll("[data-edit-record]").forEach(b=>b.onclick=()=>openRecordForEditing(Number(b.dataset.editRecord)))}function openRecordForEditing(index){if(assessmentSaving)return;const r=records[index];if(!r)return;if(reviewerMode){const choice=getLockedReviewer();if(!choice||r.station!==stations[choice.station])return;el("reviewerQueuePanel").classList.add("hidden");el("reviewerReviewPanel").classList.add("hidden")}editingRecord=true;selectedUnit=r.unit;el("stationSelect").value=r.station;el("assessmentUnit").value=r.unit;el("chosenStationLabel").textContent=r.station;el("reviewer").value=r.reviewer||"";el("status").value=r.status||"V pořádku";updateStatusTiles();el("notes").value=r.notes||"";el("saveMessage").classList.add("hidden");el("arrivalPanel").classList.add("hidden");el("stationChooserPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden");showPage("assessment");el("arrivalPanel").classList.add("hidden");el("stationChooserPanel").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");syncReviewer();el("reviewer").value=r.reviewer||"";el("pageTitle").textContent="Upravit zápis";el("pageSubtitle").textContent=r.unit+" · "+r.station;el("saveAssessment").textContent="Uložit změny";el("clearAssessment").textContent="Zrušit úpravy";openAssessmentDraft(r);}
+const assessmentCredentials=new Map();
+const ASSESSMENT_DRAFT_PREFIX="hasicskaRevueAssessmentDraft:2026:";
+let assessmentDraft=null;
+let assessmentSaving=false;
+
+function assessmentDraftOwner(){
+ return reviewerMode ? getLockedReviewer()?.name : "@organizator";
 }
-function restoreNewAssessmentDraft(){
- if(editingRecord)return;
- let draft;try{draft=JSON.parse(sessionStorage.getItem(NEW_ASSESSMENT_DRAFT_KEY)||"null")}catch(e){return}
- if(!draft?.unit||!stations.includes(draft.station)||records.some(r=>r.unit===draft.unit&&r.station===draft.station))return;
- if(reviewerMode){const locked=getLockedReviewer();if(!locked||stations[locked.station]!==draft.station)return;}
- el("stationSelect").value=draft.station;syncReviewer();el("assessmentUnit").value=draft.unit;
- el("notes").value=draft.notes||"";el("status").value=draft.status||"V pořádku";el("reviewer").value=draft.reviewer||el("reviewer").value;updateStatusTiles();
- el("stationChooserPanel").classList.add("hidden");el("reviewerQueuePanel")?.classList.add("hidden");el("arrivalPanel").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");
- el("pageTitle").textContent="Rozpracované hodnocení";el("pageSubtitle").textContent=draft.unit+" · "+draft.station;
+function assessmentDraftKey(draft){
+ return ASSESSMENT_DRAFT_PREFIX+JSON.stringify([draft.owner,draft.unit,draft.station,draft.editing]);
+}
+function readAssessmentDraft(key){
+ try{return JSON.parse(localStorage.getItem(key)||"null")}
+ catch(error){return null}
+}
+function showAssessmentDraft(draft){
+ assessmentDraft=draft;
+ el("assessmentCredential").value=assessmentCredentials.get(JSON.stringify([draft.owner,draft.station]))||"";
+ el("reviewer").value=draft.reviewer;
+ el("status").value=draft.status;
+ el("notes").value=draft.notes;
+ updateStatusTiles();
+ el("saveAssessment").disabled=false;
+ el("assessmentDraftStatus").textContent=draft.updatedAt ? "Koncept obnoven z tohoto zařízení." : "";
+}
+function openAssessmentDraft(record){
+ const draft={
+  owner:assessmentDraftOwner(),unit:el("assessmentUnit").value,station:el("stationSelect").value,
+  editing:Boolean(record),expectedRevision:record?.revision??null,date:record?.date,time:record?.time,
+  reviewer:reviewerMode ? getLockedReviewer()?.name||"" : el("reviewer").value,
+  status:el("status").value,notes:el("notes").value
+ };
+ assessmentDraft=null;
+ el("assessmentDraftStatus").textContent="";
+ if(!draft.owner||!draft.unit||!draft.station||[stations[4],stations[7]].includes(draft.station))return;
+ showAssessmentDraft(readAssessmentDraft(assessmentDraftKey(draft))||draft);
+}
+function storeAssessmentDraft(){
+ if(!assessmentDraft||el("assessmentFormPanel").classList.contains("hidden"))return;
+ const status=el("status").value,notes=el("notes").value;
+ if(status!==assessmentDraft.status||notes!==assessmentDraft.notes)delete assessmentDraft.submission;
+ Object.assign(assessmentDraft,{status,notes,updatedAt:Date.now()});
+ try{
+  localStorage.setItem(assessmentDraftKey(assessmentDraft),JSON.stringify(assessmentDraft));
+  el("assessmentDraftStatus").textContent="Koncept uložen v tomto zařízení.";
+ }catch(error){
+  el("assessmentDraftStatus").textContent="Koncept se nepodařilo uložit do zařízení.";
+ }
+}
+function restoreAssessmentDraft(){
+ const owner=assessmentDraftOwner();
+ if(!owner||observerMode||quizTokenFromUrl)return;
+ let latest=null;
+ try{
+  for(let i=0;i<localStorage.length;i++){
+   const key=localStorage.key(i);
+   if(!key?.startsWith(ASSESSMENT_DRAFT_PREFIX))continue;
+   const draft=readAssessmentDraft(key);
+   if(!draft||draft.owner!==owner||!units.includes(draft.unit)||!stations.includes(draft.station))continue;
+   if(reviewerMode&&stations[getLockedReviewer()?.station]!==draft.station)continue;
+   if(!latest||draft.updatedAt>latest.updatedAt)latest=draft;
+  }
+ }catch(error){return}
+ if(!latest)return;
+ editingRecord=latest.editing;
+ selectedUnit=latest.unit;
+ el("stationSelect").value=latest.station;
+ syncReviewer();
+ el("assessmentUnit").value=latest.unit;
+ el("chosenStationLabel").textContent=latest.station;
  showPage("assessment");
- el("stationChooserPanel").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");
+ for(const id of ["stationChooserPanel","reviewerQueuePanel","arrivalPanel","unitPickerPanel","reviewerReviewPanel"]){
+  el(id).classList.add("hidden");
+ }
+ el("assessmentFormPanel").classList.remove("hidden");
+ el("saveAssessment").textContent=editingRecord?"Uložit změny":"Uložit zápis";
+ el("clearAssessment").textContent=editingRecord?"Zrušit úpravy":"Vymazat";
+ showAssessmentDraft(latest);
+ el("pageTitle").textContent="Rozpracované hodnocení";
+ el("pageSubtitle").textContent=latest.unit+" · "+latest.station;
 }
-["notes","status","reviewer"].forEach(id=>{el(id)?.addEventListener("input",persistNewAssessmentDraft);el(id)?.addEventListener("change",persistNewAssessmentDraft)});
+el("notes").addEventListener("input",storeAssessmentDraft);
 const REVIEWER_LOCK_KEY="hasicskaRevueLockedReviewer";
 function getLockedReviewer(){try{return JSON.parse(localStorage.getItem(REVIEWER_LOCK_KEY)||"null")}catch(e){return null}}
 function showReviewerSwitcher(){
+ if(assessmentSaving)return;
  localStorage.removeItem(REVIEWER_LOCK_KEY);
  restoreReviewerThanks();
  const setup=el("reviewerSetupPanel"),queue=el("reviewerQueuePanel");
@@ -700,7 +762,7 @@ function showReviewerSwitcher(){
  el("reviewerNameTiles").querySelectorAll("[data-reviewer-name]").forEach(b=>b.onclick=()=>{
   const choice={name:b.dataset.reviewerName,station:Number(b.dataset.reviewerStation)};
   localStorage.setItem(REVIEWER_LOCK_KEY,JSON.stringify(choice));
-  applyLockedReviewer(choice);setup.classList.add("hidden");el("stationChooserPanel").classList.add("hidden");queue.classList.remove("hidden");renderReviewerQueue();
+  applyLockedReviewer(choice);setup.classList.add("hidden");el("stationChooserPanel").classList.add("hidden");queue.classList.remove("hidden");renderReviewerQueue();restoreAssessmentDraft();
  });
  el("pageTitle").textContent="Výběr hodnotitele";
  el("pageSubtitle").textContent="Vyber hodnotitele a stanoviště. Dosavadní zápisy zůstávají uložené.";
@@ -768,19 +830,125 @@ function renderReviewerQueue(){
  el("reviewerQueueList").querySelectorAll("[data-reviewer-start]").forEach(b=>b.onclick=()=>chooseAssessmentStation(Number(b.dataset.reviewerStart),b.dataset.reviewerUnit));
  if(remaining.length===0)renderReviewerFinalReview(choice);else el("reviewerReviewPanel").classList.add("hidden");
 }
-function renderAssessmentStationTiles(){const drawn=startsAreDrawn();el("assessmentStationTiles").innerHTML=stations.map((s,i)=>({s,i})).filter(({i})=>i!==7).map(({s,i})=>{const next=nextUnitForStation(s);const done=drawn&&!next;return '<button type="button" class="station-choice '+(done?"done":"")+'" data-assessment-station="'+i+'"><small>STANOVIŠTĚ '+(i+1)+'</small><strong>'+escaped(s)+'</strong><small>'+(i===4?"Přestávka · bez hodnocení":!drawn?"Jednotky zatím nejsou rozlosovány":done?"Všechny jednotky hotovy": "Další: "+escaped(next))+'</small></button>'}).join("");el("assessmentStationTiles").querySelectorAll("[data-assessment-station]").forEach(b=>b.onclick=()=>chooseAssessmentStation(Number(b.dataset.assessmentStation)))}function chooseAssessmentStation(i,preferredUnit){if(!startsAreDrawn()){alert("Jednotky zatím nejsou rozlosovány. Pořadí hodnocení bude dostupné až po rozlosování.");return}if(reviewerMode){const locked=getLockedReviewer();if(!locked||locked.station!==i)return;el("reviewerQueuePanel").classList.remove("hidden");}const station=stations[i];if(i===4){el("stationChooserPanel").classList.add("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.remove("hidden");el("pickerStationName").textContent=station;el("unitPickerTiles").innerHTML="";el("unitPickerEmpty").textContent="Toto stanoviště je přestávka bez hodnocení.";el("unitPickerEmpty").classList.remove("hidden");return}el("stationSelect").value=station;el("chosenStationLabel").textContent="Stanoviště "+(i+1)+": "+station;syncReviewer();const next=setAutomaticUnit(station,preferredUnit);if(!next){el("stationChooserPanel").classList.remove("hidden");renderAssessmentStationTiles();return}el("stationChooserPanel").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");el("unitPickerPanel").classList.add("hidden");el("status").value="V pořádku";updateStatusTiles();el("notes").value="";el("saveMessage").classList.add("hidden");el("pageTitle").textContent="Hodnocení stanoviště";el("pageSubtitle").textContent=next+" · "+station;setActiveAssessment(next,station);if(reviewerMode)el("assessmentFormPanel").scrollIntoView({behavior:"smooth",block:"start"});}
+function renderAssessmentStationTiles(){const drawn=startsAreDrawn();el("assessmentStationTiles").innerHTML=stations.map((s,i)=>({s,i})).filter(({i})=>i!==7).map(({s,i})=>{const next=nextUnitForStation(s);const done=drawn&&!next;return '<button type="button" class="station-choice '+(done?"done":"")+'" data-assessment-station="'+i+'"><small>STANOVIŠTĚ '+(i+1)+'</small><strong>'+escaped(s)+'</strong><small>'+(i===4?"Přestávka · bez hodnocení":!drawn?"Jednotky zatím nejsou rozlosovány":done?"Všechny jednotky hotovy": "Další: "+escaped(next))+'</small></button>'}).join("");el("assessmentStationTiles").querySelectorAll("[data-assessment-station]").forEach(b=>b.onclick=()=>chooseAssessmentStation(Number(b.dataset.assessmentStation)))}function chooseAssessmentStation(i,preferredUnit){if(assessmentSaving)return;if(!startsAreDrawn()){alert("Jednotky zatím nejsou rozlosovány. Pořadí hodnocení bude dostupné až po rozlosování.");return}if(reviewerMode){const locked=getLockedReviewer();if(!locked||locked.station!==i)return;el("reviewerQueuePanel").classList.remove("hidden");}const station=stations[i];if(i===4){el("stationChooserPanel").classList.add("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.remove("hidden");el("pickerStationName").textContent=station;el("unitPickerTiles").innerHTML="";el("unitPickerEmpty").textContent="Toto stanoviště je přestávka bez hodnocení.";el("unitPickerEmpty").classList.remove("hidden");return}el("stationSelect").value=station;el("chosenStationLabel").textContent="Stanoviště "+(i+1)+": "+station;syncReviewer();const next=setAutomaticUnit(station,preferredUnit);if(!next){el("stationChooserPanel").classList.remove("hidden");renderAssessmentStationTiles();return}el("stationChooserPanel").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");el("unitPickerPanel").classList.add("hidden");el("status").value="V pořádku";updateStatusTiles();el("notes").value="";el("saveMessage").classList.add("hidden");el("pageTitle").textContent="Hodnocení stanoviště";el("pageSubtitle").textContent=next+" · "+station;editingRecord=false;openAssessmentDraft();setActiveAssessment(next,station);if(reviewerMode)el("assessmentFormPanel").scrollIntoView({behavior:"smooth",block:"start"});}
 function previousStationForUnit(unit,station){const route=routeForUnit(unit);const pos=route.indexOf(stations.indexOf(station)+1);const previousNumber=route[(pos-1+route.length)%route.length];return {number:previousNumber,name:stations[previousNumber-1]}}
 function showArrivalStep(unit,station){const prev=previousStationForUnit(unit,station);const closed=stationIsComplete(unit,prev.name);el("arrivalTitle").textContent="Potvrzení příjezdu";el("arrivalUnitText").innerHTML="<strong>"+escaped(unit)+"</strong> · Stanoviště "+(stations.indexOf(station)+1)+": "+escaped(station);el("previousStationStatus").innerHTML="<strong>Předchozí stanoviště "+prev.number+": "+escaped(prev.name)+"</strong><br>"+(closed?"Zápis předchozího stanoviště je uzavřen.":"Zápis předchozího stanoviště zatím není uložen.");el("arrivalPanel").dataset.unit=unit;el("arrivalPanel").dataset.station=station;el("arrivalPanel").classList.remove("hidden");el("stationChooserPanel").classList.add("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden");el("pageTitle").textContent="Potvrzení příjezdu";el("pageSubtitle").textContent="Zkontroluj stav předchozího stanoviště a potvrď příjezd jednotky.";if(reviewerMode)el("arrivalPanel").scrollIntoView({behavior:"smooth",block:"start"})}
-el("confirmArrival").onclick=()=>{const unit=el("arrivalPanel").dataset.unit,station=el("arrivalPanel").dataset.station;if(!unit||!station)return;el("arrivalPanel").classList.add("hidden");selectedUnit=unit;el("stationSelect").value=station;el("chosenStationLabel").textContent=station;syncReviewer();setAutomaticUnit(station,unit);el("status").value="V pořádku";updateStatusTiles();el("notes").value="";el("saveMessage").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");el("pageTitle").textContent="Hodnocení stanoviště";el("pageSubtitle").textContent=unit+" · "+station;if(reviewerMode)el("assessmentFormPanel").scrollIntoView({behavior:"smooth",block:"start"});};el("backToStations").onclick=()=>{clearActiveAssessment(el("assessmentUnit").value);el("arrivalPanel").classList.add("hidden");el("stationChooserPanel").classList.remove("hidden");renderAssessmentStationTiles();el("pageTitle").textContent="Hodnocení stanoviště";el("pageSubtitle").textContent="Vyber stanoviště, kde chceš zapisovat."};
-function updateStatusTiles(){el("statusTiles").querySelectorAll("[data-status]").forEach(b=>b.classList.toggle("selected",b.dataset.status===el("status").value))}el("statusTiles").querySelectorAll("[data-status]").forEach(b=>b.onclick=()=>{el("status").value=b.dataset.status;updateStatusTiles()});
- function syncReviewer(){const i=stations.indexOf(el("stationSelect").value);el("reviewer").value=i>=0&&stationDetails[i].reviewer!=="Bude upřesněn"?stationDetails[i].reviewer:"";const isQuiz=el("stationSelect").value==="Kvíz – hasička Klepačov";el("statusField").classList.toggle("hidden",isQuiz);const notesField=el("notes").closest(".field"),voiceField=el("micButton").closest(".voice"),saveActions=el("saveAssessment").closest(".actions");notesField.classList.toggle("hidden",isQuiz);voiceField.classList.toggle("hidden",isQuiz);saveActions.classList.toggle("hidden",isQuiz);let quizNotice=el("quizManualEntryNotice");if(!quizNotice){quizNotice=document.createElement("div");quizNotice.id="quizManualEntryNotice";quizNotice.className="notice";quizNotice.textContent="Výsledky tohoto stanoviště se vyhodnocují automaticky po odevzdání kvízu. Ruční zápis hodnocení zde není dostupný.";el("statusField").insertAdjacentElement("afterend",quizNotice);}quizNotice.classList.toggle("hidden",!isQuiz);}
+el("confirmArrival").onclick=()=>{const unit=el("arrivalPanel").dataset.unit,station=el("arrivalPanel").dataset.station;if(!unit||!station)return;el("arrivalPanel").classList.add("hidden");selectedUnit=unit;el("stationSelect").value=station;el("chosenStationLabel").textContent=station;syncReviewer();setAutomaticUnit(station,unit);el("status").value="V pořádku";updateStatusTiles();el("notes").value="";el("saveMessage").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");el("pageTitle").textContent="Hodnocení stanoviště";el("pageSubtitle").textContent=unit+" · "+station;editingRecord=false;openAssessmentDraft();if(reviewerMode)el("assessmentFormPanel").scrollIntoView({behavior:"smooth",block:"start"});};el("backToStations").onclick=()=>{clearActiveAssessment(el("assessmentUnit").value);el("arrivalPanel").classList.add("hidden");el("stationChooserPanel").classList.remove("hidden");renderAssessmentStationTiles();el("pageTitle").textContent="Hodnocení stanoviště";el("pageSubtitle").textContent="Vyber stanoviště, kde chceš zapisovat."};
+function updateStatusTiles(){el("statusTiles").querySelectorAll("[data-status]").forEach(b=>b.classList.toggle("selected",b.dataset.status===el("status").value))}el("statusTiles").querySelectorAll("[data-status]").forEach(b=>b.onclick=()=>{el("status").value=b.dataset.status;updateStatusTiles();storeAssessmentDraft()});
+ function syncReviewer(){const i=stations.indexOf(el("stationSelect").value);el("reviewer").value=i>=0&&stationDetails[i].reviewer!=="Bude upřesněn"?stationDetails[i].reviewer:"";const isQuiz=el("stationSelect").value==="Kvíz – hasička Klepačov";el("statusField").classList.toggle("hidden",isQuiz);el("assessmentCredentialField").classList.toggle("hidden",isQuiz);const notesField=el("notes").closest(".field"),voiceField=el("micButton").closest(".voice"),saveActions=el("saveAssessment").closest(".actions");notesField.classList.toggle("hidden",isQuiz);voiceField.classList.toggle("hidden",isQuiz);saveActions.classList.toggle("hidden",isQuiz);let quizNotice=el("quizManualEntryNotice");if(!quizNotice){quizNotice=document.createElement("div");quizNotice.id="quizManualEntryNotice";quizNotice.className="notice";quizNotice.textContent="Výsledky tohoto stanoviště se vyhodnocují automaticky po odevzdání kvízu. Ruční zápis hodnocení zde není dostupný.";el("statusField").insertAdjacentElement("afterend",quizNotice);}quizNotice.classList.toggle("hidden",!isQuiz);}
  el("stationSelect").onchange=()=>{syncReviewer();setAutomaticUnit(el("stationSelect").value);el("chosenStationLabel").textContent=el("stationSelect").value;};syncReviewer();
- function updateNextUnitOptions(station){const available=units.filter(u=>!records.some(r=>r.unit===u&&r.station===station));el("pickerStationName").textContent=station;el("unitPickerTiles").innerHTML=available.map(u=>'<button type="button" class="unit-tile" data-pick-unit="'+escaped(u)+'"><strong>'+escaped(u)+'</strong><span>Otevřít nový zápis →</span></button>').join("");el("unitPickerEmpty").classList.toggle("hidden",available.length>0);el("unitPickerTiles").classList.toggle("hidden",available.length===0);el("unitPickerTiles").querySelectorAll("[data-pick-unit]").forEach(b=>b.onclick=()=>startAssessmentForUnit(b.dataset.pickUnit,station));} function startAssessmentForUnit(unit,station){selectedUnit=unit;setActiveAssessment(unit,station);el("stationSelect").value=station;setAutomaticUnit(station,unit);el("status").value="V pořádku";el("notes").value="";el("saveMessage").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");el("unitPickerPanel").classList.add("hidden");el("voiceStatus").textContent="Diktování závisí na podpoře prohlížeče a mikrofonu.";syncReviewer();el("pageTitle").textContent="Hodnocení stanoviště";el("pageSubtitle").textContent="Zápis hlasem nebo ručně.";el("notes").focus();}
+ function updateNextUnitOptions(station){const available=units.filter(u=>!records.some(r=>r.unit===u&&r.station===station));el("pickerStationName").textContent=station;el("unitPickerTiles").innerHTML=available.map(u=>'<button type="button" class="unit-tile" data-pick-unit="'+escaped(u)+'"><strong>'+escaped(u)+'</strong><span>Otevřít nový zápis →</span></button>').join("");el("unitPickerEmpty").classList.toggle("hidden",available.length>0);el("unitPickerTiles").classList.toggle("hidden",available.length===0);el("unitPickerTiles").querySelectorAll("[data-pick-unit]").forEach(b=>b.onclick=()=>startAssessmentForUnit(b.dataset.pickUnit,station));} function startAssessmentForUnit(unit,station){if(assessmentSaving)return;selectedUnit=unit;setActiveAssessment(unit,station);el("stationSelect").value=station;setAutomaticUnit(station,unit);el("status").value="V pořádku";el("notes").value="";el("saveMessage").classList.add("hidden");el("assessmentFormPanel").classList.remove("hidden");el("unitPickerPanel").classList.add("hidden");el("voiceStatus").textContent="Diktování závisí na podpoře prohlížeče a mikrofonu.";syncReviewer();el("pageTitle").textContent="Hodnocení stanoviště";el("pageSubtitle").textContent="Zápis hlasem nebo ručně.";editingRecord=false;openAssessmentDraft();el("notes").focus();}
 
 
 async function showDrowningHandoff(nextUnit){await loadUnitContactsFromGoogle(true);const contacts=readLocalUnitContacts();const contactUnit=nextUnit==="Lažánky + Horní Lhota"?combinedSmsCommanderUnit:nextUnit;const contact=contacts[contactUnit]||{};const phone=String(contact.phone||"").trim();const smsText="ZOZ-Voda, Blansko, Mlýnská 22, záchrana tonoucího";const overlay=document.createElement("div");overlay.style.cssText="position:fixed;inset:0;z-index:100000;background:#102d4ecc;display:flex;align-items:center;justify-content:center;padding:16px";const panel=document.createElement("div");panel.style.cssText="width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;color:#102d4e;border-radius:18px;padding:22px;box-shadow:0 20px 60px #0005;font:16px/1.45 Arial,sans-serif";panel.innerHTML='<h2 style="margin:0 0 8px;font-size:23px">📱 Informovat následující jednotku</h2><p style="margin:0 0 12px">Další jednotka na stanovišti Záchrana tonoucího: <strong>'+escaped(nextUnit)+'</strong>'+(nextUnit==="Lažánky + Horní Lhota"?'<br><span style="font-size:13px">SMS velitel: '+escaped(contactUnit)+'</span>':'')+'</p><div style="padding:12px;border-radius:10px;background:'+(phone?'#e8f7ee':'#fff1cf')+';margin-bottom:12px"><strong>Velitel:</strong> '+escaped(contact.commander||"Jméno není uložené")+'<br><strong>Telefon:</strong> <span style="font-size:20px;font-weight:800">'+escaped(phone||"Telefon není uložený v tomto zařízení")+'</span></div><label for="drowningSmsText" style="display:block;font-weight:700;margin-bottom:5px">Text informační SMS</label><textarea id="drowningSmsText" readonly style="box-sizing:border-box;width:100%;min-height:86px;padding:11px;border:1px solid #b8c5d3;border-radius:9px;font:16px/1.4 Arial,sans-serif">'+smsText+'</textarea>'+(phone?'':'<p style="color:#9a5a00;font-weight:700">Doplň telefon velitele v sekci Kontakty na jednotky na tomto zařízení. Kontakty nejsou sdílené mezi telefony.</p>')+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px"><button type="button" id="drowningCopySms" style="padding:12px;border:1px solid #aab8c8;border-radius:9px;background:#f1f5f9;font-weight:700">Zkopírovat text</button><button type="button" id="drowningOpenSms" '+(phone?'':'disabled')+' style="padding:12px;border:0;border-radius:9px;background:'+(phone?'#176b43':'#9ca3af')+';color:#fff;font-weight:700">Otevřít SMS</button><button type="button" id="drowningContinue" style="grid-column:1/-1;padding:13px;border:0;border-radius:9px;background:#102d4e;color:#fff;font-weight:800">Pokračovat v hodnocení</button></div><p id="drowningSmsStatus" style="font-size:13px;color:#52657a;margin:9px 0 0"></p>';overlay.appendChild(panel);document.body.appendChild(overlay);return await new Promise(resolve=>{panel.querySelector("#drowningCopySms").onclick=async()=>{try{await navigator.clipboard.writeText(smsText);panel.querySelector("#drowningSmsStatus").textContent="Text SMS je zkopírovaný."}catch(e){const ta=panel.querySelector("#drowningSmsText");ta.focus();ta.select();panel.querySelector("#drowningSmsStatus").textContent="Text označený – zkopíruj ho pomocí Kopírovat."}};panel.querySelector("#drowningOpenSms").onclick=()=>{if(!phone)return;const number=phone.replace(/[^0-9+]/g,"");window.location.href="sms:"+number+"?body="+encodeURIComponent(smsText);panel.querySelector("#drowningSmsStatus").textContent="Otevírám SMS aplikaci."};panel.querySelector("#drowningContinue").onclick=()=>{overlay.remove();resolve()}})}
-el("saveAssessment").onclick=async()=>{const saveButton=el("saveAssessment");saveButton.disabled=true;saveButton.textContent=editingRecord?"Ukládám změny…":"Ukládám zápis…";el("saveMessage").textContent=editingRecord?"Ukládám opravený záznam na server…":"Ukládám zápis na server…";el("saveMessage").classList.remove("hidden");try{const r={unit:el("assessmentUnit").value,station:el("stationSelect").value,reviewer:el("reviewer").value.trim(),status:el("status").value,notes:el("notes").value.trim(),date:new Date().toLocaleDateString("cs-CZ"),time:new Date().toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})};if(!r.unit||!r.station){el("saveMessage").textContent="Chybí jednotka nebo stanoviště.";el("saveMessage").classList.remove("hidden");return}const previous=records.find(x=>x.unit===r.unit&&x.station===r.station);r.expectedRevision=previous?.revision??null;const savedRecord=await saveProductionAssessment(r);delete r.expectedRevision;r.revision=savedRecord.revision;saveButton.disabled=false;saveButton.textContent="Uložit zápis";el("saveMessage").classList.add("hidden");const idx=records.findIndex(x=>x.unit===r.unit&&x.station===r.station);if(idx>=0){if(editingRecord){if(records[idx].date)r.date=records[idx].date;if(records[idx].time)r.time=records[idx].time}records[idx]=r}else records.push(r);save();clearActiveAssessment(r.unit).catch(console.warn);sessionStorage.removeItem(NEW_ASSESSMENT_DRAFT_KEY);renderResults();renderAssessmentStationTiles();renderReviewerQueue();if(editingRecord){editingRecord=false;sessionStorage.removeItem(EDIT_DRAFT_KEY);el("saveAssessment").textContent="Uložit zápis";el("clearAssessment").textContent="Vymazat formulář";if(reviewerMode){localStorage.removeItem(reviewerConfirmationKey(getLockedReviewer().station));el("assessmentFormPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");el("pageTitle").textContent="Stanoviště dokončeno";el("pageSubtitle").textContent="Zkontroluj všechna hodnocení před potvrzením.";renderReviewerQueue();return}showPage("edits");renderEditStationTiles();renderEditRecords(stations.indexOf(r.station));return}const next=nextUnitForStation(r.station);if(!editingRecord&&r.station===stations[5]&&next)await showDrowningHandoff(next);showPage("assessment");if(reviewerMode){el("arrivalPanel").classList.add("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden");el("stationChooserPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");el("pageTitle").textContent=next?"Moje stanoviště":"Stanoviště dokončeno";el("pageSubtitle").textContent=next?"Další jednotka: "+next:"Všechny jednotky už máš ohodnocené.";renderReviewerQueue();el("reviewerQueuePanel").scrollIntoView({behavior:"smooth",block:"start"})}else if(next){showArrivalStep(next,r.station)}else{el("arrivalPanel").classList.add("hidden");el("stationChooserPanel").classList.remove("hidden");el("assessmentFormPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden");el("pageTitle").textContent="Stanoviště dokončeno";el("pageSubtitle").textContent="Všechny jednotky mají na tomto stanovišti zápis.";renderAssessmentStationTiles()}}catch(err){saveButton.disabled=false;saveButton.textContent=editingRecord?"Uložit změny":"Uložit zápis";el("assessmentFormPanel").classList.remove("hidden");el("saveMessage").textContent="Zápis se nepodařilo dokončit: "+(err&&err.message?err.message:"neznámá chyba");el("saveMessage").classList.remove("hidden");console.error(err);if(reviewerMode&&/Konflikt:|Zastaralá verze aplikace/.test(String(err&&err.message||""))){el("saveMessage").textContent="Jiný hodnotitel již tento zápis uložil. Načítám aktuální přehled jednotek…";try{await loadProductionAssessments();editingRecord=false;sessionStorage.removeItem(EDIT_DRAFT_KEY);sessionStorage.removeItem(NEW_ASSESSMENT_DRAFT_KEY);el("assessmentFormPanel").classList.add("hidden");el("arrivalPanel").classList.add("hidden");el("unitPickerPanel").classList.add("hidden");el("stationChooserPanel").classList.add("hidden");el("reviewerReviewPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");el("saveMessage").classList.add("hidden");showPage("assessment");el("stationChooserPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");renderReviewerQueue()}catch(refreshErr){el("saveMessage").textContent="Zápis už byl změněn jiným hodnotitelem, ale přehled se nepodařilo načíst. Obnov stránku.";console.error(refreshErr)}}}};
- el("clearAssessment").onclick=()=>{if(!editingRecord&&reviewerMode)clearActiveAssessment(el("assessmentUnit").value);if(editingRecord){editingRecord=false;sessionStorage.removeItem(EDIT_DRAFT_KEY);el("saveAssessment").textContent="Uložit zápis";el("clearAssessment").textContent="Vymazat formulář";if(reviewerMode){const choice=getLockedReviewer();el("assessmentFormPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");el("pageTitle").textContent="Stanoviště dokončeno";el("pageSubtitle").textContent="Zkontroluj všechna hodnocení před potvrzením.";renderReviewerQueue();return}showPage("edits");renderEditStationTiles();if(editStationSelection)renderEditRecords(stations.indexOf(editStationSelection));return}el("notes").value="";el("status").value="V pořádku";updateStatusTiles();syncReviewer();el("saveMessage").classList.add("hidden");};
+el("saveAssessment").onclick=async()=>{
+ if(assessmentSaving||!assessmentDraft)return;
+ if(recognition){recognition.stop();el("saveMessage").textContent="Po ukončení diktování zkontroluj přepis a ulož zápis.";el("saveMessage").classList.remove("hidden");return}
+ const draft=assessmentDraft;
+ const credential=el("assessmentCredential").value.trim();
+ if(!credential){
+  el("saveMessage").textContent="Zadej přístupový kód stanoviště nebo organizační PIN.";
+  el("saveMessage").classList.remove("hidden");
+  el("assessmentCredential").focus();
+  return;
+ }
+ const saveButton=el("saveAssessment"),panel=el("assessmentFormPanel");
+ assessmentSaving=true;
+ saveButton.disabled=true;
+ panel.inert=true;
+ saveButton.textContent=editingRecord?"Ukládám změny…":"Ukládám zápis…";
+ el("saveMessage").textContent="Ukládám zápis na server…";
+ el("saveMessage").classList.remove("hidden");
+ try{
+  storeAssessmentDraft();
+  if(!draft.submission){
+   const now=new Date();
+   draft.submission={
+    submissionId:crypto.randomUUID(),date:draft.date||now.toLocaleDateString("cs-CZ"),
+    time:draft.time||now.toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})
+   };
+   storeAssessmentDraft();
+  }
+  const savedRecord=await saveProductionAssessment({
+   ...draft.submission,unit:draft.unit,station:draft.station,reviewer:draft.reviewer,
+   status:draft.status,notes:draft.notes.trim(),expectedRevision:draft.expectedRevision
+  },credential);
+  assessmentCredentials.set(JSON.stringify([draft.owner,draft.station]),credential);
+  const r=savedRecord;
+  const key=assessmentDraftKey(draft);
+  try{
+   if(readAssessmentDraft(key)?.submission?.submissionId===draft.submission.submissionId)localStorage.removeItem(key);
+  }catch(error){console.warn("Koncept se po potvrzení nepodařilo odstranit",error)}
+  assessmentDraft=null;
+  el("assessmentDraftStatus").textContent="";
+  saveButton.textContent="Uložit zápis";
+  el("saveMessage").classList.add("hidden");
+  const index=records.findIndex(record=>record.unit===r.unit&&record.station===r.station);
+  if(index>=0)records[index]=r;
+  else records.push(r);
+  save();
+  clearActiveAssessment(r.unit).catch(console.warn);
+  renderResults();
+  renderAssessmentStationTiles();
+
+  if(draft.editing){
+   editingRecord=false;
+   el("clearAssessment").textContent="Vymazat formulář";
+   if(reviewerMode){
+    localStorage.removeItem(reviewerConfirmationKey(getLockedReviewer().station));
+    el("assessmentFormPanel").classList.add("hidden");
+    el("reviewerQueuePanel").classList.remove("hidden");
+    el("pageTitle").textContent="Stanoviště dokončeno";
+    el("pageSubtitle").textContent="Zkontroluj všechna hodnocení před potvrzením.";
+    renderReviewerQueue();
+    return;
+   }
+   showPage("edits");
+   renderEditStationTiles();
+   renderEditRecords(stations.indexOf(r.station));
+   return;
+  }
+
+  const next=nextUnitForStation(r.station);
+  if(r.station===stations[5]&&next){
+   try{await showDrowningHandoff(next)}
+   catch(error){console.warn("Po uložení nelze otevřít předání stanoviště",error)}
+  }
+  showPage("assessment");
+  if(reviewerMode){
+   for(const id of ["arrivalPanel","assessmentFormPanel","unitPickerPanel","stationChooserPanel"]){
+    el(id).classList.add("hidden");
+   }
+   el("reviewerQueuePanel").classList.remove("hidden");
+   el("pageTitle").textContent=next?"Moje stanoviště":"Stanoviště dokončeno";
+   el("pageSubtitle").textContent=next?"Další jednotka: "+next:"Všechny jednotky už máš ohodnocené.";
+   renderReviewerQueue();
+   el("reviewerQueuePanel").scrollIntoView({behavior:"smooth",block:"start"});
+  }else if(next){
+   showArrivalStep(next,r.station);
+  }else{
+   el("arrivalPanel").classList.add("hidden");
+   el("stationChooserPanel").classList.remove("hidden");
+   el("assessmentFormPanel").classList.add("hidden");
+   el("unitPickerPanel").classList.add("hidden");
+   el("pageTitle").textContent="Stanoviště dokončeno";
+   el("pageSubtitle").textContent="Všechny jednotky mají na tomto stanovišti zápis.";
+   renderAssessmentStationTiles();
+  }
+ }catch(error){
+  saveButton.textContent=draft.editing?"Uložit změny":"Uložit zápis";
+  el("saveMessage").textContent=assessmentDraft
+   ? "Zápis se nepodařilo dokončit: "+(error.message||"neznámá chyba")
+   : "Server zápis potvrdil. Přehled se nepodařilo aktualizovat, obnov stránku.";
+  el("saveMessage").classList.remove("hidden");
+  console.error(error);
+ }finally{
+  assessmentSaving=false;
+  saveButton.disabled=false;
+  panel.inert=false;
+ }
+};
+ el("clearAssessment").onclick=()=>{if(!editingRecord&&reviewerMode)clearActiveAssessment(el("assessmentUnit").value);if(editingRecord){editingRecord=false;el("saveAssessment").textContent="Uložit zápis";el("clearAssessment").textContent="Vymazat formulář";if(reviewerMode){const choice=getLockedReviewer();el("assessmentFormPanel").classList.add("hidden");el("reviewerQueuePanel").classList.remove("hidden");el("pageTitle").textContent="Stanoviště dokončeno";el("pageSubtitle").textContent="Zkontroluj všechna hodnocení před potvrzením.";renderReviewerQueue();return}showPage("edits");renderEditStationTiles();if(editStationSelection)renderEditRecords(stations.indexOf(editStationSelection));return}el("notes").value="";el("status").value="V pořádku";updateStatusTiles();syncReviewer();el("saveMessage").classList.add("hidden");storeAssessmentDraft();};
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;let recognition=null;
 const voicePreview=document.createElement("div");voicePreview.id="voiceLivePreview";voicePreview.style.cssText="margin-top:8px;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere";voicePreview.setAttribute("aria-live","off");el("micButton").closest(".voice").appendChild(voicePreview);
 function mergeSpeechParts(parts){
@@ -791,10 +959,12 @@ el("micButton").onclick=()=>{
  if(recognition){recognition.stop();return}
  const isAndroid=/Android/i.test(navigator.userAgent);
  recognition=new SpeechRecognition();recognition.lang="cs-CZ";recognition.continuous=true;recognition.interimResults=true;
+ const dictationDraft=assessmentDraft;
  const baseText=el("notes").value.trim();let lastFinal="",lastInterim="";
  voicePreview.textContent="";
  recognition.onstart=()=>{el("micButton").textContent="■ Zastavit diktování";el("voiceStatus").textContent=isAndroid?"Poslouchám… živý náhled je oddělený od uložené poznámky.":"Poslouchám… průběžný přepis se zobrazuje při mluvení."};
  recognition.onresult=e=>{
+  if(assessmentDraft!==dictationDraft)return;
   const finals=[],interims=[];
   for(let i=0;i<e.results.length;i++){const item=e.results[i],transcript=(item[0]?.transcript||"").trim();if(!transcript)continue;(item.isFinal?finals:interims).push(transcript)}
   lastFinal=mergeSpeechParts(finals);lastInterim=mergeSpeechParts(interims);
@@ -804,15 +974,15 @@ el("micButton").onclick=()=>{
   }else{
    el("notes").value=[baseText,mergeSpeechParts([...finals,...interims])].filter(Boolean).join(" ");
   }
-  persistNewAssessmentDraft();persistEditingDraft();
+  if(assessmentDraft===dictationDraft)storeAssessmentDraft();
  };
  recognition.onerror=e=>{el("voiceStatus").textContent="Diktování se nepodařilo ("+e.error+"). Zkontroluj oprávnění mikrofonu."};
  recognition.onend=()=>{
-  if(isAndroid&&lastInterim){
+  if(assessmentDraft===dictationDraft&&isAndroid&&lastInterim){
    // Android may repeat a finalized phrase as an interim result when stopping.
    // Keep only finalized text when available; an interim is a fallback only.
    if(!lastFinal)el("notes").value=[baseText,lastInterim].filter(Boolean).join(" ");
-   persistNewAssessmentDraft();persistEditingDraft();
+   if(assessmentDraft===dictationDraft)storeAssessmentDraft();
   }
   voicePreview.textContent="";recognition=null;el("micButton").textContent="🎙 Diktovat";
   if(!el("voiceStatus").textContent.startsWith("Diktování se nepodařilo"))el("voiceStatus").textContent="Diktování ukončeno. Zkontroluj přepis před uložením.";
@@ -821,14 +991,24 @@ el("micButton").onclick=()=>{
 };
 
 /* QR kvíz – relace se ověřuje přes Apps Script, nikoli jen podle URL. */
-const QUIZ_API_DEFAULT="https://script.google.com/macros/s/AKfycbwuEk9g6WroMHecImGviCG8aMujLvdxbDsrnTNrPzB7HBEgGfLBP-Vz3kOXsDHU8ZVjrw/exec";
+const TEST_API_URL=""; // URL samostatného testovacího nasazení Apps Scriptu
+const PRODUCTION_API_URL="https://script.google.com/macros/s/AKfycbwuEk9g6WroMHecImGviCG8aMujLvdxbDsrnTNrPzB7HBEgGfLBP-Vz3kOXsDHU8ZVjrw/exec";
 const quizUrlParams=new URLSearchParams(location.search);
 const quizTokenFromUrl=quizUrlParams.get("quizToken");
 const combinedQuizUnit="Lažánky + Horní Lhota";
 const quizRoles=["Hasič","Strojník","Velitel"];
 let quizSession=null, quizStartedAt=0, quizTicker=null, quizAnswers={};
 let quizResultsCache=[]; // Poslední úspěšně načtené výsledky z Apps Scriptu.
-function quizApiUrl(){return (el("quizApiUrl")?.value||QUIZ_API_DEFAULT).trim()}
+function quizApiUrl(){
+ const value=el("quizApiUrl").value.trim()||TEST_API_URL;
+ const url=new URL(value||location.href);
+ if(!value||url.protocol!=="https:"||url.hostname!=="script.google.com"||
+    !/^\/macros\/s\/[\w-]+\/exec$/.test(url.pathname)||
+    url.origin+url.pathname===PRODUCTION_API_URL){
+  throw new Error("Pro vývojovou verzi nastav samostatné testovací nasazení Apps Scriptu.");
+ }
+ return url.origin+url.pathname;
+}
 async function quizGet(params={}){
  const u=new URL(quizApiUrl());Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
  const r=await fetch(u.toString(),{method:"GET",cache:"no-store"});if(!r.ok)throw new Error("Server vrátil "+r.status);return await r.json();
@@ -1614,7 +1794,7 @@ async function decodeUnitReportPayload(){
 })();
 renderUnits();renderRoutePlanner();setAutomaticUnit(el("stationSelect").value);renderHomeStations();renderResults();renderProgress();renderStandby();
 if(!localStorage.getItem("hasicskaRevueClearContactsOnce073")){localStorage.removeItem("hasicskaRevueUnitContacts");localStorage.setItem("hasicskaRevueClearContactsOnce073","1");}
- loadUnitContactsFromGoogle(false).then(()=>{if(document.getElementById("unitAdmin")&&!document.getElementById("unitAdmin").classList.contains("hidden"))renderUnitAdmin()});loadProductionAssessments().then(()=>{restoreEditingDraft();restoreNewAssessmentDraft()}).catch(err=>{quizStatus("Nepodařilo se načíst centrální hodnocení: "+(err&&err.message||err),true);console.error(err)});setInterval(()=>{if(el("assessmentFormPanel")?.classList.contains("hidden"))loadProductionAssessments().catch(err=>console.warn("Obnovení centrálních hodnocení selhalo",err))},15000);
+ loadUnitContactsFromGoogle(false).then(()=>{if(document.getElementById("unitAdmin")&&!document.getElementById("unitAdmin").classList.contains("hidden"))renderUnitAdmin()});loadProductionAssessments().catch(err=>{quizStatus("Nepodařilo se načíst centrální hodnocení: "+(err&&err.message||err),true);console.error(err)});setInterval(()=>{if(el("assessmentFormPanel")?.classList.contains("hidden"))loadProductionAssessments().catch(err=>console.warn("Obnovení centrálních hodnocení selhalo",err))},15000);
 renderUnitPdfExports();
 // Samostatné režimy se otevírají přes URL parametry.
 const pageParams=new URLSearchParams(location.search);
@@ -1628,8 +1808,7 @@ if(reviewerMode){
  document.querySelectorAll(".nav, .side, #readmePanel, #reviewerQrPanel, #productionTestPanel, #refreshInfo").forEach(n=>n.style.display="none");
  showPage("assessment");
  initStandaloneReviewer();
- // Rozpracovaný formulář obnovit okamžitě, ještě před načtením dat ze serveru.
- restoreNewAssessmentDraft();
+
 }
 if(observerMode){
  document.body.classList.remove("qr-fullscreen");
@@ -1645,6 +1824,7 @@ if(observerMode){
 }
 if(new URLSearchParams(location.search).get("view")==="assessmentOverview"&&!reviewerMode&&!observerMode)showPage("assessmentOverview");
 const savedPage=localStorage.getItem("hasicskaRevueCurrentPage");if(!reviewerMode&&savedPage&&document.getElementById(savedPage)?.classList.contains("page"))showPage(savedPage);if(quizTokenFromUrl&&!reviewerMode&&!observerMode){document.body.classList.add("participant-mode");showPage("quiz");document.title="Hasičská revue · Účastnický kvíz";}
-/* Obnovu rozpracované opravy provede až dokončené načtení serverových záznamů. */
+restoreAssessmentDraft();
+refreshDashboardFromGoogle();
 loadSharedAppState();setInterval(()=>{loadSharedAppState()},10000);
 </script></body></html>
