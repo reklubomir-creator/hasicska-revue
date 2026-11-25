@@ -204,7 +204,7 @@
     el("assessmentFields").hidden = !delayed;
     el("passage").hidden = delayed || (station.kind !== "studna" && !passes);
     el("passage").textContent = station.kind === "standby" ? "Ukončit pohotovost"
-      : station.kind === "quiz" ? "Potvrdit uzavřený kvíz" : "Potvrdit průchod Studnou";
+      : station.kind === "quiz" ? "Potvrdit uzavřený kvíz" : "Potvrdit průchod stanovištěm";
     el("message").textContent = "";
     loadDraft();
   }

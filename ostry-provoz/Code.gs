@@ -1285,7 +1285,12 @@ function editionProgress_(data) {
   const organizer = canManageAssessment_(data.credential);
   const allowed = edition.stations.filter(station => organizer || canManageAssessment_(data.credential, station.name));
   if (!allowed.length && !organizer) return denied;
-  if (!organizer && edition.status !== 'active') return denied;
+  if (!organizer && edition.status !== 'active') {
+    if (data.action !== 'readEditionProgress') return denied;
+    return edition.status === 'preparation'
+      ? {ok:false,code:'EDITION_NOT_STARTED',error:'Soutěž ještě nezačala. Organizátor musí ve Správě ročníků stisknout Start soutěže.'}
+      : {ok:false,code:'EDITION_CLOSED',error:'Tento ročník už je uzavřený.'};
+  }
   const sheet = editionProgressSheet_(false);
   const entries = editionProgressRows_(sheet, year);
   if (['startEditionPause','endEditionPause','sendEditionNotice'].includes(data.action)) {

@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.3 — 2026-11-25
+
+- Studna se vybírá jako běžné soutěžní stanoviště. Potvrzení průchodu a dodatečné hodnocení má vlastní volbu.
+- Pole Údaje je přejmenováno na nepovinnou poznámku k jednotce.
+- Přihlášení hodnotitele rozlišuje platný kód před startem soutěže a neplatný přístup.
+
 ## 1.1.0-beta.2 — 2026-11-25
 
 - Sjednocený vzhled přehledu jednotky, hodnocení a průběhu ročníku. Aktuální stanoviště a čekání na přesun jsou čitelnější. Stav připojení a pohotovost mají vlastní vizuální zvýraznění.

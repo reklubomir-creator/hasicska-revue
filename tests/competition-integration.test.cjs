@@ -31,6 +31,8 @@ test("ročník prochází startem, hodnocením, pauzou, předáním, push a arch
     return result;
   }
   const preparation = ok("saveCompetitionEdition",{edition,expectedRevision:null}).edition;
+  assert.equal(caller("readEditionProgress",{credential:"hodnotitel-studna"}).code,"EDITION_NOT_STARTED");
+  assert.equal(caller("readEditionProgress",{credential:"chybný kód"}).code,undefined);
   const token = randomBytes(32).toString("hex");
   ok("issueUnitAccess",{unitId:"a",token});
   const dashboard = () => ok("readUnitDashboard",{credential:undefined,token}).dashboard;

@@ -13,7 +13,7 @@
   const accessLink = el("editionAccessLink");
   const accessQr = el("editionAccessQr");
   const schemas = [
-    ["units", "Jednotky", "Přidat jednotku", [["name", "Název", 120], ["details", "Údaje", 300]]],
+    ["units", "Jednotky", "Přidat jednotku", [["name", "Název", 120], ["details", "Poznámka k jednotce (nepovinná)", 300]]],
     ["stations", "Stanoviště", "Přidat stanoviště", [["name", "Název", 120], ["kind", "Typ", "kinds"], ["location", "Místo", 240]]],
     ["commanders", "Velitelé", "Přidat velitele", [["name", "Jméno", 120], ["unitId", "Jednotka", "units"], ["phone", "Telefon", 40], ["email", "E-mail", 120]]],
     ["reviewers", "Hodnotitelé", "Přidat hodnotitele", [["name", "Jméno", 120], ["stationId", "Stanoviště", "stations"]]],
@@ -21,7 +21,7 @@
     ["draw", "Přiřazení startů", "Přidat start", [["unitId", "Jednotka", "units"], ["stationId", "Stanoviště", "stations"]]]
   ];
   const kinds = [
-    ["scored", "Soutěžní"], ["standby", "Pohotovost"], ["studna", "Studna"], ["quiz", "Kvíz"]
+    ["scored", "Soutěžní stanoviště"], ["standby", "Pohotovost"], ["quiz", "Kvíz"]
   ];
   let editions = [];
   let draft;
@@ -62,6 +62,13 @@
       for (const [index, item] of draft[key].entries()) {
         const row = document.createElement("div");
         row.className = "edition-row";
+        let stationKind;
+        let delayed;
+        if (key === "stations") {
+          delayed = document.createElement("input");
+          delayed.type = "checkbox";
+          delayed.checked = item.kind === "studna";
+        }
         for (const [field, label, options] of fields) {
           const wrapper = document.createElement("label");
           wrapper.className = "field";
@@ -69,16 +76,22 @@
           if (typeof options === "number") {
             control.maxLength = options;
             control.value = item[field] || "";
+            if (field === "details") control.placeholder = "Např. sloučená jednotka";
             if (field === "phone") control.type = "tel";
             if (field === "email") control.type = "email";
           } else if (options === "kinds") {
-            populateOptions(control, kinds, item[field] || kinds[0][0]);
+            stationKind = control;
+            populateOptions(control, kinds, delayed.checked ? "scored" : item[field] || "scored");
           } else {
             control.dataset.editionReference = options;
             fillReference(control, options, item[field]);
           }
           control.addEventListener("input", () => {
-            item[field] = control.value;
+            item[field] = field === "kind" && control.value === "scored" && delayed.checked ? "studna" : control.value;
+            if (field === "kind") {
+              delayed.parentElement.hidden = control.value !== "scored";
+              if (delayed.parentElement.hidden) delayed.checked = false;
+            }
             dirty = true;
             if (field === "name" && (key === "units" || key === "stations")) {
               for (const reference of lists.querySelectorAll('[data-edition-reference="' + key + '"]')) {
@@ -88,6 +101,17 @@
           });
           wrapper.append(label, control);
           row.append(wrapper);
+        }
+        if (delayed) {
+          const setting = document.createElement("label");
+          setting.className = "edition-station-setting";
+          setting.hidden = stationKind.value !== "scored";
+          setting.append(delayed, "Umožnit potvrdit průchod a hodnotit později");
+          delayed.onchange = () => {
+            item.kind = delayed.checked ? "studna" : "scored";
+            dirty = true;
+          };
+          row.append(setting);
         }
         const remove = document.createElement("button");
         remove.type = "button";
