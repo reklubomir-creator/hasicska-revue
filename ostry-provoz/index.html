@@ -4,6 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#F70000">
 <title>Hasičská revue</title>
+<script src="config.js"></script>
 <style>
 :root{--navy:#102d4e;--blue:#1d5688;--red:#d84343;--menu-red:#AF2B1E;--bg:#f3f6fa;--line:#e1e8f0;--muted:#64748b;--green:#16845b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#192b40;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:650}.primary{background:var(--navy);color:white}.soft{background:#e8eff7;color:var(--navy)}.danger{background:#fff0f0;color:#b42323}.layout{display:grid;grid-template-columns:238px 1fr;min-height:100vh}.side{background:var(--menu-red);color:white;padding:25px 16px}.brand{display:flex;align-items:center;gap:11px;font-size:18px;font-weight:800;margin:0 5px 35px}.crest{display:grid;place-items:center;background:var(--red);width:42px;height:42px;border-radius:13px;font-size:23px}.nav{display:grid;gap:7px}.nav button{text-align:left;color:#d5e2f0;background:transparent;font-weight:550}.nav button.active,.nav button:hover{background:#ffffff1a;color:#fff}.side-note{margin:35px 8px 0;color:#b9c9dc;font-size:12px}.main{padding:30px;max-width:1450px;width:100%;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}.eyebrow{color:var(--blue);font-weight:750;font-size:12px;letter-spacing:.1em;text-transform:uppercase}h1{margin:4px 0;font-size:clamp(25px,3vw,34px);letter-spacing:-.03em}h2{font-size:19px;margin:0 0 5px}.muted{color:var(--muted)}.pill{display:inline-flex;align-items:center;gap:6px;background:#e4f6ed;color:#13784f;padding:5px 10px;border-radius:30px;font-size:12px;font-weight:750}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.card,.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 3px 12px #102d4e06}.stat{font-size:30px;font-weight:800;margin:8px 0 1px}.stat-label{color:var(--muted);font-size:13px}.content-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:17px}.unit-list{display:grid;gap:10px}.unit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px}.unit-tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:9px;min-height:100px;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--text);text-align:left;cursor:pointer}.unit-tile strong{font-size:1.05rem}.unit-tile span{font-size:.88rem;color:var(--muted)}.unit-tile:hover{border-color:var(--accent);transform:translateY(-1px)}
@@ -472,6 +473,20 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
           <div class="field"><label for="editionStatus">Stav</label><select id="editionStatus"><option value="preparation">Příprava</option><option value="archived">Archiv přípravy</option></select></div>
         </div>
         <div id="editionLists"></div>
+        <section id="editionAccess" class="panel edition-list" hidden>
+          <h3>Přístup jednotky</h3>
+          <div class="field"><label for="editionAccessUnit">Jednotka</label><select id="editionAccessUnit"></select></div>
+          <div class="actions">
+            <button class="soft" id="editionIssueAccess" type="button">Vydat nový odkaz</button>
+            <button class="soft" id="editionRevokeAccess" type="button">Zrušit přístup</button>
+          </div>
+          <div id="editionAccessLinkField" class="field" hidden>
+            <label for="editionAccessLink">Soukromý odkaz pro jednotku</label>
+            <input id="editionAccessLink" readonly autocomplete="off">
+            <button class="soft" id="editionCopyAccess" type="button">Zkopírovat odkaz</button>
+            <div id="editionAccessQr" aria-label="QR kód soukromého odkazu" role="img"></div>
+          </div>
+        </section>
         <button class="primary" type="submit">Uložit ročník</button>
       </form>
     </fieldset>
@@ -526,7 +541,6 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
 <script>
 /* Jediný zdroj čísla verze pro menu i dashboard. */
 /* GitHub Pages rebuild after cancelled deployments; QR URLs unchanged. */
-const APP_VERSION="1.1.0-alpha.2";
 document.querySelectorAll("[data-app-version]").forEach(node=>node.textContent=APP_VERSION);
 let competitionOfficial=false;
 function competitionLive(){return competitionOfficial&&typeof startsAreDrawn==="function"&&startsAreDrawn()}
@@ -1017,8 +1031,6 @@ el("micButton").onclick=()=>{
 };
 
 /* QR kvíz – relace se ověřuje přes Apps Script, nikoli jen podle URL. */
-const TEST_API_URL=""; // URL samostatného testovacího nasazení Apps Scriptu
-const PRODUCTION_API_URL="https://script.google.com/macros/s/AKfycbwuEk9g6WroMHecImGviCG8aMujLvdxbDsrnTNrPzB7HBEgGfLBP-Vz3kOXsDHU8ZVjrw/exec";
 const quizUrlParams=new URLSearchParams(location.search);
 const quizTokenFromUrl=quizUrlParams.get("quizToken");
 const combinedQuizUnit="Lažánky + Horní Lhota";
@@ -1026,14 +1038,7 @@ const quizRoles=["Hasič","Strojník","Velitel"];
 let quizSession=null, quizStartedAt=0, quizTicker=null, quizAnswers={};
 let quizResultsCache=[]; // Poslední úspěšně načtené výsledky z Apps Scriptu.
 function quizApiUrl(){
- const value=el("quizApiUrl").value.trim()||TEST_API_URL;
- const url=new URL(value||location.href);
- if(!value||url.protocol!=="https:"||url.hostname!=="script.google.com"||
-    !/^\/macros\/s\/[\w-]+\/exec$/.test(url.pathname)||
-    url.origin+url.pathname===PRODUCTION_API_URL){
-  throw new Error("Pro vývojovou verzi nastav samostatné testovací nasazení Apps Scriptu.");
- }
- return url.origin+url.pathname;
+ return revueApiUrl(el("quizApiUrl").value.trim()||TEST_API_URL);
 }
 async function quizGet(params={}){
  const u=new URL(quizApiUrl());Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));

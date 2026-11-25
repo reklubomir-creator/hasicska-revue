@@ -25,4 +25,4 @@ Worker přijímá polohu ve formátu OsmAnd a kontroluje ID zařízení proti ha
 
 Použij novou testovací Google tabulku a k ní vázaný Apps Script s kódem z `ostry-provoz/Code.gs`. V jeho Script Properties nastav vlastní `ORGANIZER_PIN` a `ASSESSMENT_STATION_TOKENS` jako JSON objekt, kde klíčem je přesný název stanoviště a hodnotou samostatný náhodný kód. Kód zadej jako heslo v hodnoticím formuláři.
 
-URL testovacího Apps Scriptu nastav do `TEST_API_URL` v ostré vývojové stránce. Konfigurace platí také pro její samostatné rozhraní hodnotitele. Vývojová stránka zamítá známou produkční adresu Apps Scriptu. Testovací URL musí směřovat k testovací tabulce. Provozní PIN ani kódy do frontendu nepatří.
+URL testovacího Apps Scriptu nastav do `TEST_API_URL` v souboru `ostry-provoz/config.js`. Konfigurace platí také pro samostatná rozhraní hodnotitele a jednotky. Vývojová stránka zamítá známou produkční adresu Apps Scriptu. Testovací URL musí směřovat k testovací tabulce. Provozní PIN ani kódy do frontendu nepatří.

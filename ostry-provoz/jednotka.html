@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#af2b1e">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Soutěžní jednotka · Hasičská revue</title>
+  <script src="config.js" defer></script>
+  <script src="jednotka.js" defer></script>
+  <style>
+    :root{color-scheme:light;--navy:#102d4e;--red:#af2b1e;--line:#dce5ef;--muted:#42566b}
+    *{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:var(--navy);font:16px/1.5 system-ui,sans-serif}
+    header{background:var(--red);color:white;padding:16px max(16px,calc((100% - 620px)/2));font-weight:750}
+    main{max-width:652px;margin:auto;padding:16px}
+    h1,h2,p{margin:0}h1{font-size:clamp(25px,6vw,38px);line-height:1.18;margin:8px 0 16px}
+    h2{font-size:19px}section{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+    section p,section ul{margin-top:8px}ul{padding-left:24px;margin-bottom:0}
+    button{font:inherit;font-weight:650;min-height:48px;border:0;border-radius:10px;padding:8px 14px;background:#e8eff7;color:var(--navy);cursor:pointer}
+    button:focus-visible{outline:3px solid #174e91;outline-offset:3px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}.muted,footer{color:var(--muted)}
+    .standby{background:#fff5dc;border-color:#b87700}.connection{font-weight:700}
+    footer{font-size:13px;margin:16px 0}.message:empty{display:none}
+  </style>
+</head>
+<body>
+  <header>Hasičská revue</header>
+  <main>
+    <p id="unitEdition" class="muted" hidden></p>
+    <h1 id="unitName">Soutěžní jednotka</h1>
+    <p id="unitMessage" class="message" role="status">Načítám přístup jednotky…</p>
+    <div id="unitDashboard" hidden>
+      <section id="unitStationPanel" aria-labelledby="unitStationTitle">
+        <h2 id="unitStationTitle">Startovní stanoviště</h2>
+        <p><strong id="unitStation"></strong></p>
+        <p id="unitLocation" class="muted" hidden></p>
+        <p id="unitStandby" hidden>Pohotovost se nezapočítává mezi soutěžní stanoviště.</p>
+      </section>
+      <section aria-labelledby="unitStatusTitle">
+        <h2 id="unitStatusTitle">Stav soutěže</h2>
+        <p id="unitState"></p>
+        <p id="unitPause"></p>
+      </section>
+      <section aria-labelledby="unitCompletedTitle">
+        <h2 id="unitCompletedTitle">Absolvovaná stanoviště</h2>
+        <p>Počet soutěžních stanovišť <strong id="unitCompletedCount">0</strong></p>
+        <ul id="unitCompleted" hidden></ul>
+      </section>
+    </div>
+    <section aria-labelledby="unitConnectionTitle">
+      <h2 id="unitConnectionTitle">Připojení</h2>
+      <p id="unitConnection" class="connection" role="status"></p>
+      <p id="unitLastUpdate" class="muted" hidden></p>
+      <p class="muted">Sdílení polohy je vypnuté.</p>
+    </section>
+    <div class="actions">
+      <button id="unitRefresh" type="button" hidden>Obnovit údaje</button>
+      <button id="unitSignOut" type="button" hidden>Odhlásit jednotku</button>
+    </div>
+    <footer id="unitVersion"></footer>
+  </main>
+</body>
+</html>

@@ -8,6 +8,10 @@
   const status = el("editionStatus");
   const message = el("editionMessage");
   const lists = el("editionLists");
+  const access = el("editionAccess");
+  const accessUnit = el("editionAccessUnit");
+  const accessLink = el("editionAccessLink");
+  const accessQr = el("editionAccessQr");
   const schemas = [
     ["units", "Jednotky", "Přidat jednotku", [["name", "Název", 120], ["details", "Údaje", 300]]],
     ["stations", "Stanoviště", "Přidat stanoviště", [["name", "Název", 120], ["kind", "Typ", "kinds"], ["location", "Místo", 240]]],
@@ -164,6 +168,10 @@
     dirty = false;
     updateSelector();
     renderEditor();
+    hideAccessLink();
+    access.hidden = !edition?.units.length;
+    populateOptions(accessUnit, (edition?.units || []).map(unit => [unit.id, unit.name]), edition?.units[0]?.id);
+    el("editionIssueAccess").disabled = edition?.status === "archived";
     editor.hidden = false;
   }
 
@@ -192,6 +200,46 @@
       panel.querySelector("fieldset").disabled = false;
     }
   }
+
+  function hideAccessLink() {
+    el("editionAccessLinkField").hidden = true;
+    accessLink.value = "";
+    accessQr.replaceChildren();
+  }
+
+  accessUnit.onchange = hideAccessLink;
+  el("editionIssueAccess").onclick = async () => {
+    if (busy || !draft?.revision || !accessUnit.value) return;
+    if (!confirm("Vydat nový odkaz? Dosavadní odkaz vybrané jednotky přestane platit.")) return;
+    hideAccessLink();
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte =>
+      byte.toString(16).padStart(2, "0")).join("");
+    const response = await request("issueUnitAccess", { year: draft.year, unitId: accessUnit.value, token });
+    if (!response) return;
+    const link = new URL("jednotka.html", location.href);
+    link.hash = new URLSearchParams({ pristup: token }).toString();
+    accessLink.value = link.href;
+    el("editionAccessLinkField").hidden = false;
+    setMessage("Odkaz vydán. Zkopíruj ho nebo jednotce ukaž QR kód.");
+    if (typeof QRCode === "function") new QRCode(accessQr, { text:link.href, width:216, height:216 });
+  };
+  el("editionRevokeAccess").onclick = async () => {
+    if (busy || !draft?.revision || !accessUnit.value) return;
+    if (!confirm("Zrušit přístup vybrané jednotky?")) return;
+    const response = await request("revokeUnitAccess", { year: draft.year, unitId: accessUnit.value });
+    if (!response) return;
+    hideAccessLink();
+    setMessage("Přístup jednotky byl zrušen.");
+  };
+  el("editionCopyAccess").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(accessLink.value);
+      setMessage("Odkaz zkopírován.");
+    } catch (error) {
+      accessLink.select();
+      setMessage("Odkaz je označený. Zkopíruj ho ručně.");
+    }
+  };
 
   el("editionLoad").onclick = async () => {
     if (busy || !confirmDiscard()) return;

@@ -1,5 +1,11 @@
 # Změny Hasičské revue
 
+## 1.1.0-alpha.3 — 2026-11-25
+
+- Správa ročníků vydává soukromý odkaz a QR kód pro konkrétní jednotku. Vydáním nového odkazu nebo zrušením přístupu se předchozí odkaz zneplatní. Tabulka ukládá pouze otisk klíče.
+- Mobilní stránka načítá serverem omezené údaje vlastní jednotky, zobrazuje startovní stanoviště, stav přípravy, souhrn absolvování a připojení. Při výpadku v otevřené stránce zůstanou poslední načtené údaje s upozorněním.
+- List přípravy je zdrojem startu. Předávání dalších stanovišť po potvrzení hodnocení, ostrý průběh a skutečné pauzy čekají na propojení v dalších etapách.
+
 ## 1.1.0-alpha.2 — 2026-11-25
 
 - Přidána správa přípravy ročníků s organizačním PINem a kontrolou souběžných úprav.

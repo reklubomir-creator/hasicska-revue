@@ -1048,6 +1048,80 @@ function competitionEditions_(data) {
   return {ok:true,edition:Object.assign(edition,{revision:revision})};
 }
 
+const UNIT_ACCESS_SHEET = 'Přístupy jednotek';
+
+function unitAccessSheet_(create) {
+  const spreadsheet = spreadsheet_();
+  let sheet = spreadsheet.getSheetByName(UNIT_ACCESS_SHEET);
+  if (!sheet && create) {
+    sheet = spreadsheet.insertSheet(UNIT_ACCESS_SHEET);
+    sheet.appendRow(['Ročník', 'Jednotka ID', 'Otisk přístupového klíče']);
+  }
+  return sheet;
+}
+
+function unitAccessHash_(token) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, token, Utilities.Charset.UTF_8)
+    .map(byte => ('0' + (byte & 255).toString(16)).slice(-2)).join('');
+}
+
+function getSavedCompetitionEdition_(year) {
+  const row = competitionEditionRows_(competitionEditionSheet_(false))
+    .find(item => Number(item[0]) === year);
+  return row ? JSON.parse(row[2]) : null;
+}
+
+function manageUnitAccess_(data) {
+  if (!canManageAssessment_(data.credential)) return {ok:false,error:'Správa přístupů vyžaduje organizační PIN.'};
+  const year = Number(data.year);
+  const edition = getSavedCompetitionEdition_(year);
+  if (!edition || !edition.units.some(unit => unit.id === data.unitId)) {
+    return {ok:false,error:'Jednotka v uloženém ročníku neexistuje.'};
+  }
+  const sheet = unitAccessSheet_(false);
+  const rows = competitionEditionRows_(sheet);
+  const unitKey = 'unit:' + data.unitId;
+  const index = rows.findIndex(row => Number(row[0]) === year && row[1] === unitKey);
+  if (data.action === 'revokeUnitAccess') {
+    if (index >= 0) sheet.deleteRow(index + 2);
+    return {ok:true};
+  }
+  if (edition.status === 'archived') return {ok:false,error:'Pro archivovaný ročník nelze vydat přístup.'};
+  if (typeof data.token !== 'string' || !/^[a-f0-9]{64}$/.test(data.token)) {
+    return {ok:false,error:'Neplatný přístupový klíč.'};
+  }
+  const hash = unitAccessHash_(data.token);
+  if (rows.some((row, i) => i !== index && row[2] === hash)) return {ok:false,error:'Přístupový klíč je již použitý.'};
+  const row = [year, unitKey, hash];
+  const target = sheet || unitAccessSheet_(true);
+  if (index >= 0) target.getRange(index + 2, 1, 1, 3).setValues([row]);
+  else target.appendRow(row);
+  return {ok:true};
+}
+
+function readUnitDashboard_(data) {
+  const denied = {ok:false,code:'INVALID_UNIT_ACCESS',error:'Přístup jednotky není platný.'};
+  if (typeof data.token !== 'string' || !/^[a-f0-9]{64}$/.test(data.token)) return denied;
+  const hash = unitAccessHash_(data.token);
+  const access = competitionEditionRows_(unitAccessSheet_(false)).find(row => row[2] === hash);
+  if (!access) return denied;
+  const edition = getSavedCompetitionEdition_(Number(access[0]));
+  if (!edition || edition.status === 'archived') return denied;
+  const unit = edition.units.find(item => 'unit:' + item.id === access[1]);
+  if (!unit) return denied;
+  const start = edition.draw.find(item => item.unitId === unit.id);
+  const station = start && edition.stations.find(item => item.id === start.stationId);
+  return {ok:true,dashboard:{
+    name:unit.name,
+    edition:edition.name,
+    state:'preparation',
+    station:station ? {name:station.name,location:station.location,kind:station.kind} : null,
+    completed:[],
+    completedCount:0,
+    pause:null
+  }};
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   let lockAcquired = false;
@@ -1061,6 +1135,14 @@ function doPost(e) {
 
     lock.waitLock(10000);
     lockAcquired = true;
+
+    if (data.action === 'readUnitDashboard') {
+      return json(readUnitDashboard_(data));
+    }
+
+    if (data.action === 'issueUnitAccess' || data.action === 'revokeUnitAccess') {
+      return json(manageUnitAccess_(data));
+    }
 
     if (data.action === 'listCompetitionEditions' || data.action === 'saveCompetitionEdition') {
       return json(competitionEditions_(data));
