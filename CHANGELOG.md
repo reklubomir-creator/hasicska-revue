@@ -1,5 +1,9 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.24 — 2026-11-26
+
+- Po startu jsou uzamčená pole přípravy v rozhraní pouze ke čtení. Hodnocení se nabídne po potvrzení příjezdu.
+
 ## 1.1.0-beta.23 — 2026-11-26
 
 - V ukázkové betě má pořadatel jeden vstup Ročník. Po startu zobrazí průběh, výsledky a zprávy.

@@ -278,6 +278,7 @@
 
   function renderEditor() {
     contactEditor = null;
+    const locked = Boolean(draft.activatedAt) || draft.status === "active";
     const expanded = new Set([...lists.querySelectorAll("details[open]")].map(section => section.dataset.list));
     lists.replaceChildren();
     for (const [key, title, addLabel, fields] of schemas) {
@@ -316,6 +317,7 @@
           delayed = document.createElement("input");
           delayed.type = "checkbox";
           delayed.checked = item.kind === "studna";
+          delayed.disabled = locked;
         }
         for (const [field, label, options] of fields) {
           const wrapper = document.createElement("label");
@@ -354,6 +356,7 @@
               }
             }
           });
+          control.disabled = locked;
           wrapper.append(label, control);
           row.append(wrapper);
         }
@@ -394,7 +397,7 @@
           dirty = true;
           renderEditor();
         };
-        row.append(remove);
+        if (!locked) row.append(remove);
         if (key === "stations") {
           const dispatch = document.createElement("div");
           dispatch.dataset.dispatchStation = item.id;
@@ -417,9 +420,9 @@
         renderEditor();
         lists.children[schemas.findIndex(schema => schema[0] === key)].querySelector(".edition-row:last-of-type input, .edition-row:last-of-type select")?.focus();
       };
-      fieldsSection.append(add);
+      if (!locked) fieldsSection.append(add);
       if (key === "units") renderMerges(section);
-      if (key === "draw") {
+      if (key === "draw" && !locked) {
         const fill = document.createElement("button");
         fill.type = "button";
         fill.className = "soft";
@@ -597,6 +600,9 @@
     dispatchDrafts.clear();
     year.value = draft.year;
     year.readOnly = Boolean(draft.revision);
+    const locked = Boolean(draft.activatedAt) || draft.status === "active";
+    for (const control of [name,startsAt,venue,meetingPlace]) control.readOnly = locked;
+    status.querySelector('option[value="preparation"]').disabled = locked;
     name.value = draft.name;
     status.value = draft.status;
     startsAt.value = draft.startsAt || "";
@@ -758,7 +764,9 @@
     if (!response) return;
     const previousYear = draft?.year || Number(new URLSearchParams(location.search).get("rok"));
     editions = response.editions.sort((a, b) => b.year - a.year);
-    openEdition(editions.find(edition => edition.year === previousYear) || editions[0]);
+    const demoEntry = new URLSearchParams(location.search).get("demo") === "admin";
+    openEdition(editions.find(edition => edition.year === previousYear) ||
+      (demoEntry ? editions.find(edition => edition.status === "active") : null) || editions[0]);
     setMessage("Ročníky načteny.");
   };
 
@@ -789,7 +797,7 @@
   };
 
   window.addEventListener("beforeunload", event => {
-    if (dirty) event.preventDefault();
+    if (dirty || dispatchDrafts.size) event.preventDefault();
   });
 })();
 
