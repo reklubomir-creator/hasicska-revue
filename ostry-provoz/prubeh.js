@@ -10,7 +10,7 @@
   const states = { preparation:"Příprava", waiting:"Čeká na uvolnění dalšího stanoviště", active:"Na stanovišti", enroute:"Na cestě", standby:"Pohotovost · pauza na zbrojnici", paused:"Mimořádná pauza", evaluating:"PRÁVĚ HODNOTÍ", finished:"Dokončeno", closed:"Uzavřeno" };
   let login, overview, overviewSignature, selected, draftKey, submission, pendingNotice, busy = false, reading = false;
   el("version").textContent = "Verze " + APP_VERSION;
-  el("year").value = new Date().getFullYear() + 1;
+  el("year").value = new URLSearchParams(location.search).get("rok") || new Date().getFullYear() + 1;
 
   async function api(action, payload = {}, session = login) {
     const response = await fetch(revueApiUrl(), {
@@ -106,6 +106,7 @@
       const available = !overview.organizer && !overview.observer && overview.status === "active" ? [station, ...unit.delayed.map(id => overview.stations.find(item => item.id === id))] : [];
       for (const choice of available.filter(Boolean)) {
         if (stationFilter && choice.id !== stationFilter) continue;
+        if (choice.id === unit.stationId && !unit.arrivedAt && unit.state !== "evaluating") continue;
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = choice.id !== unit.stationId ? "Dodatečně vyhodnotit · " + choice.name

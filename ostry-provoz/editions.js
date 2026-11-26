@@ -607,6 +607,12 @@
     el("editionRegistration").hidden = !edition?.revision;
     el("editionIssueRegistration").hidden = draft.status !== "preparation";
     el("editionStart").hidden = draft.status !== "preparation";
+    el("editionStageHint").textContent = draft.status === "preparation"
+      ? "Připrav startovní stanoviště a výjezdové zprávy. Start soutěže zveřejní první stanoviště jednotkám a uzamkne rozlosování."
+      : "Nastavení startů a stanovišť je uzamčené. Průběh, výsledky a zprávy najdeš v přehledu ročníku.";
+    const progressLink = el("editionProgressLink");
+    progressLink.hidden = !edition?.revision || draft.status === "preparation";
+    progressLink.href = "prubeh.html?" + new URLSearchParams({rok:draft.year});
     dirty = false;
     updateSelector();
     renderEditor();
@@ -617,6 +623,9 @@
     el("editionIssueAccess").disabled = edition?.status === "archived";
     editor.hidden = false;
     if (draft.revision && draft.status !== "archived") loadStationMessages(draft);
+    document.dispatchEvent(new CustomEvent("revueEditionOpened", {
+      detail:{year:draft.year,status:draft.status}
+    }));
   }
 
   function confirmDiscard() {
@@ -747,7 +756,7 @@
     if (busy || !confirmDiscard()) return;
     const response = await request("listCompetitionEditions");
     if (!response) return;
-    const previousYear = draft?.year;
+    const previousYear = draft?.year || Number(new URLSearchParams(location.search).get("rok"));
     editions = response.editions.sort((a, b) => b.year - a.year);
     openEdition(editions.find(edition => edition.year === previousYear) || editions[0]);
     setMessage("Ročníky načteny.");

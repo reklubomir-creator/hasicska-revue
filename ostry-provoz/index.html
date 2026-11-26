@@ -503,7 +503,8 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
       <button type="button" class="soft" id="editionLoad">Načíst ročníky</button>
       <p id="editionMessage" class="muted" role="status"></p>
       <form id="editionEditor" hidden>
-        <p class="muted">Tlačítko Start soutěže zveřejní jednotkám jejich první stanoviště a uzamkne rozlosování.</p>
+        <p class="muted" id="editionStageHint"></p>
+        <p><a id="editionProgressLink" href="prubeh.html" hidden>Přejít k průběhu ročníku</a></p>
         <div class="field"><label for="editionSelect">Ročník k úpravě</label><select id="editionSelect"></select></div>
         <div class="edition-row">
           <div class="field"><label for="editionYear">Rok</label><input id="editionYear" type="number" min="2000" max="2100" required></div>
@@ -543,7 +544,7 @@ body.observer-mode #home>div:has(#progressTable) .table-wrap:after{content:"Zele
             <div id="editionAccessQr" aria-label="QR kód soukromého odkazu" role="img"></div>
           </div>
         </section>
-        <div class="edition-actions"><button class="primary" type="submit">Uložit ročník</button><button id="editionStart" class="soft" type="submit" hidden>Start soutěže</button><a href="prubeh.html">Průběh ročníku a hodnocení</a></div>
+        <div class="edition-actions"><button class="primary" type="submit">Uložit ročník</button><button id="editionStart" class="soft" type="submit" hidden>Start soutěže</button></div>
       </form>
     </fieldset>
   </div>

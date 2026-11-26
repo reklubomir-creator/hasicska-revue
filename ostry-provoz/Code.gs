@@ -1644,12 +1644,13 @@ function editionProgress_(data) {
     if (entry.startedAt) {
       return entry.reviewerId === reviewer.id ? {ok:true} : {ok:false,error:'Jednotku už hodnotí jiný hodnotitel.'};
     }
+    if (!entry.arrivedAt) return {ok:false,error:'Počkej, až jednotka potvrdí příjezd.'};
     entry.startedAt = Date.now();
     entry.reviewerId = reviewer.id;
   } else {
     if (entry.completedAt) return {ok:true};
     if (entry.quizToken) return {ok:false,error:'Otevřený kvíz uzavři tlačítkem Uzavřít kvíz.'};
-    if (!current || !['studna','standby'].includes(station.kind)) {
+    if (!current || !entry.arrivedAt || !['studna','standby'].includes(station.kind)) {
       return {ok:false,error:'Průchod tímto stanovištěm nelze tímto způsobem potvrdit.'};
     }
     entry.completedAt = eventAt;

@@ -98,6 +98,12 @@ test("ročník prochází startem, hodnocením, předáním, push a archivací p
 
   const standby = {unitId:"b",stationId:"p",credential:"hodnotitel-pohotovost"};
   assert.equal(caller("completeEditionPassage",{...standby,credential}).ok,false);
+  assert.equal(caller("completeEditionPassage",standby).ok,false);
+  const standbyToken = randomBytes(32).toString("hex");
+  ok("issueUnitAccess",{unitId:"b",token:standbyToken});
+  for (const action of ["acknowledgeUnitDispatch","acknowledgeUnitArrival"]) {
+    ok(action,{token:standbyToken,stationId:"p"});
+  }
   ok("completeEditionPassage",standby);
   assert.equal(caller("openEditionStation",{...standby,credential}).ok,false);
   ok("openEditionStation",standby);

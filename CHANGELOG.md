@@ -1,5 +1,9 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.23 — 2026-11-26
+
+- V ukázkové betě má pořadatel jeden vstup Ročník. Po startu zobrazí průběh, výsledky a zprávy.
+
 ## 1.1.0-beta.22 — 2026-11-26
 
 - Jednotka vidí číslo přiděleného stanoviště až do převzetí výjezdové zprávy. Poté i v historii vidí celý název.
