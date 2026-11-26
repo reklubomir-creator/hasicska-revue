@@ -510,70 +510,68 @@
     builder.append(title,references);
 
     const fields = [
-      ["Druh události",""],
-      ["Místo zásahu",station.location || ""],
-      ["Požární technika",""],
-      ["Věcné prostředky",""],
-      ["Datum a čas poplachu",""],
-      ["Vysílá",""],
-      ["Počet hasičů",""],
-      ["Velitel jednotky",""],
-      ["Příjezd a další pokyny",""]
-    ].map(([caption,initial]) => {
+      ["vehicles","Technika","1V, 1DA","",true],
+      ["alarm","Datum a čas","16.11.2026 09:46:28","",true],
+      ["event","Kód události","P-Odpad","",true],
+      ["location","Místo události","Blansko 2492",station.location || "",true],
+      ["landmark","Upřesnění místa","nad COV","",false],
+      ["description","Popis události","P kompostarna - kompost, vedle hromada, plamen, 30 x 30 m","",true]
+    ].map(([key,caption,placeholder,initial,enabled]) => {
       const row = document.createElement("div");
       const label = document.createElement("label");
       const check = document.createElement("input");
       check.type = "checkbox";
+      check.checked = enabled;
       label.append(check," ",caption);
       const value = document.createElement("input");
       value.type = "text";
-      value.setAttribute("aria-label",caption);
+      value.setAttribute("aria-label","Text položky " + caption);
+      value.placeholder = placeholder;
       value.value = initial;
-      value.disabled = true;
-      value.hidden = true;
-      check.onchange = () => {
-        value.disabled = value.hidden = !check.checked;
-      };
       row.append(label,value);
       builder.append(row);
-      return {caption,check,value};
+      return {key,caption,check,value};
     });
 
+    const previewLabel = document.createElement("label");
+    previewLabel.className = "field";
+    const preview = document.createElement("textarea");
+    preview.readOnly = true;
+    preview.rows = 2;
+    previewLabel.append("Náhled SMS",preview);
     const insert = document.createElement("button");
     insert.type = "button";
     insert.className = "soft";
-    insert.textContent = "Vložit vybrané položky do SMS";
+    insert.textContent = "Použít náhled jako text SMS";
     const feedback = document.createElement("p");
     feedback.setAttribute("role","status");
-    insert.onclick = () => {
+
+    function updatePreview() {
       const selected = fields.filter(field => field.check.checked);
-      if (!selected.length) {
-        feedback.textContent = "Zaškrtni alespoň jednu položku.";
-        return;
-      }
-      const empty = selected.find(field => !field.value.value.trim());
-      if (empty) {
-        feedback.textContent = "Doplň položku „" + empty.caption + "“.";
-        empty.value.focus();
-        return;
-      }
-      const lines = ["CVIČENÍ",...selected.map(field => field.caption + ": " + field.value.value.trim())];
-      const existing = messageInput.value.trim();
-      const message = (existing ? [existing,...lines.slice(1)] : lines).join("\n");
-      if (message.length > messageInput.maxLength) {
-        feedback.textContent = "Vybrané položky se do zprávy nevejdou. Zkrať text na nejvýše 800 znaků.";
-        return;
-      }
-      messageInput.value = message;
+      const values = Object.fromEntries(selected.map(field => [field.key,field.value.value]));
+      preview.value = formatDispatchSms(values);
+      insert.disabled = !selected.length || selected.some(field => !field.value.value.trim()) ||
+        preview.value.length > messageInput.maxLength;
+      feedback.textContent = preview.value.length > messageInput.maxLength
+        ? "Zkrať SMS na nejvýše 800 znaků." : "";
+    }
+
+    for (const {check,value} of fields) {
+      check.onchange = () => {
+        value.disabled = value.hidden = !check.checked;
+        updatePreview();
+      };
+      value.oninput = updatePreview;
+      value.disabled = value.hidden = !check.checked;
+    }
+    updatePreview();
+    insert.onclick = () => {
+      messageInput.value = preview.value;
       messageInput.oninput();
-      feedback.textContent = "Položky jsou v textu zprávy. Text můžeš před uložením upravit.";
-      for (const {check} of selected) {
-        check.checked = false;
-        check.onchange();
-      }
+      feedback.textContent = "Náhled je v textu SMS. Zkontroluj ho a zprávu ulož.";
       messageInput.focus();
     };
-    builder.append(insert,feedback);
+    builder.append(previewLabel,insert,feedback);
     return builder;
   }
 
@@ -822,4 +820,14 @@ function buildRemainingDraw(units, stations, original) {
   for (const unitId of freeUnits) draw.push({id:crypto.randomUUID(),unitId,stationId:freeStations.shift()});
   return {ok:true,draw,message:JSON.stringify(original) === JSON.stringify(draw)
     ? "Všechny jednotky už mají start." : "Starty jsou dolosované. Zkontroluj je a ulož ročník."};
+}
+
+
+function formatDispatchSms({vehicles = "",alarm = "",event = "",location = "",landmark = "",description = ""}) {
+  const clean = value => value.trim().replace(/\s+/g," ");
+  const timing = [alarm,event].map(clean).filter(Boolean).join(",");
+  const header = [vehicles,timing,location,landmark].map(clean).filter(Boolean).join(", ");
+  const detail = clean(description);
+  const body = [header,detail].filter(Boolean).join("; ");
+  return body ? "VYJEZD PRO: " + body : "";
 }

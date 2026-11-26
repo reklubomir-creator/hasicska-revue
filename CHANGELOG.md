@@ -2,6 +2,7 @@
 
 ## 1.1.0-beta.19 — 2026-11-26
 
+- Editor skládá SMS na jeden řádek podle dodaného vzoru VYJEZD PRO a ukazuje náhled před uložením.
 - Účastník po odevzdání vidí výsledek a chybné odpovědi přímo z potvrzení serveru.
 
 ## 1.1.0-beta.18 — 2026-11-26
