@@ -246,7 +246,8 @@ test("dva nezávislé souběžné svazky mají vlastní start a kontakty lze opr
 });
 
 test("beta kvíz ověřuje příjezd a ukládá výsledky samostatně za členy společné jednotky", () => {
-  const app = createAppsScript({ORGANIZER_PIN:credential});
+  const app = createAppsScript({ORGANIZER_PIN:credential,
+    ASSESSMENT_STATION_TOKENS:JSON.stringify({"Kvíz":"hodnotitel-kviz","Studna":"hodnotitel-studna"})});
   const post = (action,fields = {}) => app.post({action,year,credential,...fields});
   const quiz = {unitId:"ab",stationId:"quiz"};
   const setup = {...edition,reviewers:[],stations:[{id:"quiz",name:"Kvíz",kind:"quiz"}],
@@ -261,7 +262,14 @@ test("beta kvíz ověřuje příjezd a ukládá výsledky samostatně za členy 
     assert.equal(post(action,{token:unitAccess,stationId:"quiz"}).ok,true);
   }
   assert.equal(post("startEditionQuiz",{...quiz,credential:"cizí"}).ok,false);
-  const started = post("startEditionQuiz",quiz);
+  const stationAccess = {...quiz,credential:"hodnotitel-kviz"};
+  assert.equal(post("startEditionQuiz",{...quiz,credential:"hodnotitel-studna"}).ok,false);
+  const reviewerView = post("readEditionProgress",stationAccess);
+  assert.equal(reviewerView.organizer,false);
+  assert.deepEqual(reviewerView.units.map(unit => unit.name),["Jednotka A + Jednotka B"]);
+  assert.ok(reviewerView.units[0].arrivedAt);
+  assert.equal(post("readEditionFinalAssessments",stationAccess).ok,false);
+  const started = post("startEditionQuiz",stationAccess);
   assert.equal(started.ok,true,started.error);
   assert.equal(post("startEditionQuiz",quiz).token,started.token);
   assert.equal(post("completeEditionPassage",quiz).ok,false);
@@ -278,7 +286,7 @@ test("beta kvíz ověřuje příjezd a ukládá výsledky samostatně za členy 
   assert.equal(submitted.percentage,0);
   assert.equal(submitted.wrongAnswers.length,15);
   assert.equal(app.post({...attempt,unit:"a"}).ok,false);
-  const closed = post("closeEditionQuiz",quiz);
+  const closed = post("closeEditionQuiz",stationAccess);
   assert.equal(closed.ok,true,closed.error);
   assert.deepEqual(closed.summary.map(item => item.percentage),[0,null]);
   assert.deepEqual(post("closeEditionQuiz",quiz),closed);

@@ -106,7 +106,7 @@
       const available = !overview.observer && overview.status === "active" ? [station, ...unit.delayed.map(id => overview.stations.find(item => item.id === id))] : [];
       for (const choice of available.filter(Boolean)) {
         if (stationFilter && choice.id !== stationFilter) continue;
-        if (["standby","quiz"].includes(choice.kind) && !overview.organizer) continue;
+        if (choice.kind === "standby" && !overview.organizer) continue;
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = choice.id !== unit.stationId ? "Dodatečně vyhodnotit · " + choice.name

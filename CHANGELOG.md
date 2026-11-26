@@ -1,5 +1,10 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.20 — 2026-11-26
+
+- Hodnotitel s kódem stanoviště kvízu vidí příchozí jednotku a může otevřít a uzavřít její kvíz.
+
+
 ## 1.1.0-beta.19 — 2026-11-26
 
 - Editor skládá SMS na jeden řádek podle dodaného vzoru VYJEZD PRO a ukazuje náhled před uložením.

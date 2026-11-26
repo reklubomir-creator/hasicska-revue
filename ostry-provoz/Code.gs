@@ -1623,14 +1623,14 @@ function editionProgress_(data) {
   const progress = dispatch.units.get(unit.id);
   const previous = progress.records.get(station.id);
   const reviewer = edition.reviewers.find(item => item.stationId === station.id && item.id === data.reviewerId);
-  if (!organizer && !reviewer) return denied;
   const current = progress.station?.id === station.id;
   const entry = previous ? {...previous} : {unitId:unit.id,stationId:station.id};
 
   if (['startEditionQuiz','closeEditionQuiz'].includes(data.action)) {
-    return organizer ? editionQuiz_(data,edition,station,unit,progress,entry,previous,sheet,entries,eventAt) : denied;
+    return editionQuiz_(data,edition,station,unit,progress,entry,previous,sheet,entries,eventAt);
   }
 
+  if (!organizer && !reviewer) return denied;
   if (data.action === 'saveEditionAssessment') {
     if (!['scored','studna'].includes(station.kind) || !reviewer ||
         !['V pořádku','Drobné nedostatky','Závažné nedostatky'].includes(data.result) ||
