@@ -1486,11 +1486,13 @@ function editionQuiz_(data, edition, station, unit, progress, entry, previous, s
       ? {ok:true,summary:entry.quizSummary}
       : {ok:false,error:'Kvíz je už uzavřený.'};
   }
-  if (progress.station?.id !== station.id || progress.pause || !entry.arrivedAt) {
-    return {ok:false,error:'Jednotka musí být na stanovišti kvízu a potvrdit příjezd.'};
+  if (progress.station?.id !== station.id || progress.pause) {
+    return {ok:false,error:'Jednotka musí mít přidělené stanoviště kvízu a nesmí být na pauze.'};
   }
   if (data.action === 'startEditionQuiz') {
     if (!entry.quizToken) {
+      entry.receivedAt ||= eventAt;
+      entry.arrivedAt ||= eventAt;
       entry.quizToken = Utilities.getUuid().replace(/-/g,'');
       saveEditionProgressEntry_(sheet,edition.year,entry,previous);
     }
@@ -1644,8 +1646,9 @@ function editionProgress_(data) {
     if (entry.startedAt) {
       return entry.reviewerId === reviewer.id ? {ok:true} : {ok:false,error:'Jednotku už hodnotí jiný hodnotitel.'};
     }
-    if (!entry.arrivedAt) return {ok:false,error:'Počkej, až jednotka potvrdí příjezd.'};
-    entry.startedAt = Date.now();
+    entry.receivedAt ||= eventAt;
+    entry.arrivedAt ||= eventAt;
+    entry.startedAt = eventAt;
     entry.reviewerId = reviewer.id;
   } else {
     if (entry.completedAt) return {ok:true};

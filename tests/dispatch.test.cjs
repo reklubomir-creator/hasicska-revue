@@ -28,11 +28,11 @@ test("dispatch reserves the next station only after its previous unit finishes a
   const state = unit => context.editionDispatch_(edition,records).units.get(unit);
   assert.equal(state("a").station.id,"one");
   assert.equal(invoke("openEditionStation","two","b").ok,false);
-  assert.equal(invoke("startEditionAssessment","one","a").ok,false);
-  records.push({unitId:"a",stationId:"one",arrivedAt:Date.now()});
   records.push({unitId:"b",stationId:"two",arrivedAt:Date.now()});
   assert.equal(invoke("startEditionAssessment","one","a").ok,true);
   assert.equal(state("a").state,"evaluating");
+  assert.ok(state("a").records.get("one").arrivedAt);
+  assert.equal(state("a").records.get("one").receivedAt,state("a").records.get("one").arrivedAt);
   assert.equal(invoke("completeEditionPassage","one","a",{credential:"studna"}).ok,true);
   assert.equal(state("a").state,"waiting");
   assert.equal(invoke("openEditionStation","two","b",{credential:"studna"}).ok,false);

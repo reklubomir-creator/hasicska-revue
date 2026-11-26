@@ -106,7 +106,7 @@
       const available = !overview.organizer && !overview.observer && overview.status === "active" ? [station, ...unit.delayed.map(id => overview.stations.find(item => item.id === id))] : [];
       for (const choice of available.filter(Boolean)) {
         if (stationFilter && choice.id !== stationFilter) continue;
-        if (choice.id === unit.stationId && !unit.arrivedAt && unit.state !== "evaluating") continue;
+        if (choice.kind === "standby" && !unit.arrivedAt) continue;
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = choice.id !== unit.stationId ? "Dodatečně vyhodnotit · " + choice.name
@@ -264,15 +264,17 @@
     el("reviewer").required = !passes;
     el("reviewer").disabled = false;
     el("start").hidden = delayed || passes;
+    el("start").textContent = unit.arrivedAt ? "Zahájit hodnocení" : "Potvrdit příjezd a zahájit hodnocení";
     el("assessmentFields").hidden = !delayed;
     el("editionQuiz").hidden = station.kind !== "quiz";
     el("startEditionQuiz").hidden = false;
+    el("startEditionQuiz").textContent = unit.arrivedAt ? "Otevřít kvíz a zobrazit QR" : "Potvrdit příjezd a otevřít kvíz";
     el("editionQuizQr").hidden = true;
     el("editionQuizQr").replaceChildren();
     el("editionQuizLink").hidden = true;
     el("editionQuizLink").removeAttribute("href");
     el("closeEditionQuiz").hidden = true;
-    el("passage").hidden = delayed || !["studna","standby"].includes(station.kind);
+    el("passage").hidden = delayed || !unit.arrivedAt || !["studna","standby"].includes(station.kind);
     el("passage").textContent = station.kind === "standby" ? "Ukončit pohotovost"
       : "Potvrdit průchod stanovištěm";
     el("message").textContent = "";
@@ -451,6 +453,7 @@
       el("reviewer").disabled = true;
       el("start").hidden = true;
       el("assessmentFields").hidden = false;
+      el("passage").hidden = overview.stations.find(station => station.id === selected.stationId)?.kind !== "studna";
       el("notes").focus();
     }
   }

@@ -268,19 +268,21 @@ test("beta kvíz ověřuje příjezd a ukládá výsledky samostatně za členy 
   assert.equal(post("saveCompetitionEdition",{expectedRevision:prepared.revision,
     edition:{...prepared,status:"active"}}).ok,true);
   assert.equal(post("startEditionQuiz",quiz).ok,false);
-  for (const action of ["acknowledgeUnitDispatch","acknowledgeUnitArrival"]) {
-    assert.equal(post(action,{token:unitAccess,stationId:"quiz"}).ok,true);
-  }
   assert.equal(post("startEditionQuiz",{...quiz,credential:"cizí"}).ok,false);
   const stationAccess = {...quiz,credential:"hodnotitel-kviz"};
   assert.equal(post("startEditionQuiz",{...quiz,credential:"hodnotitel-studna"}).ok,false);
   const reviewerView = post("readEditionProgress",stationAccess);
   assert.equal(reviewerView.organizer,false);
   assert.deepEqual(reviewerView.units.map(unit => unit.name),["Jednotka A + Jednotka B"]);
-  assert.ok(reviewerView.units[0].arrivedAt);
+  assert.equal(reviewerView.units[0].arrivedAt,null);
   assert.equal(post("readEditionFinalAssessments",stationAccess).ok,false);
   const started = post("startEditionQuiz",stationAccess);
   assert.equal(started.ok,true,started.error);
+  const dashboard = post("readUnitDashboard",{token:unitAccess}).dashboard;
+  assert.equal(dashboard.state,"active");
+  assert.equal(dashboard.station.name,"Kvíz");
+  assert.equal(dashboard.dispatch,undefined);
+  assert.ok(post("readEditionProgress",stationAccess).units[0].arrivedAt);
   assert.equal(post("startEditionQuiz",quiz).ok,false);
   assert.equal(post("startEditionQuiz",stationAccess).token,started.token);
   assert.equal(post("completeEditionPassage",quiz).ok,false);
