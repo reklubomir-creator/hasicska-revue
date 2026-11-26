@@ -244,3 +244,44 @@ test("dva nezávislé souběžné svazky mají vlastní start a kontakty lze opr
   assert.notEqual(updated.revision,saved.edition.revision);
   assert.equal(post("listCompetitionEditions",{}).editions[0].commanders[0].name,"Nový velitel");
 });
+
+test("beta kvíz ověřuje příjezd a ukládá výsledky samostatně za členy společné jednotky", () => {
+  const app = createAppsScript({ORGANIZER_PIN:credential});
+  const post = (action,fields = {}) => app.post({action,year,credential,...fields});
+  const quiz = {unitId:"ab",stationId:"quiz"};
+  const setup = {...edition,reviewers:[],stations:[{id:"quiz",name:"Kvíz",kind:"quiz"}],
+    merges:[{id:"ab",unitIds:["a","b"]}],draw:[{id:"start",...quiz}]};
+  const prepared = post("saveCompetitionEdition",{expectedRevision:null,edition:setup}).edition;
+  const unitAccess = randomBytes(32).toString("hex");
+  assert.equal(post("issueUnitAccess",{unitId:"ab",token:unitAccess}).ok,true);
+  assert.equal(post("saveCompetitionEdition",{expectedRevision:prepared.revision,
+    edition:{...prepared,status:"active"}}).ok,true);
+  assert.equal(post("startEditionQuiz",quiz).ok,false);
+  for (const action of ["acknowledgeUnitDispatch","acknowledgeUnitArrival"]) {
+    assert.equal(post(action,{token:unitAccess,stationId:"quiz"}).ok,true);
+  }
+  assert.equal(post("startEditionQuiz",{...quiz,credential:"cizí"}).ok,false);
+  const started = post("startEditionQuiz",quiz);
+  assert.equal(started.ok,true,started.error);
+  assert.equal(post("startEditionQuiz",quiz).token,started.token);
+  assert.equal(post("completeEditionPassage",quiz).ok,false);
+  assert.equal(post("closeEditionQuiz",quiz).needsConfirmation,true);
+  const session = {quizYear:year,token:started.token};
+  assert.equal(app.get({action:"validate",...session,quizYear:year + 1}).ok,false);
+  assert.equal(app.get({action:"validate",token:started.token}).ok,false);
+  assert.deepEqual(app.get({action:"validate",...session}).session.members.map(member => member.id),["a","b"]);
+  assert.equal(app.get({action:"questions",role:"Hasič",...session}).questions.length,15);
+  const attempt = {action:"submit",...session,name:"Testující",role:"Hasič",answers:[]};
+  assert.equal(app.post({...attempt,unit:"ab"}).ok,false);
+  assert.equal(app.post({...attempt,unit:"a"}).ok,true);
+  assert.equal(app.post({...attempt,unit:"a"}).ok,false);
+  const closed = post("closeEditionQuiz",quiz);
+  assert.equal(closed.ok,true,closed.error);
+  assert.deepEqual(closed.summary.map(item => item.percentage),[0,null]);
+  assert.deepEqual(post("closeEditionQuiz",quiz),closed);
+  assert.equal(app.post({...attempt,unit:"b"}).ok,false);
+  assert.equal(app.get({action:"validate",...session}).ok,false);
+  assert.deepEqual(post("readEditionFinalAssessments").units.map(unit => unit.assessments[0].percentage),[0,null]);
+  assert.equal(post("readEditionProgress").units[0].state,"finished");
+  assert.equal(app.sheets.has("Výsledky"),false);
+});

@@ -431,11 +431,11 @@ function spreadsheet_() {
   return ss;
 }
 
-function getSheet() {
+function getSheet(name = SHEET_RESULTS) {
   const ss = spreadsheet_();
-  let sh = ss.getSheetByName(SHEET_RESULTS);
+  let sh = ss.getSheetByName(name);
   if (!sh) {
-    sh = ss.insertSheet(SHEET_RESULTS);
+    sh = ss.insertSheet(name);
     sh.appendRow(['Datum','Jednotka','Jméno','Role','Počet otázek','Správně','Úspěšnost (%)','Délka (s)','Chybné odpovědi','Token relace','Odpovědi']);
   }
   return sh;
@@ -861,7 +861,7 @@ function doGet(e) {
     }
   }
 
-  const active = getActive();
+  const active = p.quizYear ? activeEditionQuiz_(Number(p.quizYear), p.token) : getActive();
 
   if (p.action === 'lastClosedQuiz') {
     let last=null;
@@ -888,10 +888,10 @@ function doGet(e) {
     }
 
     if (p.action === 'validate') {
-      return json({ok:true,active:true,session:{unit:active.unit}});
+      return json({ok:true,active:true,session:{unit:active.unit,members:active.members}});
     }
 
-    if (!QUIZZES[p.role]) return json({ok:false,error:'Neplatná role.'});
+    if (!Object.hasOwn(QUIZZES,p.role)) return json({ok:false,error:'Neplatná role.'});
 
     return json({
       ok:true,
@@ -1480,6 +1480,63 @@ function editionFinalAssessments_(data, edition, sheet, entries) {
   })};
 }
 
+const EDITION_QUIZ_RESULTS = 'Kvízy soutěžních ročníků';
+
+function activeEditionQuiz_(year, token) {
+  if (!/^[a-f0-9]{32}$/.test(String(token || ''))) return null;
+  const edition = getSavedCompetitionEdition_(year);
+  if (edition?.status !== 'active') return null;
+  const record = editionProgressRows_(editionProgressSheet_(false), year)
+    .find(entry => entry.quizToken === token && !entry.completedAt);
+  if (!record) return null;
+  const unit = competitionUnits_(edition).find(item => item.id === record.unitId);
+  if (!unit) return null;
+  const members = (unit.unitIds || [unit.id]).map(id => edition.units.find(item => item.id === id));
+  return {unit:unit.name,token:token,members:members.map(({id,name}) => ({id,name}))};
+}
+
+function editionQuiz_(data, edition, station, unit, progress, entry, previous, sheet, entries, eventAt) {
+  if (station.kind !== 'quiz') return {ok:false,error:'Vyber stanoviště kvízu.'};
+  if (entry.completedAt) {
+    return data.action === 'closeEditionQuiz' && entry.quizSummary
+      ? {ok:true,summary:entry.quizSummary}
+      : {ok:false,error:'Kvíz je už uzavřený.'};
+  }
+  if (progress.station?.id !== station.id || progress.pause || !entry.arrivedAt) {
+    return {ok:false,error:'Jednotka musí být na stanovišti kvízu a potvrdit příjezd.'};
+  }
+  if (data.action === 'startEditionQuiz') {
+    if (!entry.quizToken) {
+      entry.quizToken = Utilities.getUuid().replace(/-/g,'');
+      saveEditionProgressEntry_(sheet,edition.year,entry,previous);
+    }
+    return {ok:true,token:entry.quizToken};
+  }
+  if (!entry.quizToken) return {ok:false,error:'Nejprve otevři kvíz.'};
+  const results = getSheet(EDITION_QUIZ_RESULTS);
+  const rows = results.getLastRow() > 1 ? results.getRange(2,1,results.getLastRow()-1,10).getValues() : [];
+  const submissions = rows.filter(row => row[9] === entry.quizToken);
+  if (!submissions.length && data.confirmEmpty !== true) {
+    return {ok:true,needsConfirmation:true};
+  }
+  entry.quizSummary = (unit.unitIds || [unit.id]).map(id => {
+    const group = submissions.filter(row => row[1] === 'unit:' + id);
+    const total = group.reduce((sum,row) => sum + row[4],0);
+    const correct = group.reduce((sum,row) => sum + row[5],0);
+    const percentage = total ? Math.round(correct / total * 100) : null;
+    if (percentage !== null) {
+      const key = '@quiz:' + id;
+      const prior = entries.find(item => item.unitId === key && item.stationId === station.id);
+      saveEditionProgressEntry_(editionProgressSheet_(false),edition.year,
+        {unitId:key,stationId:station.id,percentage:percentage},prior);
+    }
+    return {unit:edition.units.find(item => item.id === id).name,submitted:group.length,percentage:percentage};
+  });
+  entry.completedAt = eventAt;
+  saveEditionProgressEntry_(sheet,edition.year,entry,previous);
+  return {ok:true,summary:entry.quizSummary};
+}
+
 function editionProgress_(data) {
   const year = Number(data.year);
   const edition = getSavedCompetitionEdition_(year);
@@ -1570,6 +1627,10 @@ function editionProgress_(data) {
   const current = progress.station?.id === station.id;
   const entry = previous ? {...previous} : {unitId:unit.id,stationId:station.id};
 
+  if (['startEditionQuiz','closeEditionQuiz'].includes(data.action)) {
+    return organizer ? editionQuiz_(data,edition,station,unit,progress,entry,previous,sheet,entries,eventAt) : denied;
+  }
+
   if (data.action === 'saveEditionAssessment') {
     if (!['scored','studna'].includes(station.kind) || !reviewer ||
         !['V pořádku','Drobné nedostatky','Závažné nedostatky'].includes(data.result) ||
@@ -1599,6 +1660,7 @@ function editionProgress_(data) {
     entry.reviewerId = reviewer.id;
   } else {
     if (entry.completedAt) return {ok:true};
+    if (entry.quizToken) return {ok:false,error:'Otevřený kvíz uzavři tlačítkem Uzavřít kvíz.'};
     if (!current || (station.kind !== 'studna' && (!organizer || !['standby','quiz'].includes(station.kind)))) {
       return {ok:false,error:'Průchod tímto stanovištěm nelze tímto způsobem potvrdit.'};
     }
@@ -1789,7 +1851,7 @@ function doPost(e) {
     if (['acknowledgeUnitDispatch','acknowledgeUnitArrival'].includes(data.action)) return json(acknowledgeUnitDispatch_(data));
     if (data.action === 'readEditionObserver') return json(readEditionObserver_(data));
 
-    if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation','startEditionPause','endEditionPause','sendEditionNotice','saveEditionDispatchMessage','readEditionFinalAssessments','saveEditionMemberQuiz'].includes(data.action)) {
+    if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation','startEditionPause','endEditionPause','sendEditionNotice','saveEditionDispatchMessage','readEditionFinalAssessments','saveEditionMemberQuiz','startEditionQuiz','closeEditionQuiz'].includes(data.action)) {
       return json(editionProgress_(data));
     }
 
@@ -2052,7 +2114,7 @@ function doPost(e) {
     }
 
     if (data.action === 'submit') {
-      const active = getActive();
+      const active = data.quizYear ? activeEditionQuiz_(Number(data.quizYear), data.token) : getActive();
 
       if (!active || data.token !== active.token) {
         return json({
@@ -2063,10 +2125,13 @@ function doPost(e) {
 
       const name = String(data.name || '').trim();
       const role = String(data.role || '');
-      const isCombined = active.unit === 'Lažánky + Horní Lhota';
-      const unit = isCombined ? String(data.unit || '').trim() : active.unit;
+      const isCombined = !active.members && active.unit === 'Lažánky + Horní Lhota';
+      const member = active.members?.length === 1 ? active.members[0] :
+        active.members?.find(item => item.id === data.unit);
+      if (active.members && !member) return json({ok:false,error:'Vyber svou jednotku.'});
+      const unit = member ? 'unit:' + member.id : isCombined ? String(data.unit || '').trim() : active.unit;
 
-      if (!name || !QUIZZES[role]) {
+      if (!name || name.length > 100 || !Object.hasOwn(QUIZZES,role)) {
         return json({ok:false,error:'Chybí jméno nebo role.'});
       }
 
@@ -2075,14 +2140,15 @@ function doPost(e) {
       }
 
       // Server-side duplicate protection survives refresh, private browsing and new devices.
-      const resultSheet=getSheet();
+      const resultSheet=getSheet(active.members ? EDITION_QUIZ_RESULTS : SHEET_RESULTS);
       const lastRow=resultSheet.getLastRow();
       if(lastRow>1){
         const existing=resultSheet.getRange(2,2,lastRow-1,9).getValues();
-        const normalizedName=name.toLocaleLowerCase('cs-CZ').replace(/\\s+/g,' ');
+        const storedName=active.members ? "name:" + name : name;
+        const normalizedName=storedName.toLocaleLowerCase('cs-CZ').replace(/\s+/g,' ');
         const duplicate=existing.some(row=>
           String(row[0]||'')===unit &&
-          String(row[1]||'').trim().toLocaleLowerCase('cs-CZ').replace(/\\s+/g,' ')===normalizedName &&
+          String(row[1]||'').trim().toLocaleLowerCase('cs-CZ').replace(/\s+/g,' ')===normalizedName &&
           String(row[2]||'')===role &&
           String(row[8]||'')===active.token
         );
@@ -2130,10 +2196,10 @@ function doPost(e) {
       const percentage = Math.round(correct / total * 100);
       const duration = Math.min(1200,Math.max(0,Number(data.durationSeconds) || 0));
 
-      getSheet().appendRow([
+      resultSheet.appendRow([
         new Date(),
         unit,
-        name,
+        active.members ? "name:" + name : name,
         role,
         total,
         correct,

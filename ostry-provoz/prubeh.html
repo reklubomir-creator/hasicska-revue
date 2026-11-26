@@ -6,6 +6,7 @@
 <meta name="referrer" content="no-referrer">
 <title>Průběh ročníku · Hasičská revue</title>
 <script src="config.js" defer></script>
+<script src="qrcode.js" defer></script>
 <script src="prubeh.js" defer></script>
 <link rel="stylesheet" href="teren.css">
 </head>
@@ -70,6 +71,12 @@
 <p id="draftStatus" role="status"></p>
 <button type="submit">Uložit hodnocení</button>
 </div>
+<section id="editionQuiz" hidden>
+<button id="startEditionQuiz" type="button">Otevřít kvíz a zobrazit QR</button>
+<div id="editionQuizQr" style="width: min(100%, 240px); background: white; padding: 12px" hidden></div>
+<p><a id="editionQuizLink" target="_blank" rel="noopener" hidden>Otevřít účastnický kvíz</a></p>
+<button id="closeEditionQuiz" type="button" hidden>Uzavřít kvíz a uložit výsledky</button>
+</section>
 <button id="passage" class="secondary" type="button" hidden>Potvrdit průchod</button>
 <button id="back" class="secondary" type="button">Zpět na přehled</button>
 </form>

@@ -1,5 +1,10 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.18 — 2026-11-26
+
+- Ve Správě ročníků lze sestavit soutěžní výjezdovou SMS zaškrtnutím položek podle metodického listu 3/O. Text zůstává upravitelný.
+- Organizátor otevírá a uzavírá kvíz v Přehledu průběhu. Účastnický QR kód platí pro daný ročník a jednotku. Po uzavření přejdou výsledky do závěrečného hodnocení jednotlivých jednotek.
+
 ## 1.1.0-beta.17 — 2026-11-25
 
 - Pohled jednotky používá čísla stanovišť. Výjezdová karta zobrazuje číslo a text SMS, bez samostatného názvu, adresy a mapy.

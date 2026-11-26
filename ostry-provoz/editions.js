@@ -34,6 +34,7 @@
   let contactEditor;
   let drawFeedback = "";
   let savedDispatch = new Map();
+  const dispatchDrafts = new Map();
 
   function setMessage(text, error = false) {
     message.textContent = text;
@@ -459,7 +460,16 @@
     label.className = "field";
     const input = document.createElement("textarea");
     input.maxLength = 800;
-    input.value = savedDispatch.get(stationId);
+    input.value = dispatchDrafts.get(stationId) ?? savedDispatch.get(stationId);
+    const count = document.createElement("output");
+    function updateCount() {
+      count.textContent = input.value.length + " / 800 znaků";
+    }
+    input.oninput = () => {
+      dispatchDrafts.set(stationId,input.value);
+      updateCount();
+    };
+    updateCount();
     label.append("Výjezdová zpráva pro jednotky",input);
     const save = document.createElement("button");
     save.type = "button";
@@ -472,9 +482,99 @@
       if (!await request("saveEditionDispatchMessage",{year:draft.year,stationId,message,expectedMessage})) return;
       savedDispatch.set(stationId,message);
       input.value = message;
+      dispatchDrafts.delete(stationId);
+      updateCount();
       setMessage("Výjezdová zpráva uložena.");
     };
-    block.append(label,save);
+    const station = draft.stations.find(item => item.id === stationId);
+    block.append(dispatchMessageBuilder(station,input),label,count,save);
+  }
+
+  function dispatchMessageBuilder(station, messageInput) {
+    const builder = document.createElement("details");
+    builder.className = "dispatch-builder";
+    const title = document.createElement("summary");
+    title.textContent = "Sestavit soutěžní SMS";
+    const source = document.createElement("a");
+    source.href = "https://hzscr.gov.cz/soubor/ml-o3-pdf.aspx";
+    source.target = "_blank";
+    source.rel = "noopener";
+    source.textContent = "Bojový řád JPO · metodický list 3/O";
+    const regulation = document.createElement("a");
+    regulation.href = "https://e-sbirka.gov.cz/sb/2001/247";
+    regulation.target = "_blank";
+    regulation.rel = "noopener";
+    regulation.textContent = "Vyhláška č. 247/2001 Sb.";
+    const references = document.createElement("p");
+    references.append(source," · ",regulation);
+    builder.append(title,references);
+
+    const fields = [
+      ["Druh události",""],
+      ["Místo zásahu",station.location || ""],
+      ["Požární technika",""],
+      ["Věcné prostředky",""],
+      ["Datum a čas poplachu",""],
+      ["Vysílá",""],
+      ["Počet hasičů",""],
+      ["Velitel jednotky",""],
+      ["Příjezd a další pokyny",""]
+    ].map(([caption,initial]) => {
+      const row = document.createElement("div");
+      const label = document.createElement("label");
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      label.append(check," ",caption);
+      const value = document.createElement("input");
+      value.type = "text";
+      value.setAttribute("aria-label",caption);
+      value.value = initial;
+      value.disabled = true;
+      value.hidden = true;
+      check.onchange = () => {
+        value.disabled = value.hidden = !check.checked;
+      };
+      row.append(label,value);
+      builder.append(row);
+      return {caption,check,value};
+    });
+
+    const insert = document.createElement("button");
+    insert.type = "button";
+    insert.className = "soft";
+    insert.textContent = "Vložit vybrané položky do SMS";
+    const feedback = document.createElement("p");
+    feedback.setAttribute("role","status");
+    insert.onclick = () => {
+      const selected = fields.filter(field => field.check.checked);
+      if (!selected.length) {
+        feedback.textContent = "Zaškrtni alespoň jednu položku.";
+        return;
+      }
+      const empty = selected.find(field => !field.value.value.trim());
+      if (empty) {
+        feedback.textContent = "Doplň položku „" + empty.caption + "“.";
+        empty.value.focus();
+        return;
+      }
+      const lines = ["CVIČENÍ",...selected.map(field => field.caption + ": " + field.value.value.trim())];
+      const existing = messageInput.value.trim();
+      const message = (existing ? [existing,...lines.slice(1)] : lines).join("\n");
+      if (message.length > messageInput.maxLength) {
+        feedback.textContent = "Vybrané položky se do zprávy nevejdou. Zkrať text na nejvýše 800 znaků.";
+        return;
+      }
+      messageInput.value = message;
+      messageInput.oninput();
+      feedback.textContent = "Položky jsou v textu zprávy. Text můžeš před uložením upravit.";
+      for (const {check} of selected) {
+        check.checked = false;
+        check.onchange();
+      }
+      messageInput.focus();
+    };
+    builder.append(insert,feedback);
+    return builder;
   }
 
   function fillDraw() {
@@ -496,6 +596,7 @@
     draft.merges ||= [];
     drawFeedback = "";
     savedDispatch = new Map();
+    dispatchDrafts.clear();
     year.value = draft.year;
     year.readOnly = Boolean(draft.revision);
     name.value = draft.name;
@@ -521,7 +622,7 @@
   }
 
   function confirmDiscard() {
-    return !dirty || confirm("Zahodit neuložené změny ročníku?");
+    return (!dirty && !dispatchDrafts.size) || confirm("Zahodit neuložené změny ročníku nebo výjezdové SMS?");
   }
 
   async function request(action, data) {

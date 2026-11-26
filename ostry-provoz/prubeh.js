@@ -110,7 +110,7 @@
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = choice.id !== unit.stationId ? "Dodatečně vyhodnotit · " + choice.name
-          : choice.kind === "standby" ? "Ukončit pohotovost" : choice.kind === "quiz" ? "Potvrdit uzavřený kvíz" : "Otevřít hodnocení";
+          : choice.kind === "standby" ? "Ukončit pohotovost" : choice.kind === "quiz" ? "Spravovat kvíz" : "Otevřít hodnocení";
         button.onclick = () => open(unit, choice);
         row.append(button);
       }
@@ -304,9 +304,16 @@
     el("reviewer").disabled = false;
     el("start").hidden = delayed || passes;
     el("assessmentFields").hidden = !delayed;
-    el("passage").hidden = delayed || (station.kind !== "studna" && !passes);
+    el("editionQuiz").hidden = station.kind !== "quiz";
+    el("startEditionQuiz").hidden = false;
+    el("editionQuizQr").hidden = true;
+    el("editionQuizQr").replaceChildren();
+    el("editionQuizLink").hidden = true;
+    el("editionQuizLink").removeAttribute("href");
+    el("closeEditionQuiz").hidden = true;
+    el("passage").hidden = delayed || !["studna","standby"].includes(station.kind);
     el("passage").textContent = station.kind === "standby" ? "Ukončit pohotovost"
-      : station.kind === "quiz" ? "Potvrdit uzavřený kvíz" : "Potvrdit průchod stanovištěm";
+      : "Potvrdit průchod stanovištěm";
     el("message").textContent = "";
     el("dictationStatus").textContent = "";
     loadDraft();
@@ -487,6 +494,47 @@
     }
   }
   el("start").onclick = beginAssessment;
+  async function editionQuizAction(action, payload = {}) {
+    if (busy || !selected) return null;
+    busy = true;
+    el("assessment").inert = true;
+    try {
+      return await api(action,{...selected,...payload});
+    } catch (error) {
+      el("message").textContent = error.message;
+      return null;
+    } finally {
+      busy = false;
+      el("assessment").inert = false;
+    }
+  }
+  el("startEditionQuiz").onclick = async () => {
+    const result = await editionQuizAction("startEditionQuiz");
+    if (!result) return;
+    const url = new URL("index.html",location.href);
+    url.search = new URLSearchParams({quizYear:login.year,quizToken:result.token});
+    const qr = el("editionQuizQr");
+    qr.replaceChildren();
+    new QRCode(qr,{text:url.href,width:208,height:208});
+    qr.hidden = false;
+    el("editionQuizLink").href = url.href;
+    el("editionQuizLink").hidden = false;
+    el("startEditionQuiz").hidden = true;
+    el("closeEditionQuiz").hidden = false;
+    el("message").textContent = "Kvíz je otevřený. Účastníci mohou načíst QR kód.";
+  };
+  el("closeEditionQuiz").onclick = async () => {
+    if (!confirm("Uzavřít příjem odpovědí a dokončit stanoviště?")) return;
+    let result = await editionQuizAction("closeEditionQuiz");
+    if (result?.needsConfirmation) {
+      if (!confirm("Zatím nikdo neodevzdal odpovědi. Dokončit stanoviště bez výsledku?")) return;
+      result = await editionQuizAction("closeEditionQuiz",{confirmEmpty:true});
+    }
+    if (!result) return;
+    closeAssessment();
+    el("message").textContent = result.summary.map(item => item.unit + " · " +
+      (item.percentage === null ? "bez odevzdaného kvízu" : item.percentage + " %")).join(" | ");
+  };
   el("passage").onclick = async () => {
     if (el("reviewer").required && !el("reviewer").reportValidity()) return;
     if (await update("completeEditionPassage")) closeAssessment();
