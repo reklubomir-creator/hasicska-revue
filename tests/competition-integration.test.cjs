@@ -53,7 +53,7 @@ test("ročník prochází startem, hodnocením, předáním, push a archivací p
     expectedRevision:preparation.revision}).edition;
   assert.equal(dashboard().station.number,1);
   assert.equal(dashboard().dispatch.message,"Příjezd zadní branou.");
-  assert.equal(dashboard().station.name,undefined);
+  assert.deepEqual(dashboard().station,{number:1});
   assert.equal(dashboard().station.location,undefined);
   assert.ok(dashboard().notices.some(notice => notice.text === "Přidělené stanoviště č. 1"));
   assert.equal(dashboard().state,"enroute");
@@ -62,11 +62,14 @@ test("ročník prochází startem, hodnocením, předáním, push a archivací p
   ok("acknowledgeUnitDispatch",{token,stationId:"s"});
   const receivedAt = dashboard().dispatch.receivedAt;
   assert.ok(receivedAt);
+  assert.equal(dashboard().station.name,"Studna");
+  assert.ok(dashboard().notices.some(notice => notice.text === "Přidělené stanoviště: Studna"));
   ok("acknowledgeUnitDispatch",{token,stationId:"s"});
   assert.equal(dashboard().dispatch.receivedAt,receivedAt);
   ok("acknowledgeUnitArrival",{token,stationId:"s"});
   assert.equal(dashboard().state,"active");
   assert.equal(dashboard().dispatch,undefined);
+  assert.equal(dashboard().station.name,"Studna");
   const organizerUnit = ok("readEditionProgress").units.find(unit => unit.id === "a");
   assert.equal(organizerUnit.receivedAt,receivedAt);
   assert.ok(organizerUnit.arrivedAt);
@@ -90,6 +93,7 @@ test("ročník prochází startem, hodnocením, předáním, push a archivací p
   assert.equal(dashboard().state,"waiting");
   assert.equal(dashboard().completedCount,1);
   assert.deepEqual(dashboard().completed,[1]);
+  assert.deepEqual(dashboard().completedStationNames,["Studna"]);
   assert.equal(dashboard().station,null);
 
   const standby = {unitId:"b",stationId:"p",credential:"hodnotitel-pohotovost"};
@@ -102,7 +106,8 @@ test("ročník prochází startem, hodnocením, předáním, push a archivací p
   assert.equal(caller("startEditionPause",{unitId:"a",eventId:randomUUID(),minutes:3}).ok,false);
   ok("sendEditionNotice",{unitId:"a",eventId:noticeId,text:"Zpráva pro A"});
   ok("sendEditionNotice",{unitId:"b",eventId:randomUUID(),text:"Zpráva pro B"});
-  assert.equal(dashboard().station.number,2);
+  assert.deepEqual(dashboard().station,{number:2});
+  assert.deepEqual(dashboard().completedStationNames,["Studna"]);
   assert.equal(dashboard().completedCount,1);
   const deliveries = ok("readUnitPushDeliveries",{secret,credential:undefined}).deliveries;
   assert.equal(deliveries.length,1);

@@ -103,7 +103,7 @@
     el("unitDispatch").hidden = !dispatchStationId;
     el("unitStationPanel").hidden = Boolean(dispatchStationId);
     const stationNumber = data.station?.number;
-    const stationLabel = stationNumber ? "Stanoviště č. " + stationNumber : "";
+    const stationLabel = data.station?.name || (stationNumber ? "Stanoviště č. " + stationNumber : "");
     if (dispatchStationId) {
       el("unitDispatchTitle").textContent = stationLabel;
       el("unitDispatchMessage").textContent = data.dispatch.message || "Výjezdová SMS zatím není připravená.";
@@ -135,9 +135,9 @@
     }
     el("unitCompletedCount").textContent = data.completedCount;
     const list = el("unitCompleted");
-    list.replaceChildren(...data.completed.map(number => {
+    list.replaceChildren(...data.completed.map((number,index) => {
       const item = document.createElement("li");
-      item.textContent = "Stanoviště č. " + number;
+      item.textContent = data.completedStationNames?.[index] || "Stanoviště č. " + number;
       return item;
     }));
     list.hidden = !data.completed.length;

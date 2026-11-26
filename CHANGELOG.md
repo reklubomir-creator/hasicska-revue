@@ -1,5 +1,10 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.22 — 2026-11-26
+
+- Jednotka vidí číslo přiděleného stanoviště až do převzetí výjezdové zprávy. Poté i v historii vidí celý název.
+
+
 ## 1.1.0-beta.21 — 2026-11-26
 
 - Hodnotitelé obsluhují stanoviště a kvíz. Vedení sleduje průběh, čte výsledky a posílá zprávy.

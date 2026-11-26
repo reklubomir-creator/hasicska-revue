@@ -1305,10 +1305,13 @@ function editionAnnouncements_(data, edition, sheet, entries) {
 }
 
 function editionUnitNotices_(entries, progress, now) {
-  const notices = progress.stationUpdates.slice(-5).map(update => ({
-    id:'station:' + update.station.id + ':' + update.at, at:update.at,
-    text:'Přidělené stanoviště č. ' + update.number
-  }));
+  const notices = progress.stationUpdates.slice(-5).map(update => {
+    const record = progress.records.get(update.station.id);
+    const text = record?.receivedAt || record?.completedAt
+      ? 'Přidělené stanoviště: ' + update.station.name
+      : 'Přidělené stanoviště č. ' + update.number;
+    return {id:'station:' + update.station.id + ':' + update.at,at:update.at,text:text};
+  });
   for (const entry of entries) {
     if (entry.unitId !== '*' && entry.unitId !== progress.unit.id) continue;
     if (entry.notice) notices.push({id:entry.id,at:entry.at,text:entry.notice});
@@ -1797,16 +1800,22 @@ function readUnitDashboard_(data) {
   const dispatch = editionDispatch_(edition, entries);
   const progress = dispatch.units.get(unit.id);
   const station = edition.status === 'active' ? progress.station : null;
+  const record = station && progress.records.get(station.id);
+  const completed = progress.completed.map(item => dispatch.stations.get(item.id).number);
   return {ok:true,dashboard:{
     name:unit.name,
     edition:edition.name,
     state:progress.state,
     ...(edition.status === 'preparation' ? {preparation:editionRegistrationInfo_(edition)} : {}),
-    station:station ? {number:dispatch.stations.get(station.id).number,kind:station.kind} : null,
-    ...(station && !progress.records.get(station.id)?.arrivedAt && !progress.records.get(station.id)?.startedAt
-      ? {dispatch:{stationId:station.id,receivedAt:progress.records.get(station.id)?.receivedAt || null,message:entries.find(entry => entry.unitId === '@dispatch' &&
+    station:station ? {
+      number:dispatch.stations.get(station.id).number,
+      ...(record?.receivedAt ? {name:station.name,kind:station.kind} : {})
+    } : null,
+    ...(station && !record?.arrivedAt && !record?.startedAt
+      ? {dispatch:{stationId:station.id,receivedAt:record?.receivedAt || null,message:entries.find(entry => entry.unitId === '@dispatch' &&
         entry.stationId === station.id)?.message || ''}} : {}),
-    completed:progress.completed.map(item => dispatch.stations.get(item.id).number),
+    completed:completed,
+    ...(completed.length ? {completedStationNames:progress.completed.map(item => item.name)} : {}),
     completedCount:progress.completed.length,
     pause:progress.pause ? {endsAt:progress.pause.pause.endsAt,text:progress.pause.pause.text} : null,
     notices:editionUnitNotices_(entries,progress,Date.now())
