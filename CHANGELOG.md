@@ -1,5 +1,10 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.25 — 2026-11-26
+
+- Pozorovatel před startem vidí termín, místo konání a informace o srazu stejně jako jednotky.
+
+
 ## 1.1.0-beta.24 — 2026-11-26
 
 - Po startu jsou uzamčená pole přípravy v rozhraní pouze ke čtení. Zahájení hodnocení nebo kvízu potvrdí příjezd i v pohledu jednotky.

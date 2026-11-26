@@ -1415,6 +1415,7 @@ function readEditionObserver_(data) {
   const entries = visible ? editionProgressRows_(editionProgressSheet_(false),edition.year) : [];
   const dispatch = editionDispatch_(edition,entries);
   return {ok:true,observer:true,organizer:false,edition:edition.name,status:edition.status,
+    ...(!visible ? {preparation:editionRegistrationInfo_(edition)} : {}),
     stations:visible ? edition.stations.map(station => ({id:station.id,name:station.name,location:station.location || ''})) : [],
     units:competitionUnits_(edition).map(unit => {
       const progress = dispatch.units.get(unit.id);

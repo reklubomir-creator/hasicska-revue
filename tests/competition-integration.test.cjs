@@ -7,7 +7,7 @@ const credential = "organizer-test";
 const secret = "integration-test-push-secret-long-enough";
 const year = 2027;
 const edition = {
-  year,name:"Revue 2027",status:"preparation",
+  year,name:"Revue 2027",status:"preparation",startsAt:"2027-10-24T13:30",venue:"Blansko",meetingPlace:"Zbrojnice",
   units:[{id:"a",name:"Jednotka A"},{id:"b",name:"Jednotka B"}],
   stations:[{id:"s",name:"Studna",kind:"studna"},{id:"p",name:"Pohotovost",kind:"standby"}],
   commanders:[{id:"1",name:"První velitel",unitId:"a"},{id:"2",name:"Druhý velitel",unitId:"a"}],
@@ -38,6 +38,8 @@ test("ročník prochází startem, hodnocením, předáním, push a archivací p
   const dashboard = () => ok("readUnitDashboard",{credential:undefined,token}).dashboard;
   assert.equal(dashboard().station,null);
   const observe = () => ok("readEditionObserver",{credential:"pozorovatel-test"});
+  assert.deepEqual(observe().preparation,dashboard().preparation);
+  assert.equal(observe().preparation.meetingPlace,"Zbrojnice");
   assert.equal(observe().stations.length,0);
   assert.equal(observe().units[0].stationId,null);
   assert.equal(caller("readEditionObserver",{credential:"nesprávný"}).ok,false);
@@ -51,6 +53,7 @@ test("ročník prochází startem, hodnocením, předáním, push a archivací p
   assert.equal(caller("saveEditionDispatchMessage",{stationId:"s",message:"Přepsání",expectedMessage:""}).ok,false);
   const active = ok("saveCompetitionEdition",{edition:{...preparation,status:"active"},
     expectedRevision:preparation.revision}).edition;
+  assert.equal(observe().preparation,undefined);
   assert.equal(dashboard().station.number,1);
   assert.equal(dashboard().dispatch.message,"Příjezd zadní branou.");
   assert.deepEqual(dashboard().station,{number:1});

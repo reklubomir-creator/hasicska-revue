@@ -229,6 +229,24 @@
     overview = data;
     if (first) el("gatePanel").open = !data.organizer;
     el("edition").textContent = data.edition;
+    const preparation = data.observer ? data.preparation : null;
+    el("observerPreparation").hidden = !preparation;
+    if (preparation) {
+      const {startsAt,venue,meetingPlace} = preparation;
+      const date = startsAt ? new Date(startsAt) : null;
+      const fields = {
+        observerEventWhen:date && !Number.isNaN(date.getTime())
+          ? "Termín: " + date.toLocaleString("cs-CZ",{dateStyle:"long",timeStyle:"short"}) : "",
+        observerEventWhere:venue ? "Místo: " + venue : "",
+        observerMeeting:meetingPlace ? "Sraz: " + meetingPlace : ""
+      };
+      for (const [id,text] of Object.entries(fields)) {
+        el(id).textContent = text;
+        el(id).hidden = !text;
+      }
+      el("observerPreparationTitle").textContent = Object.values(fields).some(Boolean)
+        ? "Informace před startem" : "Pořadatel zatím nezveřejnil údaje o akci.";
+    }
     el("finalAssessments").hidden = !data.organizer || data.status === "preparation";
     options(el("stationFilter"),"Všechna dostupná stanoviště",data.stations);
     options(el("unitFilter"),"Všechny dostupné jednotky",data.units);
