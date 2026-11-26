@@ -1468,18 +1468,7 @@ async function quizSubmit(timeout=false){
   if(!out.ok)throw new Error(out.error||"Server odmítl odpovědi.");
   localStorage.removeItem(quizDraftKey);localStorage.setItem("hasicskaQuizSubmitted:"+quizTokenFromUrl,"1");el("quizSubmitStatus").classList.add("hidden");
   el("quizParticipantForm").classList.add("hidden");
-  el("quizParticipantState").textContent="Kvíz byl odevzdán. Načítám tvůj výsledek…";
-  let result=out.result||out.submission||out.entry||null;
-  if(!result||result.percentage===undefined){
-   const response=await quizGet({action:"results"});
-   const arr=Array.isArray(response.results)?response.results:[];
-   result=[...arr].reverse().find(x=>String(x.name||"").trim()===name&&String(x.role||"").trim()===role&&(!selectedUnit||String(x.unit||"").trim()===selectedUnit));
-  }
-  if(result&&result.percentage!==undefined){
-   el("quizParticipantState").innerHTML=quizRenderParticipantResult(result);
-  }else{
-   el("quizParticipantState").textContent="Kvíz byl úspěšně odevzdán, ale výsledek se nepodařilo načíst. Požádej hodnotitele, aby ověřil uložení.";
-  }
+  el("quizParticipantState").innerHTML=quizRenderParticipantResult(out);
  }catch(e){el("quizSubmitStatus").classList.remove("hidden");el("quizSubmitStatus").textContent=e.message||"Odeslání se nezdařilo. Kontaktuj hodnotitele a ověř uložení.";el("quizSubmit").disabled=false;if(/již kvíz|již.*odevzdal|už.*odevzdal/i.test(String(e.message||""))){el("quizPerson").readOnly=false;el("quizSubmitStatus").textContent+=" Oprav jméno nahoře ve formuláři a potom odpovědi znovu odešli.";el("quizPerson").scrollIntoView({behavior:"smooth",block:"center"});el("quizPerson").focus();el("quizPerson").select();el("quizPerson").addEventListener("input",quizSaveDraft,{once:true});}}
 }
 el("quizQuestionArea").addEventListener("change",quizSaveDraft);

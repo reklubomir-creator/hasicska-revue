@@ -273,7 +273,10 @@ test("beta kvíz ověřuje příjezd a ukládá výsledky samostatně za členy 
   assert.equal(app.get({action:"questions",role:"Hasič",...session}).questions.length,15);
   const attempt = {action:"submit",...session,name:"Testující",role:"Hasič",answers:[]};
   assert.equal(app.post({...attempt,unit:"ab"}).ok,false);
-  assert.equal(app.post({...attempt,unit:"a"}).ok,true);
+  const submitted = app.post({...attempt,unit:"a"});
+  assert.equal(submitted.ok,true);
+  assert.equal(submitted.percentage,0);
+  assert.equal(submitted.wrongAnswers.length,15);
   assert.equal(app.post({...attempt,unit:"a"}).ok,false);
   const closed = post("closeEditionQuiz",quiz);
   assert.equal(closed.ok,true,closed.error);

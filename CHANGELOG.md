@@ -1,5 +1,9 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.19 — 2026-11-26
+
+- Účastník po odevzdání vidí výsledek a chybné odpovědi přímo z potvrzení serveru.
+
 ## 1.1.0-beta.18 — 2026-11-26
 
 - Ve Správě ročníků lze sestavit soutěžní výjezdovou SMS zaškrtnutím položek podle metodického listu 3/O. Text zůstává upravitelný.

@@ -2210,7 +2210,7 @@ function doPost(e) {
         JSON.stringify(byQuestion)
       ]);
 
-      return json({ok:true,correct:correct,total:total,percentage:percentage});
+      return json({ok:true,correct:correct,total:total,percentage:percentage,wrongAnswers:wrong});
     }
 
     return json({ok:false,error:'Neznámá operace.'});
