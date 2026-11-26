@@ -15,7 +15,7 @@ test("dispatch reserves the next station only after its previous unit finishes a
   };
   const records = [];
   context.getSavedCompetitionEdition_ = () => edition;
-  context.canManageAssessment_ = (credential, station) => credential === "admin" || (credential === "studna" && station === "Studna");
+  context.canManageAssessment_ = (credential, station) => credential === "admin" || (credential === "studna" && station === "Studna") || (credential === "pohotovost" && station === "Pohotovost");
   context.editionProgressSheet_ = () => null;
   context.editionProgressRows_ = () => records;
   context.saveEditionProgressEntry_ = (_sheet,_year,row,previous) => {
@@ -23,7 +23,7 @@ test("dispatch reserves the next station only after its previous unit finishes a
     else records.push(row);
   };
   const invoke = (action, stationId, unitId, extra = {}) => context.editionProgress_({
-    year:2027,credential:"admin",reviewerId:"judge",action,stationId,unitId,...extra
+    year:2027,credential:stationId === "one" ? "studna" : "pohotovost",reviewerId:"judge",action,stationId,unitId,...extra
   });
   const state = unit => context.editionDispatch_(edition,records).units.get(unit);
   assert.equal(state("a").station.id,"one");

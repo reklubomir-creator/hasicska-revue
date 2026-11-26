@@ -1291,34 +1291,15 @@ function editionAnnouncements_(data, edition, sheet, entries) {
   const unitId = data.unitId;
   if (unitId !== '*' && !competitionUnits_(edition).some(unit => unit.id === unitId)) return {ok:false,error:'Vyber příjemce.'};
   const existing = entries.find(entry => entry.id === data.eventId);
-  const now = Date.now();
-  if (data.action === 'endEditionPause') {
-    const entry = existing;
-    if (!entry?.pause || entry.unitId !== unitId) return {ok:false,error:'Pauza už není dostupná.'};
-    if (editionPauseEnd_(entry) <= now) return {ok:true};
-    saveEditionProgressEntry_(sheet,edition.year,{...entry,pause:{...entry.pause,endedAt:Math.min(entry.pause.endsAt,editionCommandTime_(entries))}},entry);
-    return {ok:true};
-  }
   if (typeof data.eventId !== 'string' || !/^[a-f0-9-]{36}$/.test(data.eventId)) return {ok:false,error:'Chybí identifikátor požadavku.'};
   const text = typeof data.text === 'string' ? data.text.trim() : '';
   if (text.length > 400) return {ok:false,error:'Text může mít nejvýše 400 znaků.'};
+  if (!text) return {ok:false,error:'Napiš text zprávy.'};
   if (existing) {
-    const same = existing.unitId === unitId && (data.action === 'sendEditionNotice'
-      ? existing.notice === text : existing.pause?.text === text && existing.pause.endsAt - existing.at === Number(data.minutes) * 60000);
-    return same ? {ok:true} : {ok:false,error:'Identifikátor patří jinému požadavku.'};
+    return existing.unitId === unitId && existing.notice === text
+      ? {ok:true} : {ok:false,error:'Identifikátor patří jinému požadavku.'};
   }
-  const entry = {id:data.eventId,unitId:unitId,stationId:'',at:editionCommandTime_(entries)};
-  if (data.action === 'sendEditionNotice') {
-    if (!text) return {ok:false,error:'Napiš text zprávy.'};
-    entry.notice = text;
-  } else {
-    const minutes = Number(data.minutes);
-    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 120) return {ok:false,error:'Pauza může trvat 1 až 120 minut.'};
-    if (entries.some(item => item.pause && item.unitId === unitId && editionPauseEnd_(item) > now)) {
-      return {ok:false,error:'Vybraná jednotka nebo celý ročník už má aktivní pauzu.'};
-    }
-    entry.pause = {text:text,endsAt:entry.at + minutes * 60000};
-  }
+  const entry = {id:data.eventId,unitId:unitId,stationId:'',at:editionCommandTime_(entries),notice:text};
   saveEditionProgressEntry_(sheet,edition.year,entry);
   return {ok:true};
 }
@@ -1464,7 +1445,7 @@ function editionFinalAssessments_(data, edition, sheet, entries) {
     for (const id of progress.unit.unitIds || [progress.unit.id]) operational.set(id,progress);
   }
   const stations = edition.stations.filter(station => station.kind !== 'standby');
-  return {ok:true,editable:edition.status === 'active',units:edition.units.map(unit => {
+  return {ok:true,units:edition.units.map(unit => {
     const progress = operational.get(unit.id);
     return {id:unit.id,name:unit.name,sharedName:progress.unit.id !== unit.id ? progress.unit.name : '',
       assessments:stations.map(station => {
@@ -1553,8 +1534,12 @@ function editionProgress_(data) {
   }
   const sheet = editionProgressSheet_(false);
   const entries = editionProgressRows_(sheet, year);
-  if (data.action === 'readEditionFinalAssessments' || data.action === 'saveEditionMemberQuiz') {
+  if (data.action === 'readEditionFinalAssessments') {
     return organizer ? editionFinalAssessments_(data,edition,sheet,entries) : denied;
+  }
+  if (data.action === 'saveEditionMemberQuiz') {
+    return !organizer && allowed.some(station => station.id === data.stationId && station.kind === 'quiz')
+      ? editionFinalAssessments_(data,edition,sheet,entries) : denied;
   }
   if (data.action === 'saveEditionDispatchMessage') {
     if (!organizer || edition.status === 'archived' || !edition.stations.some(station => station.id === data.stationId)) return denied;
@@ -1565,7 +1550,7 @@ function editionProgress_(data) {
     saveEditionProgressEntry_(sheet,year,{unitId:'@dispatch',stationId:data.stationId,message:message},previous);
     return {ok:true};
   }
-  if (['startEditionPause','endEditionPause','sendEditionNotice'].includes(data.action)) {
+  if (data.action === 'sendEditionNotice') {
     return organizer && edition.status === 'active' ? editionAnnouncements_(data,edition,sheet,entries) : denied;
   }
   const dispatch = editionDispatch_(edition, entries);
@@ -1590,7 +1575,7 @@ function editionProgress_(data) {
       const occupant = dispatch.units.get(gate.occupant);
       const completed = occupant?.records.get(station.id)?.completedAt;
       return {stationId:station.id, unitId:gate.occupant || '', unitName:occupant?.unit.name || '',
-        ready:gate.ready, canOpen:!gate.ready && (!occupant || Boolean(completed))};
+        ready:gate.ready, canOpen:!organizer && !gate.ready && (!occupant || Boolean(completed))};
     });
     const now = Date.now();
     const pauses = organizer ? entries.filter(entry => entry.pause && editionPauseEnd_(entry) > now)
@@ -1606,7 +1591,7 @@ function editionProgress_(data) {
 
   const station = allowed.find(item => item.id === data.stationId);
   const unit = competitionUnits_(edition).find(item => item.id === data.unitId);
-  if (!station || edition.status !== 'active') return denied;
+  if (organizer || !station || edition.status !== 'active') return denied;
   const eventAt = editionCommandTime_(entries);
   if (data.action === 'openEditionStation') {
     const gate = dispatch.stations.get(station.id);
@@ -1630,7 +1615,7 @@ function editionProgress_(data) {
     return editionQuiz_(data,edition,station,unit,progress,entry,previous,sheet,entries,eventAt);
   }
 
-  if (!organizer && !reviewer) return denied;
+  if (!reviewer && station.kind !== 'standby') return denied;
   if (data.action === 'saveEditionAssessment') {
     if (!['scored','studna'].includes(station.kind) || !reviewer ||
         !['V pořádku','Drobné nedostatky','Závažné nedostatky'].includes(data.result) ||
@@ -1661,7 +1646,7 @@ function editionProgress_(data) {
   } else {
     if (entry.completedAt) return {ok:true};
     if (entry.quizToken) return {ok:false,error:'Otevřený kvíz uzavři tlačítkem Uzavřít kvíz.'};
-    if (!current || (station.kind !== 'studna' && (!organizer || !['standby','quiz'].includes(station.kind)))) {
+    if (!current || !['studna','standby'].includes(station.kind)) {
       return {ok:false,error:'Průchod tímto stanovištěm nelze tímto způsobem potvrdit.'};
     }
     entry.completedAt = eventAt;
@@ -1851,7 +1836,7 @@ function doPost(e) {
     if (['acknowledgeUnitDispatch','acknowledgeUnitArrival'].includes(data.action)) return json(acknowledgeUnitDispatch_(data));
     if (data.action === 'readEditionObserver') return json(readEditionObserver_(data));
 
-    if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation','startEditionPause','endEditionPause','sendEditionNotice','saveEditionDispatchMessage','readEditionFinalAssessments','saveEditionMemberQuiz','startEditionQuiz','closeEditionQuiz'].includes(data.action)) {
+    if (['readEditionProgress','startEditionAssessment','saveEditionAssessment','completeEditionPassage','openEditionStation','sendEditionNotice','saveEditionDispatchMessage','readEditionFinalAssessments','saveEditionMemberQuiz','startEditionQuiz','closeEditionQuiz'].includes(data.action)) {
       return json(editionProgress_(data));
     }
 

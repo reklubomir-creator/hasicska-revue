@@ -1,4 +1,4 @@
-const APP_VERSION="1.1.0-beta.20";
+const APP_VERSION="1.1.0-beta.21";
 const PUSH_VAPID_PUBLIC_KEY=""; // Veřejný klíč testovacího doručování
 const TEST_API_URL=""; // URL samostatného testovacího nasazení Apps Scriptu
 const PRODUCTION_API_URL="https://script.google.com/macros/s/AKfycbwuEk9g6WroMHecImGviCG8aMujLvdxbDsrnTNrPzB7HBEgGfLBP-Vz3kOXsDHU8ZVjrw/exec";

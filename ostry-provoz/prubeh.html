@@ -29,15 +29,10 @@
 <label>Jednotka <select id="unitFilter"></select></label>
 </div>
 <details id="organization" class="panel" hidden>
-  <summary>Mimořádná pauza a zprávy vedení</summary>
-  <div class="form-grid columns">
+  <summary>Zprávy vedení</summary>
   <label>Příjemce <select id="noticeRecipient"></select></label>
-  <label>Délka pauzy v minutách <input id="pauseMinutes" type="number" min="1" max="120" value="10"></label>
-  </div>
-  <label>Pokyn k pauze nebo text zprávy <textarea id="noticeText" maxlength="400"></textarea></label>
-  <div class="actions"><button class="secondary" id="beginPause" type="button">Zahájit pauzu</button>
-  <button id="sendNotice" type="button">Odeslat zprávu</button>
-  </div>
+  <label>Text zprávy <textarea id="noticeText" maxlength="400"></textarea></label>
+  <div class="actions"><button id="sendNotice" type="button">Odeslat zprávu</button></div>
   <div id="activePauses" class="result-list"></div>
 </details>
 <details id="gatePanel" class="panel" hidden><summary>Uvolnění stanovišť</summary><p>Po dokončení hodnocení může hodnotitel potvrdit, že stanoviště přijme další jednotku. Teprve pak se čekající jednotce zobrazí pokyn k přesunu.</p><div id="gates" class="result-list"></div></details>

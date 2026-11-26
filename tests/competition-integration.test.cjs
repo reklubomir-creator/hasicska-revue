@@ -15,10 +15,10 @@ const edition = {
   draw:[{id:"a-start",unitId:"a",stationId:"s"},{id:"b-start",unitId:"b",stationId:"p"}]
 };
 
-test("ročník prochází startem, hodnocením, pauzou, předáním, push a archivací přes skutečné API handlery", () => {
+test("ročník prochází startem, hodnocením, předáním, push a archivací přes skutečné API handlery", () => {
   const app = createAppsScript({
     ORGANIZER_PIN:credential,UNIT_PUSH_RELAY_SECRET:secret,EDITION_OBSERVER_CODE:"pozorovatel-test",
-    ASSESSMENT_STATION_TOKENS:JSON.stringify({Studna:"hodnotitel-studna"})
+    ASSESSMENT_STATION_TOKENS:JSON.stringify({Studna:"hodnotitel-studna",Pohotovost:"hodnotitel-pohotovost"})
   });
   const historical = app.insertSheet("Zápisy stanovišť");
   historical.appendRow(["Jednotka","Stanoviště","Čas","Záznam"]);
@@ -92,25 +92,21 @@ test("ročník prochází startem, hodnocením, pauzou, předáním, push a arch
   assert.deepEqual(dashboard().completed,[1]);
   assert.equal(dashboard().station,null);
 
-  const pauseId = randomUUID();
-  ok("startEditionPause",{unitId:"a",eventId:pauseId,minutes:3,text:"Vyčkejte"});
-  ok("completeEditionPassage",{unitId:"b",stationId:"p"});
-  ok("openEditionStation",{unitId:"b",stationId:"p"});
-  assert.equal(dashboard().state,"paused");
-  assert.equal(dashboard().station,null);
-  app.advance(61000);
-  assert.ok(dashboard().notices.some(item => item.id === pauseId + ":soon"));
+  const standby = {unitId:"b",stationId:"p",credential:"hodnotitel-pohotovost"};
+  assert.equal(caller("completeEditionPassage",{...standby,credential}).ok,false);
+  ok("completeEditionPassage",standby);
+  assert.equal(caller("openEditionStation",{...standby,credential}).ok,false);
+  ok("openEditionStation",standby);
   const noticeId = randomUUID();
+  assert.equal(caller("sendEditionNotice",{...standby,eventId:noticeId,text:"Zakázaná zpráva"}).ok,false);
+  assert.equal(caller("startEditionPause",{unitId:"a",eventId:randomUUID(),minutes:3}).ok,false);
   ok("sendEditionNotice",{unitId:"a",eventId:noticeId,text:"Zpráva pro A"});
   ok("sendEditionNotice",{unitId:"b",eventId:randomUUID(),text:"Zpráva pro B"});
-  ok("endEditionPause",{unitId:"a",eventId:pauseId});
   assert.equal(dashboard().station.number,2);
   assert.equal(dashboard().completedCount,1);
-  assert.ok(dashboard().notices.some(item => item.id === pauseId + ":end"));
   const deliveries = ok("readUnitPushDeliveries",{secret,credential:undefined}).deliveries;
   assert.equal(deliveries.length,1);
   assert.ok(deliveries[0].notices.includes(noticeId));
-  assert.ok(deliveries[0].notices.includes(pauseId + ":end"));
   assert.ok(!dashboard().notices.some(item => item.text === "Zpráva pro B"));
   assert.equal(caller("readUnitPushDeliveries",{secret:token}).ok,false);
 
@@ -181,7 +177,7 @@ test("předregistrace přiřadí kontakt k připravené jednotce a zobrazí výj
 });
 
 test("tři sloučené jednotky mají jeden start a sdílí postup i na již vydaném odkazu člena", () => {
-  const app = createAppsScript({ORGANIZER_PIN:credential});
+  const app = createAppsScript({ORGANIZER_PIN:credential,ASSESSMENT_STATION_TOKENS:JSON.stringify({Studna:"studna","Kvíz":"kviz"})});
   const post = (action,fields = {}) => app.post({action,year,credential,...fields});
   const token = randomBytes(32).toString("hex");
   const setup = {...edition,startsAt:"2027-10-24T13:30",venue:"Blansko",meetingPlace:"Zbrojnice",
@@ -211,11 +207,14 @@ test("tři sloučené jednotky mají jeden start a sdílí postup i na již vyda
   assert.equal(post("acknowledgeUnitArrival",{token:groupToken,stationId:"s"}).ok,true);
   assert.equal(dashboard(token).state,"active");
   assert.deepEqual(post("readEditionProgress").units.map(unit => unit.id),["abc"]);
-  const assessment = {unitId:"abc",stationId:"s",reviewerId:"judge"};
+  const assessment = {unitId:"abc",stationId:"s",reviewerId:"judge",credential:"studna"};
+  assert.equal(post("startEditionAssessment",{...assessment,credential}).ok,false);
   assert.equal(post("startEditionAssessment",assessment).ok,true);
   assert.equal(post("saveEditionAssessment",{...assessment,result:"Drobné nedostatky",notes:"Společný zápis",submissionId:randomUUID()}).ok,true);
   for (const [unitId,percentage] of [["a",82],["b",55],["c",0]]) {
-    assert.equal(post("saveEditionMemberQuiz",{unitId,stationId:"quiz",percentage,expectedPercentage:null}).ok,true);
+    const result = {unitId,stationId:"quiz",percentage,expectedPercentage:null};
+    assert.equal(post("saveEditionMemberQuiz",result).ok,false);
+    assert.equal(post("saveEditionMemberQuiz",{...result,credential:"kviz"}).ok,true);
   }
   assert.equal(post("saveEditionMemberQuiz",{unitId:"abc",stationId:"quiz",percentage:100,expectedPercentage:null}).ok,false);
   assert.equal(post("readEditionFinalAssessments",{credential:token}).ok,false);
@@ -271,9 +270,11 @@ test("beta kvíz ověřuje příjezd a ukládá výsledky samostatně za členy 
   assert.equal(post("readEditionFinalAssessments",stationAccess).ok,false);
   const started = post("startEditionQuiz",stationAccess);
   assert.equal(started.ok,true,started.error);
-  assert.equal(post("startEditionQuiz",quiz).token,started.token);
+  assert.equal(post("startEditionQuiz",quiz).ok,false);
+  assert.equal(post("startEditionQuiz",stationAccess).token,started.token);
   assert.equal(post("completeEditionPassage",quiz).ok,false);
-  assert.equal(post("closeEditionQuiz",quiz).needsConfirmation,true);
+  assert.equal(post("closeEditionQuiz",quiz).ok,false);
+  assert.equal(post("closeEditionQuiz",stationAccess).needsConfirmation,true);
   const session = {quizYear:year,token:started.token};
   assert.equal(app.get({action:"validate",...session,quizYear:year + 1}).ok,false);
   assert.equal(app.get({action:"validate",token:started.token}).ok,false);
@@ -289,7 +290,7 @@ test("beta kvíz ověřuje příjezd a ukládá výsledky samostatně za členy 
   const closed = post("closeEditionQuiz",stationAccess);
   assert.equal(closed.ok,true,closed.error);
   assert.deepEqual(closed.summary.map(item => item.percentage),[0,null]);
-  assert.deepEqual(post("closeEditionQuiz",quiz),closed);
+  assert.deepEqual(post("closeEditionQuiz",stationAccess),closed);
   assert.equal(app.post({...attempt,unit:"b"}).ok,false);
   assert.equal(app.get({action:"validate",...session}).ok,false);
   assert.deepEqual(post("readEditionFinalAssessments").units.map(unit => unit.assessments[0].percentage),[0,null]);

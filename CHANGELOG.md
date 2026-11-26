@@ -1,5 +1,10 @@
 # Změny Hasičské revue
 
+## 1.1.0-beta.21 — 2026-11-26
+
+- Hodnotitelé obsluhují stanoviště a kvíz. Vedení sleduje průběh, čte výsledky a posílá zprávy.
+
+
 ## 1.1.0-beta.20 — 2026-11-26
 
 - Hodnotitel s kódem stanoviště kvízu vidí příchozí jednotku a může otevřít a uzavřít její kvíz.

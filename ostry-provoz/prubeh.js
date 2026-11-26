@@ -35,7 +35,7 @@
     const unitFilter = el("unitFilter").value;
     const gates = el("gates");
     gates.replaceChildren();
-    el("gatePanel").hidden = overview.status !== "active" || !overview.gates.length;
+    el("gatePanel").hidden = overview.organizer || overview.status !== "active" || !overview.gates.length;
     if (!el("gatePanel").hidden) {
       for (const gate of overview.gates) {
         if (stationFilter && stationFilter !== gate.stationId) continue;
@@ -103,10 +103,9 @@
         progress.textContent = "Absolvováno " + completed + ". Zbývá " + unit.remaining + ".";
         row.append(progress);
       }
-      const available = !overview.observer && overview.status === "active" ? [station, ...unit.delayed.map(id => overview.stations.find(item => item.id === id))] : [];
+      const available = !overview.organizer && !overview.observer && overview.status === "active" ? [station, ...unit.delayed.map(id => overview.stations.find(item => item.id === id))] : [];
       for (const choice of available.filter(Boolean)) {
         if (stationFilter && choice.id !== stationFilter) continue;
-        if (choice.kind === "standby" && !overview.organizer) continue;
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = choice.id !== unit.stationId ? "Dodatečně vyhodnotit · " + choice.name
@@ -119,16 +118,16 @@
     if (!list.children.length) list.textContent = "Žádné jednotky pro vybraný filtr.";
   }
 
-  async function organizationAction(action, details) {
+  async function sendNotice(details) {
     if (busy) return;
-    const signature = JSON.stringify([action, login.year, details]);
+    const signature = JSON.stringify([login.year, details]);
     if (pendingNotice?.signature !== signature) pendingNotice = {signature,eventId:crypto.randomUUID()};
     busy = true;
     el("organization").inert = true;
     try {
-      await api(action,{eventId:pendingNotice.eventId,...details});
+      await api("sendEditionNotice",{eventId:pendingNotice.eventId,...details});
       pendingNotice = null;
-      if (action !== "endEditionPause") el("noticeText").value = "";
+      el("noticeText").value = "";
       el("message").textContent = "Server změnu potvrdil.";
     } catch (error) {
       el("message").textContent = error.message;
@@ -155,22 +154,11 @@
       const detail = document.createElement("p");
       const end = new Date(pause.endsAt).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
       detail.textContent = (unit?.name || "Všechny jednotky") + " · Pauza do " + end;
-      const endButton = document.createElement("button");
-      endButton.type = "button";
-      endButton.className = "secondary";
-      endButton.textContent = "Ukončit pauzu";
-      endButton.onclick = () => organizationAction("endEditionPause",{unitId:pause.unitId,eventId:pause.id});
-      row.append(detail,endButton);
+      row.append(detail);
       list.append(row);
     }
   }
 
-  el("beginPause").onclick = () => {
-    if (!el("pauseMinutes").reportValidity()) return;
-    organizationAction("startEditionPause",{
-      unitId:el("noticeRecipient").value,minutes:Number(el("pauseMinutes").value),text:el("noticeText").value.trim()
-    });
-  };
   el("sendNotice").onclick = () => {
     const text = el("noticeText").value.trim();
     if (!text) {
@@ -178,7 +166,7 @@
       el("noticeText").focus();
       return;
     }
-    organizationAction("sendEditionNotice",{unitId:el("noticeRecipient").value,text});
+    sendNotice({unitId:el("noticeRecipient").value,text});
   };
 
   let finalData;
@@ -206,34 +194,6 @@
       row.append(title,detail);
       if (assessment.kind === "quiz") {
         detail.textContent = assessment.percentage === null ? "Výsledek kvízu chybí." : "Výsledek: " + assessment.percentage + " %";
-        if (finalData.editable) {
-          const label = document.createElement("label");
-          const input = document.createElement("input");
-          input.type = "number";
-          input.min = "0";
-          input.max = "100";
-          input.required = true;
-          input.value = assessment.percentage ?? "";
-          label.append("Samostatný výsledek kvízu v %",input);
-          const save = document.createElement("button");
-          save.type = "button";
-          save.className = "secondary";
-          save.textContent = "Uložit výsledek kvízu";
-          save.onclick = async () => {
-            if (busy || !input.reportValidity()) return;
-            busy = true;
-            save.disabled = true;
-            try {
-              await api("saveEditionMemberQuiz",{unitId:unit.id,stationId:assessment.stationId,
-                percentage:Number(input.value),expectedPercentage:assessment.percentage});
-              el("message").textContent = "Výsledek kvízu uložen pro " + unit.name + ".";
-              assessment.percentage = Number(input.value);
-              renderFinalAssessment();
-            } catch (error) { el("message").textContent = error.message; }
-            finally { busy = false; save.disabled = false; }
-          };
-          row.append(label,save);
-        }
       } else {
         detail.textContent = assessment.result || (assessment.completed ? "Průchod potvrzen, hodnocení chybí." : "Bez hodnocení.");
         if (assessment.notes) {
